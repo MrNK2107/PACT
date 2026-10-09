@@ -1,0 +1,15 @@
+# Scripted demo: a low background arrival rate plus a hand-written task sequence (scenarios/tasks/demo_tasks.yaml)
+# so the 5-minute demo (docs/05 section 5.7) replays identically every run.
+name: s_scripted_demo
+description: Scripted task list on top of a slow background workload.
+seed: 7
+duration_s: 1200
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [4000, 4000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 3 } }
+workload:
+  arrival_rate_per_min: 0.5
+  priority_mix: [0.1, 0.3, 0.6]
+  tasks: tasks/demo_tasks.yaml
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults: []

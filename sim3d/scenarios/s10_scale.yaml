@@ -1,0 +1,11 @@
+# S10 — Scale: 12 x 12 km city (144 km2), 8 depots, 30 drones.
+name: s10_scale
+description: Large city for scalability runs (AT-11). Heavier to render; expect a few seconds to generate.
+seed: 20240611
+duration_s: 3600
+fleet: { n_drones: 30, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120, max_drones: 50 }
+world: { size_m: [12000, 12000], depots: 8, pads_per_depot: 3, no_fly: [auto], wind: { mean_mps: 5 } }
+workload: { arrival_rate_per_min: 8, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults: []

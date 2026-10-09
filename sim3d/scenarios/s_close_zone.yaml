@@ -1,0 +1,21 @@
+# Airspace closures: the stadium's closable zone activates for an event, then a scenario-defined
+# polygon (e.g. an emergency incident) closes for 10 minutes. Drones must re-route around them.
+name: s_close_zone
+description: Stadium event closure at t=300 s (until 1500 s) and an incident polygon closed at t=400 s for 600 s.
+seed: 42
+duration_s: 2400
+fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world:
+  size_m: [4000, 4000]
+  depots: 3
+  pads_per_depot: 2
+  no_fly:
+    - auto
+    - { id: NFZ-PRISON, name: Correctional facility, reason: Restricted airspace, circle: { x: 1250, y: -1350, r: 140 }, max_alt_m: 120 }
+  wind: { mean_mps: 4 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 300, type: close_zone, id: stadium, until: 1500 }
+  - { t: 400, type: close_zone, name: Incident cordon, polygon: [{ x: 500, y: -250 }, { x: 1050, y: -300 }, { x: 1150, y: 250 }, { x: 650, y: 400 }], until: 1000 }

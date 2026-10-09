@@ -1,0 +1,14 @@
+# Scripted tasks for the demo. Fields follow the PRD Task schema (docs/04 section 9.1).
+# `drop_id` references a drop point of the generated world; `drop: {x, y}` snaps to the nearest drop point.
+# Missing fields (origin depot, deadline, weight) are filled by the workload generator's distributions.
+tasks:
+  - { t: 5,   task_id: "D1:00000005:a001", origin_depot: D1, drop_id: DP-0003, priority: 2, deadline_offset_s: 900, weight_kg: 0.6 }
+  - { t: 8,   origin_depot: D2, drop_id: DP-0010, priority: 3, weight_kg: 1.1 }
+  - { t: 12,  origin_depot: D3, drop_id: DP-0021, priority: 3 }
+  - { t: 30,  drop_id: DP-0030, priority: 1, deadline_offset_s: 300, weight_kg: 0.4 }
+  - { t: 45,  drop: { x: 120, y: -40 }, priority: 2 }
+  - { t: 60,  drop: { x: -800, y: 650 }, priority: 3, weight_kg: 1.8 }
+  - { t: 90,  origin_depot: D1, drop_id: DP-0015, priority: 2 }
+  - { t: 120, origin_depot: D2, drop_id: DP-0044, priority: 1, deadline_offset_s: 360 }
+  - { t: 150, drop_id: DP-0051, priority: 3 }
+  - { t: 180, drop_id: DP-0008, priority: 2, weight_kg: 1.5 }

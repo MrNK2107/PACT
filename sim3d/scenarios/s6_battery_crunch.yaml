@@ -1,0 +1,12 @@
+# S6 — Battery crunch: high demand, few pads, battery drain x1.5.
+name: s6_battery_crunch
+description: One pad per depot, 4 orders/min, every drone drains 1.5x faster from t=120 s.
+seed: 42
+duration_s: 3600
+fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [4000, 4000], depots: 3, pads_per_depot: 1, no_fly: [auto], wind: { mean_mps: 6 } }
+workload: { arrival_rate_per_min: 4.0, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 120, type: battery_drain, id: all, factor: 1.5 }

@@ -1,0 +1,16 @@
+# S0 — Healthy baseline (docs/05_evaluation_plan.md section 5.3). Mirrors the PRD 9.1 example.
+name: s0_healthy
+description: Healthy fleet, no faults. 4 x 4 km city, 3 depots with 2 charging pads each, 12 drones.
+seed: 42
+duration_s: 3600
+fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world:
+  size_m: [4000, 4000]
+  depots: 3
+  pads_per_depot: 2
+  no_fly: [auto]          # hospital helipads, airport, government quarter, substations, closable stadium zone
+  wind: { mean_mps: 4, dir_deg: 240, gust_mps: 2.5 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM, bundle_len: 3, lease_ttl_s: 20, gossip_period_s: 1.0 }
+faults: []

@@ -1,0 +1,13 @@
+# Ten urgent medical jobs inside 60 s (the S7 pattern as an explicit list). Drops snap to the
+# nearest hospital / clinic drop point when `drop_id` is omitted and `cluster_type` is given.
+tasks:
+  - { t: 600, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.3 }
+  - { t: 604, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.3 }
+  - { t: 610, priority: 1, cluster_type: clinic,   deadline_offset_s: 360, weight_kg: 0.5 }
+  - { t: 615, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.3 }
+  - { t: 622, priority: 1, cluster_type: hospital, deadline_offset_s: 280, weight_kg: 0.4 }
+  - { t: 630, priority: 1, cluster_type: clinic,   deadline_offset_s: 360, weight_kg: 0.5 }
+  - { t: 638, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.3 }
+  - { t: 645, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.6 }
+  - { t: 652, priority: 1, cluster_type: clinic,   deadline_offset_s: 360, weight_kg: 0.3 }
+  - { t: 659, priority: 1, cluster_type: hospital, deadline_offset_s: 300, weight_kg: 0.3 }

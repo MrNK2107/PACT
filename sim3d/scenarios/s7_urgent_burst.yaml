@@ -1,0 +1,12 @@
+# S7 — Urgent burst: 10 priority-1 jobs within 60 s (REQ-AUC-003 event-driven re-auction).
+name: s7_urgent_burst
+description: Steady workload, then ten urgent hospital/clinic jobs arrive within one minute at t=600 s.
+seed: 42
+duration_s: 2400
+fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [4000, 4000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 4 } }
+workload: { arrival_rate_per_min: 2.0, priority_mix: [0.05, 0.3, 0.65] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 600, type: urgent_job_burst, n: 10, window_s: 60, priority: 1, cluster_type: hospital }
