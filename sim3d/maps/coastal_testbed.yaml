@@ -1,0 +1,12 @@
+# Test fixture: a 2 x 2 km coastal city that keeps the automated tests fast. Not shown in the picker.
+id: coastal_testbed
+name: Coastal Testbed
+description: 2 x 2 km fixture world for automated tests.
+tier: tutorial
+size_m: 2000
+hidden: true
+geography: { water: coast_river }
+logistics: { depots: { layout: distributed, count: 3, pads: 2 }, drop_points_per_km2: 35 }
+mechanics: { wind: { mean_mps: 3 } }
+no_fly: [auto]
+scenarios: [test_small]

@@ -1,0 +1,13 @@
+# Legacy map: the original procedural coastal city at the PRD example size (4 x 4 km).
+# Geography is derived from the size exactly as before the maps refactor, so every scenario on this
+# map generates a byte-identical world (TC-M0 pins).
+id: coastal_metro
+name: Coastal Metro
+description: 4 x 4 km coastal city with a river, motorway ring, hospitals, a stadium and 3 depots. The PRD example world.
+tier: standard
+size_m: 4000
+geography: { water: coast_river }
+logistics: { depots: { layout: distributed, count: 3, pads: 2 }, drop_points_per_km2: 35 }
+mechanics: { wind: { mean_mps: 4 } }
+no_fly: [auto]
+scenarios: [s0_healthy, s6_battery_crunch, s7_urgent_burst, s_close_zone, s_scripted_demo]

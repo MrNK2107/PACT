@@ -1,0 +1,11 @@
+# Legacy map: the 12 x 12 km coastal city (airport, port, rail, motorway ring, secondary centres).
+id: harbour_metro_xl
+name: Harbour Metro XL
+description: 12 x 12 km metropolis with airport, port and rail. Heavy to generate and render; used for scalability runs (AT-11).
+tier: stress
+size_m: 12000
+geography: { water: coast_river }
+logistics: { depots: { layout: distributed, count: 8, pads: 3 }, drop_points_per_km2: 35 }
+mechanics: { wind: { mean_mps: 5 } }
+no_fly: [auto]
+scenarios: [s10_scale]
