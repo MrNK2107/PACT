@@ -1,5 +1,6 @@
 import type { DepotBuild } from './BlockFillers';
 import type { CityLayout, LayoutBlock } from './CityLayout';
+import type { DepotLayout } from './features';
 import type { ChargerData, DepotData, PadData } from './types';
 
 /**
@@ -25,11 +26,18 @@ function fits(b: LayoutBlock, w: number, d: number, maxArea: number): boolean {
   return b.w * b.d <= maxArea && ((b.w >= w && b.d >= d) || (b.w >= d && b.d >= w));
 }
 
-export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number): LayoutBlock[] {
-  const minSep = layout.size < 2500 ? 300 : 600;
+/** Micro depots favour small blocks in residential / rural districts. */
+const CAND_TIERS_MICRO: typeof CAND_TIERS = [
+  { kinds: ['suburb', 'houses', 'farmland', 'townhouses'], w: 70, d: 55, maxArea: 40000 },
+  { kinds: ['suburb', 'houses', 'farmland', 'townhouses', 'mixed', 'commercial'], w: 70, d: 55, maxArea: Infinity },
+  { kinds: [], w: 70, d: 55, maxArea: Infinity },
+];
+
+export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number, kind: DepotLayout = 'distributed'): LayoutBlock[] {
+  const minSep = kind === 'micro' ? 250 : layout.size < 2500 ? 300 : 600;
   const excluded = new Set(['airport', 'water', 'hospital', 'stadium']);
   let cands: LayoutBlock[] = [];
-  for (const tier of CAND_TIERS) {
+  for (const tier of kind === 'micro' ? CAND_TIERS_MICRO : CAND_TIERS) {
     cands = layout.blocks.filter((b) => !b.kind && !b.nearWater && !excluded.has(b.district) && (tier.kinds.length === 0 || tier.kinds.includes(b.district)) && fits(b, tier.w, tier.d, tier.maxArea));
     if (cands.length >= n) break;
   }

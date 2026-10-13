@@ -1,3 +1,4 @@
+import { featuresForSize, type LayoutFeatures } from './features';
 import { Noise2D } from './noise';
 import { Rng } from './rng';
 import type { CoastData, DistrictData, DistrictKind, JunctionData, RailData, RiverData, RoadData, RoadKind, StationData, ZoneType } from './types';
@@ -48,7 +49,7 @@ export interface CityLayout {
   half: number;
   centre: { x: number; z: number };
   centres: { x: number; z: number; w: number }[];
-  coast: CoastData;
+  coast: CoastData | null;
   rivers: RiverData[];
   airport: Rect | null;
   port: Rect | null;
@@ -108,7 +109,7 @@ function sampler(points: { x: number; z: number }[], z0: number, dz: number): (z
   };
 }
 
-export function generateLayout(seed: number, size: number): CityLayout {
+export function generateLayout(seed: number, size: number, f: LayoutFeatures = featuresForSize(size)): CityLayout {
   const rng = new Rng(seed ^ 0x5bd1e995);
   const noise = new Noise2D(seed);
   const noise2 = new Noise2D(seed + 101);
@@ -118,7 +119,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
   // ---- centres -----------------------------------------------------------------------------------------
   const centre = { x: rng.range(-0.08, 0.04) * size, z: rng.range(-0.06, 0.06) * size };
   const centres: { x: number; z: number; w: number }[] = [];
-  const nSecondary = size >= 6000 ? 3 : size >= 3000 ? 1 : 0;
+  const nSecondary = f.secondaryCentres;
   for (let i = 0; i < nSecondary; i++) {
     const ang = rng.range(0, Math.PI * 2);
     const r = rng.range(0.22, 0.34) * size;
@@ -127,32 +128,38 @@ export function generateLayout(seed: number, size: number): CityLayout {
 
   // ---- water -------------------------------------------------------------------------------------------
   const waterLevel = -0.9;
+  const hasSea = f.water === 'coast_river' || f.water === 'coast';
+  const hasRiver = f.water === 'coast_river' || f.water === 'river';
   const SAMPLE = 25;
   const nS = Math.ceil(size / SAMPLE) + 1;
   const shorePts: { x: number; z: number }[] = [];
-  const bayDepth = rng.range(500, 900) * S;
-  const shoreBase = half * rng.range(0.68, 0.76);
-  for (let i = 0; i < nS; i++) {
-    const z = -half + i * SAMPLE;
-    const u = (z + half) / size;
-    const x = shoreBase - bayDepth * Math.sin(u * Math.PI) + (noise.fbm(0, z, 1400 * S, 4) - 0.5) * 900 * S + (noise2.fbm(3, z, 260, 3) - 0.5) * 140;
-    shorePts.push({ x, z });
+  // without a sea the shoreline is infinitely far east, so every "x > shoreX" test is false
+  let shoreX: (z: number) => number = () => Infinity;
+  if (hasSea) {
+    const bayDepth = rng.range(500, 900) * S;
+    const shoreBase = half * rng.range(0.68, 0.76);
+    for (let i = 0; i < nS; i++) {
+      const z = -half + i * SAMPLE;
+      const u = (z + half) / size;
+      const x = shoreBase - bayDepth * Math.sin(u * Math.PI) + (noise.fbm(0, z, 1400 * S, 4) - 0.5) * 900 * S + (noise2.fbm(3, z, 260, 3) - 0.5) * 140;
+      shorePts.push({ x, z });
+    }
+    shoreX = sampler(shorePts, -half, SAMPLE);
   }
-  const shoreX = sampler(shorePts, -half, SAMPLE);
-  const coast: CoastData = { shore: shorePts, waterY: waterLevel };
+  const coast: CoastData | null = hasSea ? { shore: shorePts, waterY: waterLevel } : null;
 
   // river: enters from the north, meanders south then bends east into the bay
   const riverPts: { x: number; z: number }[] = [];
   const widths: number[] = [];
-  const rx0 = centre.x - rng.range(0.14, 0.26) * size;
-  const bend = rng.range(0.05, 0.3);
+  const rx0 = hasRiver ? centre.x - rng.range(0.14, 0.26) * size : 0;
+  const bend = hasRiver ? rng.range(0.05, 0.3) : 0;
   let riverEndZ = half;
-  for (let i = 0; i < nS; i++) {
+  for (let i = 0; hasRiver && i < nS; i++) {
     const z = -half + i * SAMPLE;
     const u = (z + half) / size;
     const meander = Math.sin(u * Math.PI * 2.4 + seed % 7) * 520 * S + (noise2.fbm(z, 11, 900 * S, 4) - 0.5) * 900 * S;
     const towardsSea = smooth((u - bend) / (1 - bend - 0.08));
-    const x = lerp(rx0 + meander, shoreX(z) + 200, towardsSea);
+    const x = hasSea ? lerp(rx0 + meander, shoreX(z) + 200, towardsSea) : rx0 + meander;
     const w = 60 * S + 40 * S * u + (noise.fbm(z, 5, 400, 2) - 0.5) * 30;
     riverPts.push({ x, z });
     widths.push(Math.max(36, w));
@@ -161,14 +168,15 @@ export function generateLayout(seed: number, size: number): CityLayout {
       break;
     }
   }
-  const riverXFn = sampler(riverPts, -half, SAMPLE);
-  const riverX = (z: number) => (z <= riverEndZ ? riverXFn(z) : null);
+  const riverXFn = hasRiver ? sampler(riverPts, -half, SAMPLE) : () => 0;
+  const riverX = (z: number) => (hasRiver && z <= riverEndZ ? riverXFn(z) : null);
   const riverWidth = (z: number) => {
+    if (!hasRiver) return 0;
     const t = (z + half) / SAMPLE;
     const i = Math.max(0, Math.min(widths.length - 1, Math.floor(t)));
     return widths[i];
   };
-  const rivers: RiverData[] = [{ id: 'RIV-01', name: 'River', points: riverPts, width: 80 * S, waterY: waterLevel }];
+  const rivers: RiverData[] = hasRiver ? [{ id: 'RIV-01', name: 'River', points: riverPts, width: 80 * S, waterY: waterLevel }] : [];
   const isWater = (x: number, z: number): boolean => {
     if (x > shoreX(z)) return true;
     const r = riverX(z);
@@ -177,7 +185,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
 
   // ---- airport / port -----------------------------------------------------------------------------------
   let airport: Rect | null = null;
-  if (size >= 8000) {
+  if (f.airport) {
     const w = 2700 * S;
     const d = 1700 * S;
     const minX = -half + 0.14 * size;
@@ -185,7 +193,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
     airport = { minX, maxX: minX + w, minZ, maxZ: minZ + d };
   }
   let port: Rect | null = null;
-  if (size >= 5000) {
+  if (f.port && hasSea) {
     // on the bay, south of the river mouth
     const z0 = Math.min(half - 1500 * S, riverEndZ + 500 * S);
     const z1 = Math.min(half - 300, z0 + 1600 * S);
@@ -264,7 +272,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
   const ringE = Math.min(half - 0.09 * size, shoreMin - 420 * S);
   const ringN = -half + 0.09 * size;
   const ringS = half - 0.09 * size;
-  if (size >= 4000) {
+  if (f.motorwayRing) {
     addRoad('M1 Western Ring', 'motorway', 'NS', ringW, ringN, ringS);
     addRoad('M1 Coastal Motorway', 'motorway', 'NS', ringE, ringN, ringS);
     addRoad('M2 Northern Ring', 'motorway', 'EW', ringN, ringW, ringE);
@@ -303,7 +311,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
   const rails: RailData[] = [];
   const stations: StationData[] = [];
   let railZ: number | null = null;
-  if (size >= 5000) {
+  if (f.rail) {
     railZ = centre.z + rng.range(0.03, 0.07) * size;
     // keep clear of arterials
     while (majorEW.some((m) => Math.abs(m - railZ!) < 60)) railZ += 40;
@@ -357,10 +365,10 @@ export function generateLayout(seed: number, size: number): CityLayout {
     return c;
   };
   const specials: { kind: DistrictKind; count: number }[] = [
-    { kind: 'hospital', count: size >= 8000 ? 4 : 2 },
-    { kind: 'campus', count: size >= 8000 ? 3 : 1 },
-    { kind: 'stadium', count: 1 },
-    { kind: 'cemetery', count: size >= 8000 ? 2 : 1 },
+    { kind: 'hospital', count: f.specials.hospital },
+    { kind: 'campus', count: f.specials.campus },
+    { kind: 'stadium', count: f.specials.stadium },
+    { kind: 'cemetery', count: f.specials.cemetery },
   ];
   let dn = 0;
   for (let i = 0; i < xs.length - 1; i++) {
@@ -391,6 +399,13 @@ export function generateLayout(seed: number, size: number): CityLayout {
       const nInd = noise2.fbm(cx + 5000, cz - 7000, 2600 * S, 3);
       const edge = Math.max(Math.abs(cx), Math.abs(cz)) / half; // 0 centre … 1 map edge
       let kind: DistrictKind;
+      const bCbd = f.districtBias.cbd ?? 1;
+      const bInd = f.districtBias.industrial ?? 1;
+      const bPark = f.districtBias.park ?? 1;
+      const bSub = f.districtBias.suburb ?? 1;
+      const bFarm = f.districtBias.farmland;
+      const nFarm = bFarm !== undefined ? noise2.fbm(cx - 3000, cz + 4000, 1800 * S, 3) : 0;
+      const cenR = cen / bSub; // >1 pushes the residential ladder towards its outer kinds
       const airportHit = airport && !(inner.maxX < airport.minX || inner.minX > airport.maxX || inner.maxZ < airport.minZ || inner.minZ > airport.maxZ);
       const portHit = port && cx > port.minX && cx < port.maxX && cz > port.minZ && cz < port.maxZ;
       const railNear = railZ !== null && Math.abs(cz - railZ) < 700 * S;
@@ -398,14 +413,15 @@ export function generateLayout(seed: number, size: number): CityLayout {
       else if (airportHit) kind = 'airport';
       else if (portHit && waterFrac < 0.6) kind = 'port';
       else if (waterFrac > 0.22) kind = 'waterfront';
-      else if (dCentre(cx, cz) < 760 * S) kind = 'cbd';
-      else if (cen > 0.62) kind = 'commercial';
-      else if (n > 0.79 && cen < 0.6) kind = 'park';
-      else if (nInd + (railNear ? 0.16 : 0) + (edge > 0.72 ? 0.12 : 0) - cen * 0.9 > 0.62 && cen < 0.4) kind = nInd > 0.7 ? 'logistics' : 'industrial';
-      else if (cen > 0.44) kind = 'mixed';
-      else if (cen > 0.3) kind = 'apartments';
-      else if (cen > 0.2) kind = 'townhouses';
-      else if (cen > 0.1 || edge < 0.55) kind = 'houses';
+      else if (dCentre(cx, cz) < 760 * S * bCbd) kind = 'cbd';
+      else if (cen * bCbd > 0.62) kind = 'commercial';
+      else if (n * bPark > 0.79 && cen < 0.6) kind = 'park';
+      else if ((nInd + (railNear ? 0.16 : 0) + (edge > 0.72 ? 0.12 : 0)) * bInd - cen * 0.9 > 0.62 && cen < 0.4) kind = nInd > 0.7 ? 'logistics' : 'industrial';
+      else if (bFarm !== undefined && cen < 0.3 && nFarm * bFarm > 0.42) kind = 'farmland';
+      else if (cenR > 0.44) kind = 'mixed';
+      else if (cenR > 0.3) kind = 'apartments';
+      else if (cenR > 0.2) kind = 'townhouses';
+      else if (cenR > 0.1 || edge < 0.55) kind = 'houses';
       else kind = 'suburb';
       const id = `DIST-${String(++dn).padStart(3, '0')}`;
       districts.push({ id, kind, name: '', x0, x1, z0, z1, inner, minX: inner.minX, maxX: inner.maxX, minZ: inner.minZ, maxZ: inner.maxZ, centrality: cen, waterFrac });
@@ -442,6 +458,7 @@ export function generateLayout(seed: number, size: number): CityLayout {
     airport: 'Airport',
     cemetery: 'Cemetery',
     waterfront: 'Waterfront',
+    farmland: 'Farmland',
     water: 'Water',
   };
   const nameCount = new Map<DistrictKind, number>();
@@ -469,11 +486,12 @@ export function generateLayout(seed: number, size: number): CityLayout {
     hospital: [170, 260, 10],
     stadium: [220, 400, 12],
     cemetery: [240, 400, 6],
+    farmland: [260, 420, 6],
   };
   const blocks: LayoutBlock[] = [];
   let bn = 0;
   const zoneOf = (k: DistrictKind): ZoneType =>
-    k === 'cbd' || k === 'commercial' ? 'commercial' : k === 'industrial' || k === 'logistics' || k === 'port' ? 'industrial' : k === 'park' || k === 'cemetery' || k === 'waterfront' ? 'park' : k === 'campus' || k === 'hospital' || k === 'stadium' ? 'civic' : k === 'airport' ? 'transport' : k === 'water' ? 'water' : 'residential';
+    k === 'cbd' || k === 'commercial' ? 'commercial' : k === 'industrial' || k === 'logistics' || k === 'port' ? 'industrial' : k === 'park' || k === 'cemetery' || k === 'waterfront' ? 'park' : k === 'farmland' ? 'rural' : k === 'campus' || k === 'hospital' || k === 'stadium' ? 'civic' : k === 'airport' ? 'transport' : k === 'water' ? 'water' : 'residential';
 
   const localName = () => `${rng.pick(STREET_NAMES)} ${rng.pick(SUFFIX)}`;
 

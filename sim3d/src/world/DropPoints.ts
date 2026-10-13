@@ -49,6 +49,8 @@ export function dropTypeFor(kind: DistrictKind): DropType | null {
       return 'industrial';
     case 'stadium':
       return 'event';
+    case 'farmland':
+      return 'residential';
     case 'park':
     case 'waterfront':
     case 'cemetery':
@@ -95,7 +97,7 @@ export function generateDropPoints(
   depots: DepotData[],
   noFly: NoFlyZone[],
   shards: ShardGrid,
-  cfg: { dropPointsPerKm2: number; landKm2: number; groundY: number },
+  cfg: { dropPointsPerKm2: number; landKm2: number; groundY: number; rooftopOnly?: boolean },
   rng: Rng,
 ): { clusters: DemandCluster[]; dropPoints: DropPointData[] } {
   const clusters: DemandCluster[] = [];
@@ -144,7 +146,8 @@ export function generateDropPoints(
     const want = Math.max(1, Math.min(14, Math.round((p.demand / sum) * total)));
     const id = `CL-${String(i + 1).padStart(3, '0')}`;
     const cluster: DemandCluster = { id, districtId: p.district.id, type: p.type, cx: p.cx, cz: p.cz, radius: p.radius, demand: p.demand, pointIds: [] };
-    const grounds = (groundByDistrict.get(p.district.id) ?? []).slice();
+    // dense-city maps allow rooftop drops only
+    const grounds = cfg.rooftopOnly ? [] : (groundByDistrict.get(p.district.id) ?? []).slice();
     const roofs = (roofByDistrict.get(p.district.id) ?? []).slice();
     // shuffle deterministically
     const shuffle = <T>(a: T[]) => {

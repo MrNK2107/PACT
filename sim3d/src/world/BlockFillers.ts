@@ -23,6 +23,10 @@ export interface FillEnv {
   layout: CityLayout;
   palettes: Map<string, Palette>;
   padsPerDepot: number;
+  /** Per depot block pad counts (hub-and-spoke / micro layouts); absent blocks use `padsPerDepot`. */
+  depotPads?: Map<string, number>;
+  /** Tall-building height caps (legacy: 8 km maps and up). */
+  tall: boolean;
   /** districtId -> kind -> blocks already assigned (damps repetition inside a district). */
   kindCounts: Map<string, Map<string, number>>;
 }
@@ -66,6 +70,7 @@ const KIND_WEIGHTS: Record<DistrictKind, Weighted> = {
   airport: [['airport', 1]],
   cemetery: [['cemetery', 1]],
   waterfront: [['promenade', 3], ['marina', 1.5], ['perimeter', 1.5], ['slabs', 1], ['hotel', 0.6], ['pocketpark', 0.8]],
+  farmland: [['fields', 5], ['farmstead', 2], ['paddock', 2], ['barns', 1.2], ['solarfarm', 0.4]],
   water: [],
 };
 
@@ -623,6 +628,45 @@ function fillPaddock(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillO
   if (rng.chance(0.3)) ground(ctx, b, b.cx, b.cz, `Farm gate drop — ${b.id}`);
 }
 
+const CROPS = ['#c9b458', '#8aa34a', '#6f9a45', '#b59a4e', '#9aa851', '#a58f48'];
+
+function fillFields(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): void {
+  const rng = env.rng;
+  addBlock(b, out, 'fields', 'lawn', rng.pick(CROPS));
+  const r = rect(b);
+  // hedgerow boundary and a few field trees; one gate is a drop site
+  fence(out, r.minX + 1, r.maxX - 1, r.minZ + 1, r.maxZ - 1, 'hedge');
+  treesIn(ctx, rng, r.minX + 3, r.maxX - 3, r.minZ + 3, r.maxZ - 3, rng.int(0, 4), 7, 12, 0.2);
+  if (rng.chance(0.45)) ground(ctx, b, b.cx + rng.range(-b.w / 4, b.w / 4), r.minZ + 6, `Field gate drop — ${b.id}`);
+}
+
+function fillFarmstead(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): void {
+  const rng = env.rng;
+  const p = pal(b, env);
+  addBlock(b, out, 'farmstead', 'lawn', '#8a9a5a');
+  const r = rect(b);
+  const fc = facade(p, rng);
+  const house = ctx.addBuilding(spec(b, { name: `Farmhouse ${b.id}`, kind: 'house', cx: r.minX + 22, cz: r.minZ + 18, w: 12, d: 9, h: 6.5, roof: 'gable', color: fc.color, material: 'plaster', equipment: 1 }));
+  ctx.addBuilding(spec(b, { name: `Barn ${b.id}`, kind: 'shed', cx: b.cx + 6, cz: b.cz + 4, w: 24, d: 13, h: 7.5, roof: 'gable', color: '#7a4a3b', material: 'corrugated' }));
+  out.utilities.push({ id: `UT-FS-${b.id}`, kind: 'silo', x: b.cx + 28, z: b.cz - 2, height: rng.range(14, 20), radius: 3 });
+  ctx.keepout(b.cx + 28, b.cz - 2, 6);
+  treesIn(ctx, rng, r.minX + 2, r.maxX - 2, r.maxZ - 12, r.maxZ - 2, 6, 7, 12, 0.3);
+  ground(ctx, b, house.cx + 12, house.cz + 8, `Farmyard drop — ${b.id}`, house.id);
+}
+
+function fillBarns(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): void {
+  const rng = env.rng;
+  addBlock(b, out, 'barns', 'gravel', '#a1a094');
+  const r = rect(b);
+  const n = rng.int(2, 3);
+  for (let i = 0; i < n; i++) {
+    ctx.addBuilding(spec(b, { name: `Barn ${b.id}-${i + 1}`, kind: 'shed', cx: r.minX + 20 + i * 32, cz: b.cz + rng.range(-6, 6), w: 24, d: 12, h: rng.range(6, 8), roof: 'gable', color: rng.pick(['#7a4a3b', '#8a8f8a', '#6d5a48']), material: 'corrugated' }));
+  }
+  const k = rng.int(2, 4);
+  for (let i = 0; i < k; i++) out.utilities.push({ id: `UT-BN-${b.id}-${i + 1}`, kind: 'silo', x: r.maxX - 12 - i * 8, z: r.minZ + 12, height: rng.range(16, 26), radius: 3.2 });
+  ground(ctx, b, b.cx, r.maxZ - 8, `Barn yard drop — ${b.id}`);
+}
+
 function fillSolarFarm(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): void {
   addBlock(b, out, 'solarfarm', 'gravel', '#9a9a8c');
   const r = rect(b);
@@ -652,7 +696,7 @@ function fillTower(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut
     const td = Math.min(pd - 8, tw * rng.range(0.8, 1.25));
     const ox = pair ? (i === 0 ? -1 : 1) * (pw / 4) : rng.range(-(pw - tw) / 2 + 3, (pw - tw) / 2 - 3) * 0.5;
     const oz = rng.range(-(pd - td) / 2 + 3, (pd - td) / 2 - 3) * 0.5;
-    const fl = floors(rng.range(14, 30), mult, 10, env.layout.size >= 8000 ? 56 : 42);
+    const fl = floors(rng.range(14, 30), mult, 10, env.tall ? 56 : 42);
     const fc = facade(p, rng, 0.5);
     const t = ctx.addBuilding(spec(b, { name: `${pair ? 'Twin ' : ''}Tower ${b.id}-${i + 1}`, kind: 'tower', cx: b.cx + ox, cz: b.cz + oz, w: tw, d: td, h: fl * FLOOR_H, baseY: podH, color: fc.color, material: fc.material === 'brick' ? 'glass' : fc.material, equipment: 2 }));
     if (fl > 24 && rng.chance(0.6)) {
@@ -1205,7 +1249,7 @@ function fillLandmarkTower(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out:
   const pw = Math.min(b.w - 6, 70);
   const pd = Math.min(b.d - 6, 70);
   const podium = ctx.addBuilding(spec(b, { name: `Skyline Tower Podium ${b.id}`, kind: 'podium', cx: b.cx, cz: b.cz, w: pw, d: pd, h: 3 * FLOOR_H, color: jitter(rng.pick(p.facade), rng), material: 'glass', equipment: 1, solidTop: true, keepout: { x: b.cx + pw / 2 - 9, z: b.cz + pd / 2 - 9, r: 5 } }));
-  const fl = env.layout.size >= 8000 ? 60 : 46;
+  const fl = env.tall ? 60 : 46;
   const tw = Math.min(pw - 14, 30);
   const t = ctx.addBuilding(spec(b, { name: `Skyline Tower ${b.id}`, kind: 'tower', cx: b.cx, cz: b.cz, w: tw, d: tw * 0.9, h: fl * FLOOR_H, baseY: podium.baseY + podium.h, color: jitter(rng.pick(p.glass), rng), material: 'glass', equipment: 0 }));
   ctx.addBuilding(spec(b, { name: `Skyline Tower Crown ${b.id}`, kind: 'crown', cx: b.cx, cz: b.cz, w: tw * 0.6, d: tw * 0.55, h: 12, baseY: t.baseY + t.h, color: jitter(rng.pick(p.glass), rng), material: 'glass' }));
@@ -1235,7 +1279,7 @@ function fillCathedral(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: Fil
 function fillTvMast(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): void {
   const rng = env.rng;
   addBlock(b, out, 'tvmast', 'lawn', '#7d9560');
-  out.utilities.push({ id: `UT-TV-${b.id}`, kind: 'mast', x: b.cx, z: b.cz, height: env.layout.size >= 8000 ? 190 : 140, radius: 3.5 });
+  out.utilities.push({ id: `UT-TV-${b.id}`, kind: 'mast', x: b.cx, z: b.cz, height: env.tall ? 190 : 140, radius: 3.5 });
   ctx.addBuilding(spec(b, { name: `Transmitter Hall ${b.id}`, kind: 'shed', cx: b.cx + 16, cz: b.cz + 10, w: 14, d: 9, h: 4.5, color: '#c9ccce', material: 'concrete' }));
   fence(out, b.cx - 24, b.cx + 24, b.cz - 20, b.cz + 20);
   treesIn(ctx, rng, b.cx - b.w / 2 + 2, b.cx + b.w / 2 - 2, b.cz - b.d / 2 + 2, b.cz + b.d / 2 - 2, 10, 6, 12, 0.5);
@@ -1283,8 +1327,9 @@ export function fillDepot(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: 
     : { minX: side === 'e' ? cx + bw / 2 + gap : cx - bw / 2 - gap - 24, maxX: side === 'e' ? cx + bw / 2 + gap + 24 : cx - bw / 2 - gap, minZ: cz - bd / 2 - 2, maxZ: cz + bd / 2 + 2 };
   const pads: { x: number; z: number }[] = [];
   const handoff: { x: number; z: number }[] = [];
-  const n = env.padsPerDepot;
-  const pitch = 12;
+  const n = env.depotPads?.get(b.id) ?? env.padsPerDepot;
+  // a hub with more than 3 pads packs them to fit the apron; 1-3 pads keep the legacy 12 m pitch
+  const pitch = n > 3 ? Math.min(12, ((alongX ? bw : bd) + 4 - 8) / n) : 12;
   for (let i = 0; i < n; i++) {
     const t = (i - (n - 1) / 2) * pitch;
     pads.push(alongX ? { x: cx + t, z: (apron.minZ + apron.maxZ) / 2 + (side === 's' ? 4 : -4) } : { x: (apron.minX + apron.maxX) / 2 + (side === 'e' ? 4 : -4), z: cz + t });
@@ -1343,6 +1388,9 @@ export const FILLERS: Record<string, Filler> = {
   sportsfield: fillSportsField,
   paddock: fillPaddock,
   solarfarm: fillSolarFarm,
+  fields: fillFields,
+  farmstead: fillFarmstead,
+  barns: fillBarns,
   tower: (c, b, e, o) => fillTower(c, b, e, o, false),
   towerpair: (c, b, e, o) => fillTower(c, b, e, o, true),
   officemid: fillOfficeMid,

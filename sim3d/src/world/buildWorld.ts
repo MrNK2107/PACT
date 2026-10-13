@@ -5,6 +5,7 @@ import { assembleDepots, siteDepotBlocks } from './Depots';
 import { generateDropPoints, planClusters } from './DropPoints';
 import { placeLandmarks } from './Landmarks';
 import { inNoFly as inNoFlyZones, zoneFromSpec } from './NoFly';
+import { featuresForSize, type LayoutFeatures } from './features';
 import { Noise2D } from './noise';
 import { buildObstacles } from './Obstacles';
 import { familyFor, makePalette, type Palette } from './palettes';
@@ -40,12 +41,14 @@ export function inNoFly(world: WorldData, x: number, z: number, margin = 0, only
 export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   const cfg: WorldGenConfig = { ...DEFAULT_WORLD_CONFIG, ...config };
   if (cfg.size < 1500 || cfg.size > 20000) throw new Error(`world size ${cfg.size} m out of range (1500–20000)`);
-  const depotsWanted = Math.max(1, Math.min(8, Math.round(cfg.depots)));
-  const padsPerDepot = Math.max(1, Math.min(3, Math.round(cfg.padsPerDepot)));
+  const f: LayoutFeatures = cfg.features ?? featuresForSize(cfg.size);
+  const depotLayout = cfg.depotLayout ?? 'distributed';
+  const depotsWanted = depotLayout === 'single_hub' ? 1 : Math.max(1, Math.min(8, Math.round(cfg.depots)));
+  const padsPerDepot = Math.max(1, Math.min(depotLayout === 'single_hub' ? 6 : 3, Math.round(cfg.padsPerDepot)));
   const half = cfg.size / 2;
   const bounds = cfg.bounds ?? { minX: -half, maxX: half, minZ: -half, maxZ: half, minY: 0, maxY: 120 };
 
-  const layout = generateLayout(cfg.seed, cfg.size);
+  const layout = generateLayout(cfg.seed, cfg.size, f);
   const ctx = new BuildContext(cfg.seed + 1);
   const rng = new Rng(cfg.seed + 2);
   const noise = new Noise2D(cfg.seed + 3);
@@ -60,14 +63,18 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   }
 
   // ---- landmarks + old town, demand clusters (district level), depot siting ---------------------------------
-  const { oldTown } = placeLandmarks(layout, rng);
+  const { oldTown } = placeLandmarks(layout, rng, f);
   for (const id of oldTown) {
     const d = layout.districts.find((q) => q.id === id)!;
     palettes.set(id, makePalette('old', rng));
     d.name = `Old Town (${d.name})`;
   }
   const plans = planClusters(layout, noise, rng);
-  const depotBlocks = siteDepotBlocks(layout, plans, depotsWanted);
+  const depotBlocks = siteDepotBlocks(layout, plans, depotsWanted, depotLayout);
+  // pads per depot block: the hub of a hub-and-spoke network keeps the full count, spokes and micro depots get one
+  const depotPads = new Map<string, number>();
+  if (depotLayout === 'hub_and_spoke') depotBlocks.forEach((blk, i) => depotPads.set(blk.id, i === 0 ? padsPerDepot : 1));
+  if (depotLayout === 'micro') depotBlocks.forEach((blk) => depotPads.set(blk.id, 1));
   // one landmark per special district: the largest block gets the hospital / stadium, the rest support it
   for (const d of layout.districts) {
     if (d.kind !== 'hospital' && d.kind !== 'stadium') continue;
@@ -79,7 +86,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   }
 
   // ---- block fillers ----------------------------------------------------------------------------------------
-  const env: FillEnv = { rng, noise, kindNoise, skyline, layout, palettes, padsPerDepot, kindCounts: new Map() };
+  const env: FillEnv = { rng, noise, kindNoise, skyline, layout, palettes, padsPerDepot, depotPads, tall: f.tall, kindCounts: new Map() };
   const out: FillOut = { blocks: [], props: [], parking: [], containers: [], loadingBays: [], cranes: [], utilities: [], noFly: [], depotBlocks: [] };
   const depotBuilds: { block: LayoutBlock; build: DepotBuild }[] = [];
   for (const b of layout.blocks) {
@@ -118,7 +125,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   // ---- drop points ------------------------------------------------------------------------------------------------
   let landKm2 = 0;
   for (const d of layout.districts) if (d.kind !== 'water' && d.kind !== 'airport') landKm2 += ((d.maxX - d.minX) * (d.maxZ - d.minZ)) / 1e6;
-  const { clusters, dropPoints } = generateDropPoints(plans, ctx, depots, noFlyZones, shards, { dropPointsPerKm2: cfg.dropPointsPerKm2, landKm2, groundY: GROUND_Y }, rng);
+  const { clusters, dropPoints } = generateDropPoints(plans, ctx, depots, noFlyZones, shards, { dropPointsPerKm2: cfg.dropPointsPerKm2, landKm2, groundY: GROUND_Y, rooftopOnly: cfg.rooftopOnly }, rng);
 
   // ---- streetscape ---------------------------------------------------------------------------------------------------
   const street = generateStreetscape(layout, ctx, rng, { coastal: (x, z) => x > layout.shoreX(z) - 450 });
@@ -128,7 +135,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   const powerLines: PowerLineData[] = [];
   const utilities: UtilityStructure[] = out.utilities.slice();
   const ring = layout.roads.find((r) => r.kind === 'motorway' && r.dir === 'NS' && r.c < layout.centre.x);
-  if (ring) {
+  if (f.powerLines && ring) {
     const ids: string[] = [];
     for (let z = ring.a + 80; z < ring.b - 80; z += 260) {
       const x = ring.c - ring.width / 2 - 26;
@@ -143,9 +150,19 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     }
     if (ids.length >= 2) powerLines.push({ id: `PL-${powerLines.length + 1}`, pylonIds: ids });
   }
-  if (cfg.size >= 4000) {
+  if (f.turbines > 0 && !layout.coast) {
+    // no sea: a wind farm on open ground east of the centre (own RNG, so the main stream is untouched)
+    const trng = new Rng(cfg.seed + 9101);
+    for (let i = 0; i < f.turbines; i++) {
+      const x = half * 0.55 + trng.range(-150, 150);
+      const z = -half * 0.5 + (i * half) / f.turbines + trng.range(-80, 80);
+      if (layout.isWater(x, z) || !ctx.clear(x, z, 60)) continue;
+      utilities.push({ id: `UT-WT-${i + 1}`, kind: 'turbine', x, z, height: 70, radius: 3 });
+      ctx.keepout(x, z, 60);
+    }
+  } else if (f.turbines > 0) {
     // a short line of coastal wind turbines on the headland south of the port
-    const n = cfg.size >= 8000 ? 5 : 3;
+    const n = f.turbines;
     for (let i = 0; i < n; i++) {
       const z = half - 300 - i * 220;
       const x = layout.shoreX(z) - 140;
@@ -157,7 +174,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
 
   // ---- moving obstacles (balloons / blimps / helicopter) -------------------------------------------------------------
   const dynamicObstacles: DynamicObstacleDef[] = [];
-  const nDyn = Math.max(2, Math.round((cfg.size * cfg.size) / 1e6 / 2));
+  const nDyn = Math.max(2, Math.round(((cfg.size * cfg.size) / 1e6 / 2) * f.dynamicObstacleDensity));
   const parks = layout.districts.filter((d) => d.kind === 'park' || d.kind === 'cbd' || d.kind === 'commercial');
   for (let i = 0; i < nDyn; i++) {
     const kind: DynamicObstacleDef['kind'] = i % 3 === 0 ? 'blimp' : i % 3 === 1 ? 'balloon' : 'helicopter';
@@ -194,7 +211,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     rivers: layout.rivers,
     coast: layout.coast,
     districts: layout.districts.map((d) => ({ id: d.id, kind: d.kind, name: d.name, minX: d.minX, maxX: d.maxX, minZ: d.minZ, maxZ: d.maxZ, centrality: d.centrality })),
-    zones: layout.districts.map((d) => ({ id: `Z-${d.id}`, type: d.kind === 'cbd' || d.kind === 'commercial' ? 'commercial' : d.kind === 'industrial' || d.kind === 'logistics' || d.kind === 'port' ? 'industrial' : d.kind === 'park' || d.kind === 'cemetery' || d.kind === 'waterfront' ? 'park' : d.kind === 'campus' || d.kind === 'hospital' || d.kind === 'stadium' ? 'civic' : d.kind === 'airport' ? 'transport' : d.kind === 'water' ? 'water' : 'residential', name: d.name, minX: d.minX, maxX: d.maxX, minZ: d.minZ, maxZ: d.maxZ })),
+    zones: layout.districts.map((d) => ({ id: `Z-${d.id}`, type: d.kind === 'cbd' || d.kind === 'commercial' ? 'commercial' : d.kind === 'industrial' || d.kind === 'logistics' || d.kind === 'port' ? 'industrial' : d.kind === 'park' || d.kind === 'cemetery' || d.kind === 'waterfront' ? 'park' : d.kind === 'farmland' ? 'rural' : d.kind === 'campus' || d.kind === 'hospital' || d.kind === 'stadium' ? 'civic' : d.kind === 'airport' ? 'transport' : d.kind === 'water' ? 'water' : 'residential', name: d.name, minX: d.minX, maxX: d.maxX, minZ: d.minZ, maxZ: d.maxZ })),
     roads: layout.roads,
     junctions: layout.junctions,
     rails: layout.rails,

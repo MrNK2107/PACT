@@ -1,3 +1,4 @@
+import type { DepotLayout, LayoutFeatures } from './features';
 /**
  * World data model.
  *
@@ -22,7 +23,7 @@ export interface AABB {
   maxZ: number;
 }
 
-export type ZoneType = 'residential' | 'commercial' | 'industrial' | 'park' | 'civic' | 'transport' | 'water' | 'perimeter';
+export type ZoneType = 'residential' | 'commercial' | 'industrial' | 'park' | 'civic' | 'transport' | 'water' | 'perimeter' | 'rural';
 
 /** Land-use category of one super-block (the cell between four arterial roads). */
 export type DistrictKind =
@@ -43,6 +44,7 @@ export type DistrictKind =
   | 'airport'
   | 'cemetery'
   | 'waterfront'
+  | 'farmland'
   | 'water';
 
 export interface ZoneData {
@@ -540,6 +542,12 @@ export type NoFlySpec =
 
 export interface WorldGenConfig {
   seed: number;
+  /** Generator feature flags; defaults to the legacy size-derived set. */
+  features?: LayoutFeatures;
+  /** How depots are sited (default distributed). */
+  depotLayout?: DepotLayout;
+  /** Drop points only on rooftops (dense-city maps). */
+  rooftopOnly?: boolean;
   /** Side length of the square map in metres (PRD default 4 000). */
   size: number;
   /** Number of depots (1–8). */
