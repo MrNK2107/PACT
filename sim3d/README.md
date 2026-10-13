@@ -5,7 +5,7 @@ Interactive Three.js world (React + TypeScript + Vite + React Three Fiber) for
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173  (add ?scenario=<name> to pick a scenario)
+npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
 npm test           # world, scenario, workload, task-board, planner and 10-minute simulation tests
 npm run build
 ```
@@ -14,11 +14,23 @@ npm run build
 > model with speed / payload / wind terms accelerated for a short demo, and the battery is a toy.
 > Nothing here is a flight-readiness model.
 
+## Maps
+A map (`maps/<id>.yaml`) fixes the kind of world: size, geography, depot layout, default wind, difficulty tier and a
+curated scenario list. Scenarios (`scenarios/<map_id>/*.yaml`) bind to a map with `map: <id>`; they may override depots,
+pads, drop density, wind and no-fly zones but not size or geography. The toolbar has a Map picker and a Scenario picker
+filtered by map (`?map=<id>&scenario=<name>`; either alone also works). Switching reloads the page.
+
+| Map | Size | Tier | Notes |
+|---|---|---|---|
+| `coastal_metro` | 4 km | standard | The PRD example world and the original scenarios |
+| `harbour_metro_xl` | 12 km | stress | Airport, port and rail; scalability runs |
+| `coastal_testbed` | 2 km | tutorial | Hidden fixture used by the automated tests |
+
 ## Scenarios drive everything (NFR-6)
 The world, fleet, workload, policy knobs and fault script come from one YAML file under
-`scenarios/`, mirroring `docs/04_agent_first_PRD.md` section 9.1:
+`scenarios/<map>/`, mirroring `docs/04_agent_first_PRD.md` section 9.1:
 
-| File | What it shows |
+| File (`scenarios/<map>/`) | What it shows |
 |---|---|
 | `s0_healthy.yaml` | PRD example: 4 × 4 km city, 3 depots × 2 pads, 12 drones, 2.5 orders/min, no faults |
 | `s6_battery_crunch.yaml` | 1 pad per depot, 4 orders/min, `battery_drain ×1.5` |
