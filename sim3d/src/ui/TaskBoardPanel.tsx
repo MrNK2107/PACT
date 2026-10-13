@@ -1,4 +1,4 @@
-import { engine, scenario } from '../app/simContext';
+import { engine, map, scenario } from '../app/simContext';
 import { useSimSnapshot } from '../app/hooks';
 import { useUI } from '../app/uiStore';
 import { fmtTime } from './TelemetryPanel';
@@ -14,7 +14,7 @@ export function TaskBoardPanel() {
   return (
     <section className="panel">
       <h3>
-        Order board <span className="muted">· {scenario.name}</span>
+        Order board <span className="muted">· {map.name} / {scenario.name}</span>
       </h3>
       <div className="metrics">
         <div className="metric">

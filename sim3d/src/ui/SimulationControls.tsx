@@ -1,7 +1,14 @@
-import { engine, scenario } from '../app/simContext';
+import { engine, map, scenario } from '../app/simContext';
 import { useSimSnapshot } from '../app/hooks';
 import { useUI, type ToggleKey } from '../app/uiStore';
-import { SCENARIOS, SCENARIO_NAMES } from '../scenario/registry';
+import { MAPS } from '../map/registry';
+import { SCENARIOS, VISIBLE_MAP_IDS, scenariosForMap, tierOf } from '../scenario/registry';
+
+function navigate(params: Record<string, string>) {
+  const u = new URL(location.href);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  location.href = u.toString();
+}
 
 const SPEEDS = [0.5, 1, 2, 4, 8];
 
@@ -22,20 +29,32 @@ export function SimulationControls() {
 
   return (
     <div className="toolbar">
-      <div className="group" title={scenario.description}>
-        <span className="lbl">Scenario</span>
+      <div className="group" title={map.description}>
+        <span className="lbl">Map</span>
         <select
           className="select"
-          value={scenario.name}
+          value={map.id}
           onChange={(e) => {
+            // switching map drops the scenario so the map's first scenario is used
             const u = new URL(location.href);
-            u.searchParams.set('scenario', e.target.value);
+            u.searchParams.set('map', e.target.value);
+            u.searchParams.delete('scenario');
             location.href = u.toString();
           }}
         >
-          {SCENARIO_NAMES.map((n) => (
-            <option key={n} value={n} title={SCENARIOS[n].description}>
-              {n}
+          {(VISIBLE_MAP_IDS.includes(map.id) ? VISIBLE_MAP_IDS : [map.id, ...VISIBLE_MAP_IDS]).map((id) => (
+            <option key={id} value={id} title={MAPS[id].description}>
+              {MAPS[id].name} · {MAPS[id].tier}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="group" title={scenario.description}>
+        <span className="lbl">Scenario</span>
+        <select className="select" value={scenario.name} onChange={(e) => navigate({ map: map.id, scenario: e.target.value })}>
+          {scenariosForMap(map.id).map((s) => (
+            <option key={s.name} value={s.name} title={SCENARIOS[s.name].description}>
+              {s.name} · {tierOf(s)}
             </option>
           ))}
         </select>

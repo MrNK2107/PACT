@@ -18,6 +18,11 @@ export interface BridgeDroneState {
 }
 
 export interface BridgeState {
+  /** Map and seed identify the world; positions are world metres (+X east, +Z south, +Y up) inside `bounds`. */
+  mapId: string;
+  scenario: string;
+  seed: number;
+  bounds: { minX: number; maxX: number; minZ: number; maxZ: number; minY: number; maxY: number };
   time: number;
   drones: BridgeDroneState[];
 }
