@@ -1,6 +1,9 @@
 import { parse } from 'yaml';
+import { featuresFromMap } from '../map/features';
+import { findMap } from '../map/registry';
 import type { MapDef } from '../map/types';
 import { TIERS } from '../map/types';
+import { featuresForSize } from '../world/features';
 import type { NoFlySpec, WorldGenConfig } from '../world/types';
 import { SCENARIO_DEFAULTS } from './defaults';
 import type { DeepPartial, FaultDef, Scenario, ScriptedTaskSpec } from './types';
@@ -110,7 +113,7 @@ export function loadScenario(
   num(path, w.size_m[0], 'world.size_m[0]', 1500, 20000);
   if (w.size_m[0] !== w.size_m[1]) fail(path, `world.size_m must be square (got ${w.size_m[0]} x ${w.size_m[1]}); non-square maps are not supported`);
   num(path, w.depots, 'world.depots', 1, 8);
-  num(path, w.pads_per_depot, 'world.pads_per_depot', 1, 3);
+  num(path, w.pads_per_depot, 'world.pads_per_depot', 1, map?.logistics.depots.layout === 'single_hub' ? 6 : 3);
   num(path, w.drop_points_per_km2, 'world.drop_points_per_km2', 1, 200);
   num(path, w.wind.mean_mps, 'world.wind.mean_mps', 0, 30);
   if (!Array.isArray(w.no_fly)) fail(path, 'world.no_fly must be a list');
@@ -160,9 +163,14 @@ export function worldConfigFrom(s: Scenario): WorldGenConfig {
     if (n.polygon) spec.polygon = n.polygon.map(groundToWorld);
     return spec;
   });
+  const size = s.world.size_m[0];
+  const map = findMap(s.map);
   return {
     seed: s.seed,
-    size: s.world.size_m[0],
+    size,
+    features: map ? featuresFromMap(map, size) : featuresForSize(size),
+    depotLayout: map?.logistics.depots.layout ?? 'distributed',
+    rooftopOnly: map?.logistics.rooftop_only ?? false,
     depots: s.world.depots,
     padsPerDepot: s.world.pads_per_depot,
     dropPointsPerKm2: s.world.drop_points_per_km2,

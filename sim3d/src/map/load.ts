@@ -1,6 +1,9 @@
 import { parse } from 'yaml';
 import { DEPOT_LAYOUTS, TIERS, WATER_MODES, type MapDef } from './types';
 
+const BIAS_KEYS = ['cbd', 'industrial', 'park', 'suburb', 'farmland'];
+const LANDMARKS = ['landmarktower', 'cathedral', 'tvmast', 'gasometer'];
+
 function isObj(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v);
 }
@@ -28,6 +31,22 @@ export function loadMap(text: string, path: string): MapDef {
   const mech = isObj(raw.mechanics) ? raw.mechanics : {};
   const wind = isObj(mech.wind) ? mech.wind : {};
   const layout = oneOf(path, dep.layout ?? 'distributed', 'logistics.depots.layout', DEPOT_LAYOUTS);
+  const optBool = (v: unknown, name: string): boolean | undefined => {
+    if (v === undefined) return undefined;
+    if (typeof v !== 'boolean') fail(path, `${name} must be true or false, got ${JSON.stringify(v)}`);
+    return v;
+  };
+  const optNum = (v: unknown, name: string, lo: number, hi: number): number | undefined => (v === undefined ? undefined : num(path, v, name, lo, hi));
+  const specialsRaw = isObj(geo.specials) ? geo.specials : {};
+  const biasRaw = isObj(geo.district_bias) ? geo.district_bias : {};
+  for (const k of Object.keys(biasRaw)) if (!BIAS_KEYS.includes(k)) fail(path, `geography.district_bias.${k} is not one of ${BIAS_KEYS.join(' | ')}`);
+  if (geo.landmarks !== undefined && !Array.isArray(geo.landmarks)) fail(path, 'geography.landmarks must be a list');
+  const landmarks = Array.isArray(geo.landmarks) ? geo.landmarks.map(String) : undefined;
+  for (const l of landmarks ?? []) if (!LANDMARKS.includes(l)) fail(path, `geography.landmarks has unknown landmark "${l}" (use ${LANDMARKS.join(' | ')})`);
+  const bias: NonNullable<MapDef['geography']['district_bias']> = {};
+  for (const k of BIAS_KEYS) if (biasRaw[k] !== undefined) bias[k as keyof typeof bias] = num(path, biasRaw[k], `geography.district_bias.${k}`, 0.1, 5);
+  const specials: NonNullable<MapDef['geography']['specials']> = {};
+  for (const k of ['hospital', 'campus', 'stadium', 'cemetery'] as const) if (specialsRaw[k] !== undefined) specials[k] = num(path, specialsRaw[k], `geography.specials.${k}`, 0, 8);
   return {
     id,
     name: typeof raw.name === 'string' && raw.name ? raw.name : id,
@@ -36,10 +55,26 @@ export function loadMap(text: string, path: string): MapDef {
     seed: raw.seed === undefined ? undefined : num(path, raw.seed, 'seed', 0, 2 ** 31),
     size_m: num(path, raw.size_m ?? 4000, 'size_m', 1500, 20000),
     hidden: raw.hidden === true,
-    geography: { water: oneOf(path, geo.water ?? 'coast_river', 'geography.water', WATER_MODES) },
+    geography: {
+      water: oneOf(path, geo.water ?? 'coast_river', 'geography.water', WATER_MODES),
+      airport: optBool(geo.airport, 'geography.airport'),
+      port: optBool(geo.port, 'geography.port'),
+      rail: optBool(geo.rail, 'geography.rail'),
+      motorway_ring: optBool(geo.motorway_ring, 'geography.motorway_ring'),
+      secondary_centres: optNum(geo.secondary_centres, 'geography.secondary_centres', 0, 6),
+      landmarks,
+      specials: Object.keys(specials).length ? specials : undefined,
+      old_town_districts: optNum(geo.old_town_districts, 'geography.old_town_districts', 0, 6),
+      tall_buildings: optBool(geo.tall_buildings, 'geography.tall_buildings'),
+      turbines: optNum(geo.turbines, 'geography.turbines', 0, 12),
+      power_lines: optBool(geo.power_lines, 'geography.power_lines'),
+      dynamic_obstacle_density: optNum(geo.dynamic_obstacle_density, 'geography.dynamic_obstacle_density', 0, 5),
+      district_bias: Object.keys(bias).length ? bias : undefined,
+    },
     logistics: {
       depots: { layout, count: num(path, dep.count ?? 3, 'logistics.depots.count', 1, 8), pads: num(path, dep.pads ?? 2, 'logistics.depots.pads', 1, layout === 'single_hub' ? 6 : 3) },
       drop_points_per_km2: num(path, log.drop_points_per_km2 ?? 35, 'logistics.drop_points_per_km2', 1, 200),
+      rooftop_only: log.rooftop_only === true,
     },
     mechanics: {
       wind: {

@@ -1,4 +1,7 @@
 import type { NoFlyFileSpec } from '../scenario/types';
+import type { DepotLayout } from '../world/features';
+
+export type { DepotLayout };
 
 /**
  * Map definition (maps/<id>.yaml). A map fixes what kind of world a scenario runs in: size, geography,
@@ -15,7 +18,6 @@ export const TIERS: Tier[] = ['tutorial', 'standard', 'hard', 'stress'];
 export type WaterMode = 'coast_river' | 'coast' | 'river' | 'none' | 'islands' | 'lake';
 export const WATER_MODES: WaterMode[] = ['coast_river', 'coast', 'river', 'none', 'islands', 'lake'];
 
-export type DepotLayout = 'distributed' | 'single_hub' | 'hub_and_spoke' | 'micro';
 export const DEPOT_LAYOUTS: DepotLayout[] = ['distributed', 'single_hub', 'hub_and_spoke', 'micro'];
 
 export interface MapDef {
@@ -30,10 +32,28 @@ export interface MapDef {
   hidden: boolean;
   geography: {
     water: WaterMode;
+    /** Optional flags; undefined = derived from the map size like the legacy generator. */
+    airport?: boolean;
+    port?: boolean;
+    rail?: boolean;
+    motorway_ring?: boolean;
+    secondary_centres?: number;
+    /** Landmarks to place, from landmarktower | cathedral | tvmast | gasometer. */
+    landmarks?: string[];
+    specials?: { hospital?: number; campus?: number; stadium?: number; cemetery?: number };
+    old_town_districts?: number;
+    tall_buildings?: boolean;
+    turbines?: number;
+    power_lines?: boolean;
+    dynamic_obstacle_density?: number;
+    /** Multipliers tilting the district mix: cbd, industrial, park, suburb, farmland. */
+    district_bias?: { cbd?: number; industrial?: number; park?: number; suburb?: number; farmland?: number };
   };
   logistics: {
     depots: { layout: DepotLayout; count: number; pads: number };
     drop_points_per_km2: number;
+    /** Drop points only on rooftops (dense-city maps). */
+    rooftop_only: boolean;
   };
   mechanics: {
     wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };
