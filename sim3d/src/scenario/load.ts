@@ -1,4 +1,6 @@
 import { parse } from 'yaml';
+import type { MapDef } from '../map/types';
+import { TIERS } from '../map/types';
 import type { NoFlySpec, WorldGenConfig } from '../world/types';
 import { SCENARIO_DEFAULTS } from './defaults';
 import type { DeepPartial, FaultDef, Scenario, ScriptedTaskSpec } from './types';
@@ -54,10 +56,46 @@ export function parseTasksYaml(text: string, path: string): ScriptedTaskSpec[] {
  * Builds a validated Scenario from parsed file contents. `resolveTasks` returns the scripted task list
  * for a `workload.tasks` file reference (relative to scenarios/).
  */
-export function loadScenario(raw: DeepPartial<Scenario>, path: string, resolveTasks: (ref: string) => ScriptedTaskSpec[] | null = () => null): Scenario {
+/** Defaults a map contributes under a scenario's own values (scenario file wins; PRD defaults sit below). */
+export function mapDefaults(m: MapDef): DeepPartial<Scenario> {
+  return {
+    ...(m.seed !== undefined ? { seed: m.seed } : {}),
+    world: {
+      size_m: [m.size_m, m.size_m],
+      depots: m.logistics.depots.count,
+      pads_per_depot: m.logistics.depots.pads,
+      drop_points_per_km2: m.logistics.drop_points_per_km2,
+      no_fly: m.no_fly,
+      wind: m.mechanics.wind,
+    },
+  } as DeepPartial<Scenario>;
+}
+
+export function loadScenario(
+  raw: DeepPartial<Scenario>,
+  path: string,
+  resolveTasks: (ref: string) => ScriptedTaskSpec[] | null = () => null,
+  resolveMap?: (id: string) => MapDef | null,
+): Scenario {
   const rawTasks = (raw.workload as { tasks?: unknown } | undefined)?.tasks;
-  const over = { ...raw, workload: raw.workload ? { ...raw.workload, tasks: undefined } : undefined };
-  const s = merge(SCENARIO_DEFAULTS, over);
+  // a scenario without a workload block keeps the defaults (an explicit undefined would erase them)
+  const over: DeepPartial<Scenario> = { ...raw };
+  if (raw.workload) over.workload = { ...raw.workload, tasks: undefined };
+  let base: Scenario = SCENARIO_DEFAULTS;
+  let map: MapDef | null = null;
+  if (resolveMap) {
+    const mapId = typeof raw.map === 'string' && raw.map ? raw.map : SCENARIO_DEFAULTS.map;
+    map = resolveMap(mapId);
+    if (!map) fail(path, `unknown map "${mapId}"`);
+    const rawSize = (raw.world as { size_m?: unknown } | undefined)?.size_m;
+    if (rawSize !== undefined && (!Array.isArray(rawSize) || rawSize[0] !== map.size_m || rawSize[1] !== map.size_m)) {
+      fail(path, `world.size_m ${JSON.stringify(rawSize)} conflicts with map "${map.id}" (${map.size_m} m); size belongs to the map`);
+    }
+    base = merge(SCENARIO_DEFAULTS, mapDefaults(map));
+  }
+  const s = merge(base, over);
+  if (s.tier !== undefined && !TIERS.includes(s.tier)) fail(path, `tier must be one of ${TIERS.join(' | ')}, got ${JSON.stringify(s.tier)}`);
+  if (!Array.isArray(s.tags)) fail(path, 'tags must be a list');
   s.name = typeof raw.name === 'string' && raw.name ? raw.name : path.replace(/^.*[\\/]/, '').replace(/\.ya?ml$/, '');
   num(path, s.seed, 'seed', 0, 2 ** 31);
   num(path, s.duration_s, 'duration_s', 1, 1e7);

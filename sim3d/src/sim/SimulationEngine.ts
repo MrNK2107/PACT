@@ -637,6 +637,10 @@ export class SimulationEngine {
 
   exportState(): BridgeState {
     return {
+      mapId: this.scenario.map,
+      scenario: this.scenario.name,
+      seed: this.world.seed,
+      bounds: { ...this.world.bounds },
       time: this.time,
       drones: this.agents.map((a) => ({
         id: a.id,

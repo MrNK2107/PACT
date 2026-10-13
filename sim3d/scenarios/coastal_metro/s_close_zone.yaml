@@ -1,6 +1,7 @@
 # Airspace closures: the stadium's closable zone activates for an event, then a scenario-defined
 # polygon (e.g. an emergency incident) closes for 10 minutes. Drones must re-route around them.
 name: s_close_zone
+map: coastal_metro
 description: Stadium event closure at t=300 s (until 1500 s) and an incident polygon closed at t=400 s for 600 s.
 seed: 42
 duration_s: 2400

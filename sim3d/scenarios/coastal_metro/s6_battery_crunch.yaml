@@ -1,5 +1,6 @@
 # S6 — Battery crunch: high demand, few pads, battery drain x1.5.
 name: s6_battery_crunch
+map: coastal_metro
 description: One pad per depot, 4 orders/min, every drone drains 1.5x faster from t=120 s.
 seed: 42
 duration_s: 3600

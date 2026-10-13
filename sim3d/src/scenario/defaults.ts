@@ -4,6 +4,8 @@ import type { Scenario } from './types';
 export const SCENARIO_DEFAULTS: Scenario = {
   name: 'default',
   description: '',
+  map: 'coastal_metro',
+  tags: [],
   seed: 42,
   duration_s: 3600,
   fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120, max_drones: 50 },

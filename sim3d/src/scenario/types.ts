@@ -1,3 +1,4 @@
+import type { Tier } from '../map/types';
 import type { DropType } from '../world/types';
 
 /**
@@ -48,6 +49,11 @@ export interface NoFlyFileSpec {
 export interface Scenario {
   name: string;
   description: string;
+  /** Map this scenario runs on (maps/<id>.yaml). Size and geography come from the map. */
+  map: string;
+  /** Difficulty tier; falls back to the map's tier. */
+  tier?: Tier;
+  tags: string[];
   seed: number;
   duration_s: number;
   fleet: {
