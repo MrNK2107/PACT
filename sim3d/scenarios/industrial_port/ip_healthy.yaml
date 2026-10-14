@@ -1,0 +1,11 @@
+# Industrial port, healthy operations: hub-and-spoke depots, heavy low-altitude traffic.
+name: ip_healthy
+map: industrial_port
+tier: standard
+description: Healthy fleet around the port. 6 drones, one 3-pad hub plus three single-pad spokes, no faults.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults: []

@@ -1,0 +1,30 @@
+# Rural flatland: farmland around a small town, no water, long hauls between micro depots and a
+# wind farm. Sparse demand, steady strong wind, little clutter but long energy-bound legs.
+id: flatland_rural
+name: Flatland Rural
+description: 8 km farmland with a market town, a wind farm and eight single-pad micro depots. Long hauls and strong steady wind.
+tier: standard
+seed: 31003
+size_m: 8000
+geography:
+  water: none
+  airport: false
+  port: false
+  rail: true
+  motorway_ring: false
+  secondary_centres: 1
+  landmarks: [tvmast, gasometer]
+  specials: { hospital: 1, campus: 0, stadium: 0, cemetery: 1 }
+  old_town_districts: 1
+  tall_buildings: false
+  turbines: 6
+  power_lines: false
+  dynamic_obstacle_density: 0.3
+  district_bias: { farmland: 2.6, suburb: 1.6, cbd: 0.4, industrial: 0.5 }
+logistics:
+  depots: { layout: micro, count: 8, pads: 1 }
+  drop_points_per_km2: 9
+mechanics:
+  wind: { mean_mps: 8, dir_deg: 270, gust_mps: 2 }
+no_fly: [auto]
+scenarios: [fr_healthy, fr_battery_crunch]

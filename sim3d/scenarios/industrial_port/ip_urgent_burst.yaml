@@ -1,0 +1,12 @@
+# Industrial port with a medical emergency: ten priority-1 jobs inside a minute.
+name: ip_urgent_burst
+map: industrial_port
+tier: hard
+description: Ten priority-1 hospital jobs within 60 s at t=400 s while the background workload keeps flowing.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 400, type: urgent_job_burst, n: 10, window_s: 60, priority: 1, cluster_type: hospital }

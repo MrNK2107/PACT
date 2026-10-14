@@ -1,0 +1,30 @@
+# Industrial harbour: warehouses, a port, cranes and tank farms. Hub-and-spoke logistics, heavy
+# moving-obstacle traffic (helicopters and blimps) and a restricted-airspace-rich skyline.
+id: industrial_port
+name: Industrial Port
+description: 3 km harbour district with a port, warehouses, cranes and tank farms. Hub-and-spoke depots and busy low airspace.
+tier: standard
+seed: 31002
+size_m: 3000
+geography:
+  water: coast_river
+  airport: false
+  port: true
+  rail: true
+  motorway_ring: true
+  secondary_centres: 0
+  landmarks: [gasometer, tvmast]
+  specials: { hospital: 1, campus: 0, stadium: 0, cemetery: 0 }
+  old_town_districts: 1
+  tall_buildings: false
+  turbines: 3
+  power_lines: true
+  dynamic_obstacle_density: 2.5
+  district_bias: { industrial: 1.9, cbd: 0.5, park: 0.6 }
+logistics:
+  depots: { layout: hub_and_spoke, count: 4, pads: 3 }
+  drop_points_per_km2: 45
+mechanics:
+  wind: { mean_mps: 7, dir_deg: 250, gust_mps: 3 }
+no_fly: [auto]
+scenarios: [ip_healthy, ip_urgent_burst]

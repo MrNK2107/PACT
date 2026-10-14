@@ -1,0 +1,31 @@
+# Dense downtown core: a compact, CBD-heavy coastal district with tall buildings and rooftop-only
+# deliveries. Short hops, vertical clutter, many closable event zones and a busy low airspace.
+id: dense_metro_core
+name: Dense Metro Core
+description: 2.5 km downtown core. Towers everywhere, rooftop-only drops, a ring motorway, canyon gusts and a crowded low airspace.
+tier: hard
+seed: 31001
+size_m: 2500
+geography:
+  water: coast_river
+  airport: false
+  port: false
+  rail: false
+  motorway_ring: true
+  secondary_centres: 0
+  landmarks: [landmarktower, cathedral]
+  specials: { hospital: 2, campus: 0, stadium: 1, cemetery: 0 }
+  old_town_districts: 1
+  tall_buildings: true
+  turbines: 0
+  power_lines: false
+  dynamic_obstacle_density: 2
+  district_bias: { cbd: 3, industrial: 0.35, suburb: 0.5, park: 0.6 }
+logistics:
+  depots: { layout: distributed, count: 4, pads: 2 }
+  drop_points_per_km2: 90
+  rooftop_only: true
+mechanics:
+  wind: { mean_mps: 6, dir_deg: 200, gust_mps: 3.5 }
+no_fly: [auto]
+scenarios: [dm_healthy, dm_event_closures]

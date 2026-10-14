@@ -1,0 +1,11 @@
+# Dense core, healthy operations: short hops between rooftops, no faults.
+name: dm_healthy
+map: dense_metro_core
+tier: standard
+description: Healthy fleet over a dense downtown. 8 drones, rooftop-only deliveries, no faults.
+duration_s: 1800
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 3, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults: []

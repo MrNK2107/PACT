@@ -1,0 +1,14 @@
+# Event night: the stadium zone closes and an incident cordon follows, while a medical burst lands.
+name: dm_event_closures
+map: dense_metro_core
+tier: hard
+description: Stadium closure at t=200 s, then a hospital burst at t=400 s and an incident cordon at t=500 s. Drones must re-route around closed airspace.
+duration_s: 1800
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 3.5, priority_mix: [0.15, 0.35, 0.5] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 200, type: close_zone, id: stadium, until: 1200 }
+  - { t: 400, type: urgent_job_burst, n: 6, window_s: 45, priority: 1, cluster_type: hospital }
+  - { t: 500, type: close_zone, name: Incident cordon, circle: { x: 0, y: 0, r: 180 }, until: 1000 }
