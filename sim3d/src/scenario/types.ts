@@ -32,7 +32,8 @@ export type FaultDef =
   | { t: number; type: 'battery_drain'; id: string; factor: number }
   | { t: number; type: 'close_zone'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; until?: number }
   | { t: number; type: 'urgent_job_burst'; n?: number; window_s?: number; priority?: Priority; cluster_type?: DropType }
-  | { t: number; type: 'clock_drift'; id: string; ppm: number };
+  | { t: number; type: 'clock_drift'; id: string; ppm: number }
+  | { t: number; type: 'radio_blackout'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; box?: { x0: number; y0: number; x1: number; y1: number }; range_factor?: number; loss?: number; max_alt_m?: number; until?: number };
 
 export interface NoFlyFileSpec {
   id?: string;
@@ -43,6 +44,21 @@ export interface NoFlyFileSpec {
   polygon?: { x: number; y: number }[];
   max_alt_m?: number;
   closable?: boolean;
+  active?: boolean;
+}
+
+/** Radio dead zone in a scenario or map file (PRD ground coordinates: y maps onto world z). */
+export interface RadioFileSpec {
+  id?: string;
+  name?: string;
+  circle?: { x: number; y: number; r: number };
+  box?: { x0: number; y0: number; x1: number; y1: number };
+  polygon?: { x: number; y: number }[];
+  /** Multiplier on the radio range inside the zone (0 = dark, default 0). */
+  range_factor?: number;
+  /** Extra packet-loss probability inside the zone (default 0). */
+  loss?: number;
+  max_alt_m?: number;
   active?: boolean;
 }
 
@@ -68,6 +84,8 @@ export interface Scenario {
     depots: number;
     pads_per_depot: number;
     no_fly: ('auto' | NoFlyFileSpec)[];
+    /** Extra radio dead zones on top of the map's. */
+    radio_zones: RadioFileSpec[];
     wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };
     drop_points_per_km2: number;
   };

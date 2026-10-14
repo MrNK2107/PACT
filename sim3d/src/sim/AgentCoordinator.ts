@@ -3,6 +3,7 @@ import type { Vec3, WindField } from '../world/types';
 import { estimatePct, type EnergyModel } from './Battery';
 import { SIM } from './config';
 import type { ObstacleManager } from './ObstacleManager';
+import type { RadioModel } from './Radio';
 import type { NeighborInfo } from './PathPlanner';
 import type { DronePhase, Message, SiteStage, Task } from './types';
 
@@ -19,13 +20,17 @@ export class MessageBus {
     this.pending.push({ from, pos: { ...pos }, msg });
   }
 
-  deliver(agents: { id: string; pos: Vec3 }[], rng: Rng): void {
+  deliver(agents: { id: string; pos: Vec3 }[], rng: Rng, radio?: RadioModel): void {
+    const zoned = !!radio && radio.hasZones;
     for (const p of this.pending) {
       for (const a of agents) {
         if (a.id === p.from) continue;
         const d = Math.hypot(a.pos.x - p.pos.x, a.pos.y - p.pos.y, a.pos.z - p.pos.z);
-        if (d > SIM.commRange) continue;
-        if (SIM.packetLoss > 0 && rng.next() < SIM.packetLoss) continue;
+        // dead zones shrink the range and add loss; with no active zone this is exactly the plain disc model
+        const fx = zoned ? radio!.link(p.pos, a.pos) : null;
+        if (d > (fx ? SIM.commRange * fx.rangeFactor : SIM.commRange)) continue;
+        const loss = fx && fx.loss > 0 ? 1 - (1 - SIM.packetLoss) * (1 - fx.loss) : SIM.packetLoss;
+        if (loss > 0 && rng.next() < loss) continue;
         let box = this.inboxes.get(a.id);
         if (!box) this.inboxes.set(a.id, (box = []));
         box.push(p.msg);

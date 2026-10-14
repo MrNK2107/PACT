@@ -1,6 +1,7 @@
 import type { BridgeState, ExternalBridge } from '../integration/ExternalBridge';
 import type { FaultDef, Scenario } from '../scenario/types';
 import { polygonShape } from '../world/NoFly';
+import { radioSpecsFrom, radioZoneFromSpec } from '../world/Radio';
 import { Rng } from '../world/rng';
 import type { DropType, NoFlyZone, PadData, Vec3, WorldData } from '../world/types';
 import { MessageBus } from './AgentCoordinator';
@@ -10,6 +11,7 @@ import { DRONE_COLORS, DroneAgent } from './DroneAgent';
 import { FaultInjector } from './Faults';
 import { ObstacleManager } from './ObstacleManager';
 import { PathPlanner } from './PathPlanner';
+import { RadioModel } from './Radio';
 import type { Priority, Task, TaskState } from './Task';
 import { TaskBoard, type TaskStats } from './TaskBoard';
 import type { AgentController, AgentEvent, DronePhase } from './types';
@@ -108,6 +110,7 @@ export interface SimSnapshot {
 export class SimulationEngine {
   readonly obstacles: ObstacleManager;
   readonly planner: PathPlanner;
+  readonly radio: RadioModel;
   readonly energy: EnergyModel;
   board: TaskBoard;
   workload: WorkloadGenerator;
@@ -154,6 +157,7 @@ export class SimulationEngine {
     this.initialDrones = scenario.fleet.n_drones;
     this.obstacles = new ObstacleManager(world);
     this.planner = new PathPlanner(this.obstacles, world.bounds);
+    this.radio = new RadioModel(world.radioZones);
     this.rng = new Rng(world.seed + 7);
     this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s });
     this.workload = new WorkloadGenerator(world, scenario, new Rng(world.seed + 11));
@@ -191,6 +195,7 @@ export class SimulationEngine {
     for (const z of this.obstacles.allNoFly) if (z.closable && z.active) this.obstacles.setZoneActive(z.id, false);
     for (let i = this.obstacles.allNoFly.length - 1; i >= 0; i--) if (this.obstacles.allNoFly[i].source === 'fault') this.obstacles.allNoFly.splice(i, 1);
     this.obstacles.step(0);
+    this.radio.reset();
     for (let i = 0; i < this.initialDrones; i++) this.spawnDrone(false);
     // a few orders are waiting when the simulation starts (demo convenience; the Poisson stream takes over)
     for (let i = 0; i < SIM.initialOrders; i++) this.addTask(this.workload.makeTask(0, {}));
@@ -359,6 +364,25 @@ export class SimulationEngine {
         }
         return false;
       },
+      radioBlackout: (def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number) => {
+        const existing = def.id ? this.radio.find(def.id) : undefined;
+        if (existing) {
+          if (def.range_factor !== undefined) existing.rangeFactor = def.range_factor;
+          if (def.loss !== undefined) existing.lossAdd = def.loss;
+          this.radio.setActive(existing.id, true, now, def.until);
+          this.note('fault', `Fault: radio blackout in ${existing.id}${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'radio_blackout', id: existing.id });
+          return true;
+        }
+        if (!(def.polygon || def.circle || def.box)) return false;
+        const [spec] = radioSpecsFrom([{ name: def.name ?? 'Radio blackout', polygon: def.polygon, circle: def.circle, box: def.box, range_factor: def.range_factor, loss: def.loss, max_alt_m: def.max_alt_m }]);
+        const zid = `RAD-FAULT-${this.radio.zones.filter((z) => z.source === 'fault').length + 1}`;
+        const zone = radioZoneFromSpec({ ...spec, id: zid }, 0, 'fault');
+        zone.closedFrom = now;
+        zone.closedUntil = def.until;
+        this.radio.add(zone);
+        this.note('fault', `Fault: ${zone.name} (${zid}) radio dark${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'radio_blackout', id: zid });
+        return true;
+      },
       batteryDrain: (id: string, factor: number, now: number) => {
         for (const a of this.agents) if (id === 'all' || a.id === id) a.drainFactor = factor;
         this.note('fault', `Fault: battery drain ×${factor} on ${id}`, null, 'fault', { type: 'battery_drain', id, factor, t: now });
@@ -383,6 +407,7 @@ export class SimulationEngine {
   private tick(): void {
     const dt = SIM.dt;
     this.obstacles.step(this.time);
+    this.radio.step(this.time);
     this.obstacles.expireZones(this.time);
     this.faults.step(this.time);
     for (const t of this.workload.step(this.time)) this.addTask(t);
@@ -398,6 +423,7 @@ export class SimulationEngine {
     this.bus.deliver(
       this.agents.map((a) => ({ id: a.id, pos: a.body.pos })),
       this.rng,
+      this.radio,
     );
 
     for (const a of this.agents) {
@@ -676,7 +702,8 @@ export class SimulationEngine {
       for (let j = i + 1; j < this.agents.length; j++) {
         const a = this.agents[i].body.pos;
         const b = this.agents[j].body.pos;
-        if (Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) <= SIM.commRange) out.push([i, j]);
+        const range = this.radio.hasZones ? SIM.commRange * this.radio.link(a, b).rangeFactor : SIM.commRange;
+        if (Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) <= range) out.push([i, j]);
       }
     }
     return out;

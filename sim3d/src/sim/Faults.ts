@@ -6,6 +6,7 @@ import type { Priority } from './Task';
 export interface FaultHooks {
   urgentBurst(n: number, priority: Priority, windowS: number, clusterType: DropType | undefined, now: number): void;
   closeZone(def: Extract<FaultDef, { type: 'close_zone' }>, now: number): boolean;
+  radioBlackout(def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number): boolean;
   batteryDrain(id: string, factor: number, now: number): void;
   killDrone(id: string, now: number): void;
   unsupported(def: FaultDef, now: number): void;
@@ -14,7 +15,7 @@ export interface FaultHooks {
 
 /**
  * Scripted fault injector (REQ-SIM-004). Faults fire once, in time order, from the simulation clock —
- * never from wall-clock. Supported here: urgent_job_burst, close_zone, battery_drain, kill_drone.
+ * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, battery_drain, kill_drone.
  */
 export class FaultInjector {
   private idx = 0;
@@ -37,6 +38,11 @@ export class FaultInjector {
         case 'close_zone': {
           const ok = this.hooks.closeZone(def, now);
           this.hooks.log(ok ? 'fault_close_zone' : 'fault_close_zone_failed', { id: def.id, name: def.name, until: def.until }, now);
+          break;
+        }
+        case 'radio_blackout': {
+          const ok = this.hooks.radioBlackout(def, now);
+          this.hooks.log(ok ? 'fault_radio_blackout' : 'fault_radio_blackout_failed', { id: def.id, name: def.name, until: def.until }, now);
           break;
         }
         case 'battery_drain':

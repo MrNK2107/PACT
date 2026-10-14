@@ -4,6 +4,7 @@ import { findMap } from '../map/registry';
 import type { MapDef } from '../map/types';
 import { TIERS } from '../map/types';
 import { featuresForSize } from '../world/features';
+import { radioSpecsFrom } from '../world/Radio';
 import type { NoFlySpec, WorldGenConfig } from '../world/types';
 import { SCENARIO_DEFAULTS } from './defaults';
 import type { DeepPartial, FaultDef, Scenario, ScriptedTaskSpec } from './types';
@@ -69,6 +70,7 @@ export function mapDefaults(m: MapDef): DeepPartial<Scenario> {
       pads_per_depot: m.logistics.depots.pads,
       drop_points_per_km2: m.logistics.drop_points_per_km2,
       no_fly: m.no_fly,
+      radio_zones: m.mechanics.radio.zones,
       wind: m.mechanics.wind,
     },
   } as DeepPartial<Scenario>;
@@ -117,6 +119,8 @@ export function loadScenario(
   num(path, w.drop_points_per_km2, 'world.drop_points_per_km2', 1, 200);
   num(path, w.wind.mean_mps, 'world.wind.mean_mps', 0, 30);
   if (!Array.isArray(w.no_fly)) fail(path, 'world.no_fly must be a list');
+  if (!Array.isArray(w.radio_zones)) fail(path, 'world.radio_zones must be a list');
+  w.radio_zones.forEach((z, i) => radioSpec(path, z, `world.radio_zones[${i}]`));
   const wl = s.workload;
   num(path, wl.arrival_rate_per_min, 'workload.arrival_rate_per_min', 0, 600);
   if (!Array.isArray(wl.priority_mix) || wl.priority_mix.length !== 3) fail(path, 'workload.priority_mix must have 3 entries');
@@ -143,9 +147,17 @@ export function loadScenario(
   if (!Array.isArray(s.faults)) fail(path, 'faults must be a list');
   s.faults.forEach((fd, i) => {
     if (!isObj(fd) || typeof fd.t !== 'number' || typeof fd.type !== 'string') fail(path, `faults[${i}] needs numeric t and a type`);
+    if (fd.type === 'radio_blackout') radioSpec(path, fd, `faults[${i}]`, true);
   });
   s.faults = [...s.faults].sort((a, b) => a.t - b.t) as FaultDef[];
   return s;
+}
+
+/** Validates the shape and numbers of a radio zone spec (file coordinates). `fault` allows a bare id reference. */
+function radioSpec(path: string, z: unknown, where: string, fault = false): void {
+  if (!isObj(z)) fail(path, `${where} must be a mapping`);
+  if (!(z.circle || z.box || z.polygon || (fault && typeof z.id === 'string'))) fail(path, `${where} needs a circle, box or polygon${fault ? ' (or the id of an existing zone)' : ''}`);
+  for (const k of ['range_factor', 'loss'] as const) if (z[k] !== undefined) num(path, z[k], `${where}.${k}`, 0, 1);
 }
 
 /** PRD ground {x, y} → world {x, z}. */
@@ -175,6 +187,7 @@ export function worldConfigFrom(s: Scenario): WorldGenConfig {
     padsPerDepot: s.world.pads_per_depot,
     dropPointsPerKm2: s.world.drop_points_per_km2,
     noFly,
+    radio: map && (map.mechanics.radio.dead_zones === 'auto' || s.world.radio_zones.length) ? { auto: map.mechanics.radio.dead_zones === 'auto', zones: radioSpecsFrom(s.world.radio_zones) } : undefined,
     wind: s.world.wind,
   };
 }
