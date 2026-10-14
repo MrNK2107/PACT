@@ -116,6 +116,7 @@ const LAYERS: { key: ToggleKey; label: string; hint: string }[] = [
   { key: 'showNoFly', label: 'No-fly zones', hint: 'Restricted airspace' },
   { key: 'showObstacles', label: 'Obstacle volumes', hint: 'Collision volumes used by the planner + moving-obstacle safety bubbles' },
   { key: 'showComms', label: 'Comm ranges', hint: 'Radio range rings and live links between drones' },
+  { key: 'showRadio', label: 'Radio dead zones', hint: 'Areas where the radio range shrinks and packets are lost' },
   { key: 'showLabels', label: 'Labels', hint: 'Depot, drop-point, shard and drone tags' },
   { key: 'showWind', label: 'Wind field', hint: 'Wind vectors on the 100 m grid (affects energy use)' },
   { key: 'showShards', label: 'Shards', hint: '500 m hex shards coloured by depot catchment' },

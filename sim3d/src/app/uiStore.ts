@@ -12,6 +12,7 @@ export interface UIState {
   showNoFly: boolean;
   showObstacles: boolean;
   showComms: boolean;
+  showRadio: boolean;
   showLabels: boolean;
   showWind: boolean;
   showShards: boolean;
@@ -24,7 +25,7 @@ export interface UIState {
   focusSelection: () => void;
 }
 
-export type ToggleKey = 'showBuildings' | 'showGrid' | 'showRoutes' | 'showWaypoints' | 'showNoFly' | 'showObstacles' | 'showComms' | 'showLabels' | 'showWind' | 'showShards';
+export type ToggleKey = 'showBuildings' | 'showGrid' | 'showRoutes' | 'showWaypoints' | 'showNoFly' | 'showObstacles' | 'showComms' | 'showRadio' | 'showLabels' | 'showWind' | 'showShards';
 
 export const useUI = create<UIState>((set) => ({
   showBuildings: true,
@@ -34,6 +35,7 @@ export const useUI = create<UIState>((set) => ({
   showNoFly: true,
   showObstacles: false,
   showComms: false,
+  showRadio: true,
   showLabels: true,
   showWind: false,
   showShards: false,

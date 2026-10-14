@@ -7,7 +7,7 @@ import { useUI } from '../app/uiStore';
 import { SIM } from '../sim/config';
 import { shapeBounds } from '../world/NoFly';
 import { shardPolygon } from '../world/Shards';
-import type { BuildingData, DepotData, DistrictData, NoFlyZone, StaticObstacle } from '../world/types';
+import type { BuildingData, DepotData, DistrictData, NoFlyZone, RadioZone, StaticObstacle } from '../world/types';
 import { windAt } from '../world/Wind';
 import { ChunkedInstances } from './ChunkedInstances';
 import { hatchTexture } from './textures';
@@ -15,6 +15,7 @@ import { hatchTexture } from './textures';
 const NOFLY = '#dc2626';
 const CLOSED = '#f59e0b';
 const INACTIVE = '#8a96a6';
+const RADIO = '#7c3aed';
 
 function useTarget(): THREE.Vector3 {
   const controls = useThree((st) => st.controls) as unknown as { target: THREE.Vector3 } | null;
@@ -219,6 +220,69 @@ function NoFlyZones() {
     <group>
       {world.noFlyZones.map((z) => (
         <NoFlyZone key={`${z.id}:${z.active}:${z.closedFrom ?? ''}`} z={z} hatch={hatch} labels={labels} />
+      ))}
+    </group>
+  );
+}
+
+// -------------------------------------------------------------------------------------------------
+// Radio dead zones: hatched ground patches plus a faint ceiling at the zone's altitude limit
+// -------------------------------------------------------------------------------------------------
+
+function RadioZoneMesh({ z, hatch, labels }: { z: RadioZone; hatch: THREE.Texture; labels: boolean }) {
+  const H = Math.min(60, z.maxY);
+  const { floor, edges, cx, cz } = useMemo(() => {
+    const s = z.shape;
+    const bb = shapeBounds(s);
+    const cx = (bb.minX + bb.maxX) / 2;
+    const cz = (bb.minZ + bb.maxZ) / 2;
+    let floor: THREE.BufferGeometry;
+    let volume: THREE.BufferGeometry;
+    if (s.type === 'circle') {
+      floor = new THREE.CircleGeometry(s.r, 48).rotateX(-Math.PI / 2);
+      volume = new THREE.CylinderGeometry(s.r, s.r, H, 48, 1, true).translate(0, H / 2, 0);
+    } else if (s.type === 'box') {
+      floor = new THREE.PlaneGeometry(s.maxX - s.minX, s.maxZ - s.minZ).rotateX(-Math.PI / 2);
+      volume = new THREE.BoxGeometry(s.maxX - s.minX, H, s.maxZ - s.minZ).translate(0, H / 2, 0);
+    } else {
+      const shape = new THREE.Shape(s.points.map((p) => new THREE.Vector2(p.x - cx, -(p.z - cz))));
+      floor = new THREE.ShapeGeometry(shape).rotateX(-Math.PI / 2);
+      volume = new THREE.ExtrudeGeometry(shape, { depth: H, bevelEnabled: false }).rotateX(-Math.PI / 2);
+    }
+    return { floor, edges: new THREE.EdgesGeometry(volume, 30), cx, cz };
+  }, [z, H]);
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({ map: hatch, transparent: true, opacity: 0.4, depthWrite: false, color: RADIO }), [hatch]);
+  const label = `${z.id} · radio ×${z.rangeFactor.toFixed(2)}${z.lossAdd > 0 ? ` · loss +${Math.round(z.lossAdd * 100)}%` : ''}`;
+  return (
+    <group position={[cx, 0, cz]}>
+      <mesh geometry={floor} position={[0, 0.7, 0]} renderOrder={2} material={mat} />
+      <lineSegments geometry={edges}>
+        <lineBasicMaterial color={RADIO} transparent opacity={0.45} />
+      </lineSegments>
+      {labels && (
+        <group position={[0, H + 3, 0]}>
+          <Html center style={{ pointerEvents: 'none' }}>
+            <div className="chip chip-nofly" style={{ background: 'rgba(91,33,182,.85)' }}>{label}</div>
+          </Html>
+        </group>
+      )}
+    </group>
+  );
+}
+
+function RadioZones() {
+  const show = useUI((s) => s.showRadio);
+  const labels = useUI((s) => s.showLabels);
+  const hatch = useMemo(() => hatchTexture('#ffffff'), []);
+  const [, setV] = useState(0);
+  useFrame(() => {
+    setV((v) => (v === engine.radio.version ? v : engine.radio.version));
+  });
+  if (!show || !engine.radio.hasZones) return null;
+  return (
+    <group>
+      {engine.radio.zones.filter((z) => z.active).map((z) => (
+        <RadioZoneMesh key={`${z.id}:${z.rangeFactor}`} z={z} hatch={hatch} labels={labels} />
       ))}
     </group>
   );
@@ -529,6 +593,7 @@ export function Overlays() {
     <group>
       <NavGrid />
       <NoFlyZones />
+      <RadioZones />
       <ObstacleVolumes />
       <WindArrows />
       <ShardGrid />
