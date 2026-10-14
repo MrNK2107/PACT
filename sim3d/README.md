@@ -24,7 +24,14 @@ filtered by map (`?map=<id>&scenario=<name>`; either alone also works). Switchin
 |---|---|---|---|
 | `coastal_metro` | 4 km | standard | The PRD example world and the original scenarios |
 | `harbour_metro_xl` | 12 km | stress | Airport, port and rail; scalability runs |
+| `dense_metro_core` | 2.5 km | hard | Downtown towers, rooftop-only drops, ring motorway, crowded low airspace |
+| `industrial_port` | 3 km | standard | Port, warehouses, cranes, tank farms; hub-and-spoke depots |
+| `flatland_rural` | 8 km | standard | Farmland, no water, wind farm, eight single-pad micro depots, long hauls |
 | `coastal_testbed` | 2 km | tutorial | Hidden fixture used by the automated tests |
+
+A map's `geography:` block overrides generator flags (airport, port, rail, ring motorway, landmarks, specials, tall
+buildings, turbines, district bias) and its `logistics:` block picks the depot layout (`distributed`, `single_hub`,
+`hub_and_spoke`, `micro`). Flags a map omits are derived from its size, exactly as before.
 
 ## Scenarios drive everything (NFR-6)
 The world, fleet, workload, policy knobs and fault script come from one YAML file under
