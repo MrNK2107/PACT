@@ -30,6 +30,8 @@ export function loadMap(text: string, path: string): MapDef {
   const dep = isObj(log.depots) ? log.depots : {};
   const mech = isObj(raw.mechanics) ? raw.mechanics : {};
   const wind = isObj(mech.wind) ? mech.wind : {};
+  const radio = isObj(mech.radio) ? mech.radio : {};
+  if (radio.zones !== undefined && !Array.isArray(radio.zones)) fail(path, 'mechanics.radio.zones must be a list');
   const layout = oneOf(path, dep.layout ?? 'distributed', 'logistics.depots.layout', DEPOT_LAYOUTS);
   const optBool = (v: unknown, name: string): boolean | undefined => {
     if (v === undefined) return undefined;
@@ -82,6 +84,7 @@ export function loadMap(text: string, path: string): MapDef {
         dir_deg: wind.dir_deg === undefined ? undefined : num(path, wind.dir_deg, 'mechanics.wind.dir_deg', 0, 360),
         gust_mps: wind.gust_mps === undefined ? undefined : num(path, wind.gust_mps, 'mechanics.wind.gust_mps', 0, 30),
       },
+      radio: { dead_zones: oneOf(path, radio.dead_zones ?? 'none', 'mechanics.radio.dead_zones', ['none', 'auto'] as const), zones: (radio.zones as MapDef['mechanics']['radio']['zones'] | undefined) ?? [] },
     },
     no_fly: Array.isArray(raw.no_fly) ? (raw.no_fly as MapDef['no_fly']) : ['auto'],
     scenarios: Array.isArray(raw.scenarios) ? raw.scenarios.map(String) : [],

@@ -385,6 +385,36 @@ export interface NoFlyZone {
   source: 'auto' | 'scenario' | 'fault';
 }
 
+/** Radio dead zone: degrades links with an endpoint inside it (sim/Radio.ts applies the effect). */
+export interface RadioZone {
+  id: string;
+  name: string;
+  shape: NoFlyShape;
+  /** Multiplier on the radio range for links touching the zone (0 = dark). */
+  rangeFactor: number;
+  /** Extra packet-loss probability for links touching the zone. */
+  lossAdd: number;
+  /** The zone applies at and below this altitude. */
+  maxY: number;
+  active: boolean;
+  closedFrom?: number;
+  closedUntil?: number;
+  source: 'auto' | 'scenario' | 'fault';
+}
+
+/** Radio zone specification as written in a scenario / map file (ground coordinates already mapped to x/z). */
+export interface RadioSpec {
+  id?: string;
+  name?: string;
+  circle?: { x: number; z: number; r: number };
+  box?: { minX: number; maxX: number; minZ: number; maxZ: number };
+  polygon?: { x: number; z: number }[];
+  rangeFactor?: number;
+  loss?: number;
+  maxY?: number;
+  active?: boolean;
+}
+
 /** Wind field sampled on a regular grid (m/s). Affects energy only (assumption T11). */
 export interface WindField {
   cell: number;
@@ -515,6 +545,7 @@ export interface WorldData {
   dropPoints: DropPointData[];
   clusters: DemandCluster[];
   noFlyZones: NoFlyZone[];
+  radioZones: RadioZone[];
   wind: WindField;
   shards: ShardGrid;
   obstacles: StaticObstacle[];
@@ -557,6 +588,8 @@ export interface WorldGenConfig {
   /** Target density of drop points. */
   dropPointsPerKm2: number;
   noFly: NoFlySpec[];
+  /** Radio dead zones: generated automatically and/or listed explicitly. Absent = none. */
+  radio?: { auto: boolean; zones: RadioSpec[] };
   wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };
   /** Flight-envelope boundary. Defaults to the full generated map. */
   bounds?: WorldBounds;

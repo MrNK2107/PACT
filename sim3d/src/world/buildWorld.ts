@@ -4,6 +4,7 @@ import { generateLayout, type LayoutBlock } from './CityLayout';
 import { assembleDepots, siteDepotBlocks } from './Depots';
 import { generateDropPoints, planClusters } from './DropPoints';
 import { placeLandmarks } from './Landmarks';
+import { generateRadioZones, radioZoneFromSpec } from './Radio';
 import { inNoFly as inNoFlyZones, zoneFromSpec } from './NoFly';
 import { featuresForSize, type LayoutFeatures } from './features';
 import { Noise2D } from './noise';
@@ -12,7 +13,7 @@ import { familyFor, makePalette, type Palette } from './palettes';
 import { Rng } from './rng';
 import { createShardGrid, shardOf } from './Shards';
 import { generateStreetscape } from './Streetscape';
-import type { DynamicObstacleDef, NoFlyZone, PowerLineData, UtilityStructure, WorldData, WorldGenConfig } from './types';
+import type { DynamicObstacleDef, NoFlyZone, PowerLineData, RadioZone, UtilityStructure, WorldData, WorldGenConfig } from './types';
 import { generateWind } from './Wind';
 
 /** Top of the paved lot slabs: every ground-level landing surface sits here. */
@@ -115,6 +116,13 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
         if (inNoFlyZones([z], p.x, p.z, 3, false)) throw new Error(`depot ${d.id} overlaps no-fly zone ${z.id}`);
       }
     }
+  }
+
+  // ---- radio dead zones (no RNG: the main stream is untouched) ------------------------------------------------------
+  const radioZones: RadioZone[] = [];
+  if (cfg.radio) {
+    if (cfg.radio.auto) radioZones.push(...generateRadioZones(layout.districts, ctx.buildings, out.cranes));
+    cfg.radio.zones.forEach((spec, i) => radioZones.push(radioZoneFromSpec(spec, i)));
   }
 
   // ---- wind + shards --------------------------------------------------------------------------------------------
@@ -236,6 +244,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     dropPoints,
     clusters,
     noFlyZones,
+    radioZones,
     wind,
     shards,
     obstacles,

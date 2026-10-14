@@ -1,4 +1,4 @@
-import type { NoFlyFileSpec } from '../scenario/types';
+import type { NoFlyFileSpec, RadioFileSpec } from '../scenario/types';
 import type { DepotLayout } from '../world/features';
 
 export type { DepotLayout };
@@ -57,6 +57,8 @@ export interface MapDef {
   };
   mechanics: {
     wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };
+    /** Radio dead zones: none, generated from the city (urban canyons, industrial clutter), plus explicit zones. */
+    radio: { dead_zones: 'none' | 'auto'; zones: RadioFileSpec[] };
   };
   no_fly: ('auto' | NoFlyFileSpec)[];
   /** Curated, ordered scenario names for the picker. Unlisted scenarios of the map follow alphabetically. */
