@@ -1,5 +1,6 @@
 import type { Vec3, WorldData } from '../world/types';
 import type { ObstacleManager } from './ObstacleManager';
+import type { PadBook } from './PadBook';
 import type { NeighborInfo, PathPlanner, Waypoint } from './PathPlanner';
 
 export type DronePhase = 'idle' | 'claiming' | 'to_pickup' | 'loading' | 'to_delivery' | 'unloading' | 'returning' | 'charging';
@@ -43,7 +44,7 @@ export interface TaskBoardView {
 }
 
 export interface AgentEvent {
-  type: 'claimed' | 'picked_up' | 'delivered' | 'replanned' | 'plan_failed' | 'charging' | 'charged' | 'departed' | 'landed' | 'task_taken' | 'aborted' | 'zombie_stop';
+  type: 'claimed' | 'picked_up' | 'delivered' | 'replanned' | 'plan_failed' | 'charging' | 'charged' | 'departed' | 'landed' | 'task_taken' | 'aborted' | 'zombie_stop' | 'pad_unavailable' | 'pad_changed';
   taskId?: string;
   detail?: string;
 }
@@ -72,6 +73,8 @@ export interface Percept {
   capacityKg: number;
   /** Policy knobs from the scenario. */
   socReserve: number;
+  /** Depot-arbitrated pad reservations (absent: every drone keeps its own pad). */
+  pads?: PadBook;
 }
 
 export interface Command {
@@ -104,6 +107,8 @@ export interface BrainView {
   readonly destination: Vec3 | null;
   readonly destinationLabel: string | null;
   readonly homePadId: string;
+  /** The pad this drone currently uses (its preferred pad unless that was unavailable). */
+  readonly padId: string;
 }
 
 /**

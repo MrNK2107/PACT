@@ -11,6 +11,7 @@ import { DRONE_COLORS, DroneAgent } from './DroneAgent';
 import { FaultInjector } from './Faults';
 import { ObstacleManager } from './ObstacleManager';
 import { PathPlanner } from './PathPlanner';
+import { PadBook } from './PadBook';
 import { RadioModel } from './Radio';
 import type { Priority, Task, TaskState } from './Task';
 import { TaskBoard, type TaskStats } from './TaskBoard';
@@ -68,6 +69,8 @@ export interface DroneSummary {
   cruiseAlt: number;
   destination: string | null;
   homePad: string;
+  /** The pad the drone currently uses. */
+  pad: string;
   priority: number;
   distance: number;
   drainFactor: number;
@@ -99,6 +102,8 @@ export interface SimSnapshot {
   /** Open tasks sorted by deadline (soonest first), for the task panel. */
   openTasks: { id: string; priority: Priority; deadline: number; state: TaskState; owner: string | null; drop: string; type: DropType; depot: string }[];
   closedZones: string[];
+  /** Pads currently out of service. */
+  padOutages: string[];
 }
 
 /**
@@ -111,6 +116,7 @@ export class SimulationEngine {
   readonly obstacles: ObstacleManager;
   readonly planner: PathPlanner;
   readonly radio: RadioModel;
+  readonly pads: PadBook;
   readonly energy: EnergyModel;
   board: TaskBoard;
   workload: WorkloadGenerator;
@@ -158,6 +164,7 @@ export class SimulationEngine {
     this.obstacles = new ObstacleManager(world);
     this.planner = new PathPlanner(this.obstacles, world.bounds);
     this.radio = new RadioModel(world.radioZones);
+    this.pads = new PadBook(world.pads);
     this.rng = new Rng(world.seed + 7);
     this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s });
     this.workload = new WorkloadGenerator(world, scenario, new Rng(world.seed + 11));
@@ -196,6 +203,7 @@ export class SimulationEngine {
     for (let i = this.obstacles.allNoFly.length - 1; i >= 0; i--) if (this.obstacles.allNoFly[i].source === 'fault') this.obstacles.allNoFly.splice(i, 1);
     this.obstacles.step(0);
     this.radio.reset();
+    this.pads.reset();
     for (let i = 0; i < this.initialDrones; i++) this.spawnDrone(false);
     // a few orders are waiting when the simulation starts (demo convenience; the Poisson stream takes over)
     for (let i = 0; i < SIM.initialOrders; i++) this.addTask(this.workload.makeTask(0, {}));
@@ -259,15 +267,19 @@ export class SimulationEngine {
   // ---- fleet -----------------------------------------------------------------------------------------
 
   private freePad(): { pad: PadData } | null {
+    // a pad is free for a new drone if no live drone was spawned on it, none holds it, and it is in service
     const used = new Set(this.agents.map((a) => a.pad.id));
+    const free = (pid: string) => !used.has(pid) && this.pads.holderOf(pid) === null && this.pads.isEnabled(pid);
     const depots = this.world.depots;
     const start = this.agents.length % Math.max(1, depots.length);
     for (let k = 0; k < depots.length; k++) {
       const depot = depots[(start + k) % depots.length];
       for (const pid of depot.padIds) {
-        if (!used.has(pid)) return { pad: this.world.pads.find((p) => p.id === pid)! };
+        if (free(pid)) return { pad: this.world.pads.find((p) => p.id === pid)! };
       }
     }
+    // public pads outside the depots come last
+    for (const p of this.world.pads) if (p.depotId === '' && free(p.id)) return { pad: p };
     return null;
   }
 
@@ -280,6 +292,7 @@ export class SimulationEngine {
     const idx = n - 1;
     const a = DroneAgent.create(id, idx, DRONE_COLORS[idx % DRONE_COLORS.length], fp.pad, SIM.layers[idx % SIM.layers.length], this.scenario.fleet.capacity_kg);
     this.agents.push(a);
+    this.pads.reserve(fp.pad.id, id);
     if (announce) this.note('info', `${id} added at ${fp.pad.id}`, id, 'drone_added', { pad: fp.pad.id });
     return a;
   }
@@ -311,6 +324,7 @@ export class SimulationEngine {
       this.note('warn', `${a.id} ${reason} — ${task.task_id} returned to the order board`, a.id, 'drone_removed', { task: task.task_id });
     } else this.note('info', `${a.id} ${reason}`, a.id, 'drone_removed', {});
     this.agents = this.agents.filter((x) => x !== a);
+    this.pads.release(a.id);
     this.bus.drop(a.id);
     for (const k of [...this.conflicts.keys()]) if (k.split('|').includes(a.id)) this.conflicts.delete(k);
     this.fleetVersion++;
@@ -364,6 +378,14 @@ export class SimulationEngine {
         }
         return false;
       },
+      padOutage: (target: { pad?: string; depot?: string }, now: number, until?: number) => {
+        const ids = target.pad ? [target.pad] : (this.world.depots.find((d) => d.id === target.depot)?.padIds ?? []);
+        const n = this.pads.disable(ids, until);
+        if (!n) return false;
+        const what = target.pad ?? `depot ${target.depot}`;
+        this.note('fault', `Fault: ${what} charging out of service${until !== undefined ? ` until ${until} s` : ''} (${n} pad${n > 1 ? 's' : ''})`, null, 'fault', { type: target.pad ? 'pad_outage' : 'depot_outage', target: what, t: now });
+        return true;
+      },
       radioBlackout: (def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number) => {
         const existing = def.id ? this.radio.find(def.id) : undefined;
         if (existing) {
@@ -408,6 +430,7 @@ export class SimulationEngine {
     const dt = SIM.dt;
     this.obstacles.step(this.time);
     this.radio.step(this.time);
+    this.pads.step(this.time);
     this.obstacles.expireZones(this.time);
     this.faults.step(this.time);
     for (const t of this.workload.step(this.time)) this.addTask(t);
@@ -439,6 +462,7 @@ export class SimulationEngine {
         energy: this.energy,
         capacityKg: a.capacityKg,
         socReserve: this.scenario.policy.soc_reserve,
+        pads: this.pads,
       });
       for (const m of cmd.outbox) this.bus.broadcast(a.id, a.body.pos, m);
       for (const e of cmd.events) this.onAgentEvent(a, e);
@@ -555,10 +579,16 @@ export class SimulationEngine {
         break;
       }
       case 'charging':
-        this.note('power', `${a.id} charging at ${a.pad.id} (${a.body.battery.toFixed(0)}%)`, a.id, 'charging', { pad: a.pad.id, soc: Math.round(a.body.battery) });
+        this.note('power', `${a.id} charging at ${a.controller.padId} (${a.body.battery.toFixed(0)}%)`, a.id, 'charging', { pad: a.controller.padId, soc: Math.round(a.body.battery) });
         break;
       case 'charged':
         this.note('power', `${a.id} charged`, a.id, 'charged', {});
+        break;
+      case 'pad_unavailable':
+        this.note('warn', `${a.id} waiting for a pad: ${e.detail ?? ''}`, a.id, 'pad_unavailable', { detail: e.detail });
+        break;
+      case 'pad_changed':
+        this.note('power', `${a.id} switched pad: ${e.detail ?? ''}`, a.id, 'pad_changed', { detail: e.detail });
         break;
       case 'replanned':
         this.note('info', `${a.id} replanned route (${e.detail ?? ''})`, a.id, 'replanned', { detail: e.detail });
@@ -740,6 +770,7 @@ export class SimulationEngine {
         cruiseAlt: c.cruiseAlt,
         destination: c.destinationLabel,
         homePad: c.homePadId,
+        pad: c.padId,
         priority: c.priority,
         distance: a.distance,
         drainFactor: a.drainFactor,
@@ -777,6 +808,7 @@ export class SimulationEngine {
       faultsPending: this.faults.pending,
       faultsFired: this.faults.fired.map((f) => ({ t: f.t, type: f.def.type })),
       openTasks: openTasks.slice(0, 40),
+      padOutages: this.pads.disabledIds,
       closedZones: this.obstacles.allNoFly.filter((z) => z.active && (z.source === 'fault' || z.closedFrom !== undefined)).map((z) => z.id),
     };
   }

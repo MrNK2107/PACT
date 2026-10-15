@@ -6,6 +6,7 @@ import type { Priority } from './Task';
 export interface FaultHooks {
   urgentBurst(n: number, priority: Priority, windowS: number, clusterType: DropType | undefined, now: number): void;
   closeZone(def: Extract<FaultDef, { type: 'close_zone' }>, now: number): boolean;
+  padOutage(target: { pad?: string; depot?: string }, now: number, until?: number): boolean;
   radioBlackout(def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number): boolean;
   batteryDrain(id: string, factor: number, now: number): void;
   killDrone(id: string, now: number): void;
@@ -38,6 +39,12 @@ export class FaultInjector {
         case 'close_zone': {
           const ok = this.hooks.closeZone(def, now);
           this.hooks.log(ok ? 'fault_close_zone' : 'fault_close_zone_failed', { id: def.id, name: def.name, until: def.until }, now);
+          break;
+        }
+        case 'pad_outage':
+        case 'depot_outage': {
+          const ok = this.hooks.padOutage(def.type === 'pad_outage' ? { pad: def.id } : { depot: def.id }, now, def.until);
+          this.hooks.log(ok ? `fault_${def.type}` : `fault_${def.type}_failed`, { id: def.id, until: def.until }, now);
           break;
         }
         case 'radio_blackout': {

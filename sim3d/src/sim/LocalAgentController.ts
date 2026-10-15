@@ -56,6 +56,8 @@ export class LocalAgentController implements AgentController {
   private lastZoneCheck = -Infinity;
   private intent: Vec3 = ZERO;
   private lastHoldT = -Infinity;
+  private padRetryAt = 0;
+  private padWaitLogged = false;
 
   constructor(
     readonly id: string,
@@ -63,6 +65,11 @@ export class LocalAgentController implements AgentController {
     private layerAlt: number,
   ) {
     this.coord = new AgentCoordinator(id);
+  }
+
+  /** The pad this drone currently uses (the preferred pad unless it was unavailable). */
+  get padId(): string {
+    return this.homePad?.id ?? this.homePadId;
   }
 
   /** The task this drone currently holds (live board record). */
@@ -145,7 +152,7 @@ export class LocalAgentController implements AgentController {
 
   private atHome(p: Percept): boolean {
     const pad = this.homePad!;
-    return hdist(p.body.pos, pad.pos) < 3 && p.body.pos.y < pad.pos.y + 1;
+    return pad.enabled !== false && hdist(p.body.pos, pad.pos) < 3 && p.body.pos.y < pad.pos.y + 1;
   }
 
   private enterIdle(now: number): void {
@@ -213,7 +220,9 @@ export class LocalAgentController implements AgentController {
     this.task = a.task;
     this.taskId = a.task.task_id;
     out.events.push({ type: 'claimed', taskId: a.task.task_id, detail: `P${a.task.priority}, score ${(-a.cost).toFixed(2)}, epoch ${a.task.epoch}` });
-    if (!this.startRoute(p, out, a.task.pickup, 'to_pickup', a.task.origin_depot)) {
+    if (this.startRoute(p, out, a.task.pickup, 'to_pickup', a.task.origin_depot)) {
+      p.pads?.release(this.id); // leaving the pad: it is free for others while I am away
+    } else {
       p.tasks.release(a.task.task_id, this.id, now);
       this.dropTask();
       this.phase = 'idle';
@@ -370,6 +379,11 @@ export class LocalAgentController implements AgentController {
   }
 
   private doCharge(p: Percept, out: Command): void {
+    if (this.homePad!.enabled === false) {
+      // the charger went out of service under me: stop charging; the idle logic relocates to a working pad
+      this.enterIdle(p.time);
+      return;
+    }
     out.charging = true;
     if (p.body.battery >= SIM.chargeTarget) {
       out.events.push({ type: 'charged' });
@@ -402,9 +416,41 @@ export class LocalAgentController implements AgentController {
     this.planReturn(p, out);
   }
 
+  /**
+   * Asks the depot book for a pad: my current pad if it is enabled and free (the only case without outages),
+   * otherwise the nearest enabled free pad. Without a book every drone keeps its own pad.
+   */
+  private acquirePad(p: Percept): PadData | null {
+    const cur = this.homePad!;
+    const book = p.pads;
+    if (!book) return cur;
+    if (book.reserve(cur.id, this.id)) return cur;
+    const alt = book.nearestFree(p.body.pos, this.id);
+    return alt && book.reserve(alt.id, this.id) ? alt : null;
+  }
+
   private planReturn(p: Percept, out: Command): void {
-    const pad = this.homePad!;
-    if (!this.startRoute(p, out, pad.pos, 'returning', this.homePadId)) this.backoffUntil = p.time + 3;
+    const now = p.time;
+    if (now < this.padRetryAt) return;
+    const pad = this.acquirePad(p);
+    if (!pad) {
+      // no working pad is free: wait where I am and ask again shortly
+      this.padRetryAt = now + 3;
+      if (!this.padWaitLogged) {
+        this.padWaitLogged = true;
+        out.events.push({ type: 'pad_unavailable', detail: `no free enabled pad (preferred ${this.homePad!.id})` });
+      }
+      return;
+    }
+    this.padWaitLogged = false;
+    if (pad.id !== this.homePad!.id) {
+      out.events.push({ type: 'pad_changed', detail: `${this.homePad!.id} -> ${pad.id}` });
+      this.homePad = pad;
+    }
+    if (!this.startRoute(p, out, pad.pos, 'returning', pad.id)) {
+      p.pads?.release(this.id);
+      this.backoffUntil = now + 3;
+    }
   }
 
   private startRoute(p: Percept, out: Command, dest: Vec3, phase: DronePhase, label: string): boolean {
