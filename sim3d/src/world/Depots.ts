@@ -142,7 +142,7 @@ export function assembleDepots(builds: { block: LayoutBlock; build: DepotBuild }
     const alongX = build.apron.maxX - build.apron.minX >= build.apron.maxZ - build.apron.minZ;
     build.pads.forEach((p, k) => {
       const padId = `PAD-${id}-${k + 1}`;
-      pads.push({ id: padId, pos: { x: p.x, y: groundY + 0.1, z: p.z }, radius: 3, rooftop: false, depotId: id });
+      pads.push({ id: padId, pos: { x: p.x, y: groundY + 0.1, z: p.z }, radius: 3, rooftop: false, depotId: id, enabled: true });
       depot.padIds.push(padId);
       const chId = `CHG-${id}-${k + 1}`;
       const away = alongX ? (p.z > build.building.cz ? 1 : -1) : p.x > build.building.cx ? 1 : -1;

@@ -68,6 +68,7 @@ export function mapDefaults(m: MapDef): DeepPartial<Scenario> {
       size_m: [m.size_m, m.size_m],
       depots: m.logistics.depots.count,
       pads_per_depot: m.logistics.depots.pads,
+      public_pads: m.logistics.public_pads,
       drop_points_per_km2: m.logistics.drop_points_per_km2,
       no_fly: m.no_fly,
       radio_zones: m.mechanics.radio.zones,
@@ -116,6 +117,7 @@ export function loadScenario(
   if (w.size_m[0] !== w.size_m[1]) fail(path, `world.size_m must be square (got ${w.size_m[0]} x ${w.size_m[1]}); non-square maps are not supported`);
   num(path, w.depots, 'world.depots', 1, 8);
   num(path, w.pads_per_depot, 'world.pads_per_depot', 1, map?.logistics.depots.layout === 'single_hub' ? 6 : 3);
+  num(path, w.public_pads, 'world.public_pads', 0, 8);
   num(path, w.drop_points_per_km2, 'world.drop_points_per_km2', 1, 200);
   num(path, w.wind.mean_mps, 'world.wind.mean_mps', 0, 30);
   if (!Array.isArray(w.no_fly)) fail(path, 'world.no_fly must be a list');
@@ -148,6 +150,7 @@ export function loadScenario(
   s.faults.forEach((fd, i) => {
     if (!isObj(fd) || typeof fd.t !== 'number' || typeof fd.type !== 'string') fail(path, `faults[${i}] needs numeric t and a type`);
     if (fd.type === 'radio_blackout') radioSpec(path, fd, `faults[${i}]`, true);
+    if ((fd.type === 'pad_outage' || fd.type === 'depot_outage') && typeof fd.id !== 'string') fail(path, `faults[${i}] (${fd.type}) needs the id of a ${fd.type === 'pad_outage' ? 'pad' : 'depot'}`);
   });
   s.faults = [...s.faults].sort((a, b) => a.t - b.t) as FaultDef[];
   return s;
@@ -185,6 +188,7 @@ export function worldConfigFrom(s: Scenario): WorldGenConfig {
     rooftopOnly: map?.logistics.rooftop_only ?? false,
     depots: s.world.depots,
     padsPerDepot: s.world.pads_per_depot,
+    publicPads: s.world.public_pads,
     dropPointsPerKm2: s.world.drop_points_per_km2,
     noFly,
     radio: map && (map.mechanics.radio.dead_zones === 'auto' || s.world.radio_zones.length) ? { auto: map.mechanics.radio.dead_zones === 'auto', zones: radioSpecsFrom(s.world.radio_zones) } : undefined,

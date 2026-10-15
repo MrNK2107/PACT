@@ -4,6 +4,7 @@ import { generateLayout, type LayoutBlock } from './CityLayout';
 import { assembleDepots, siteDepotBlocks } from './Depots';
 import { generateDropPoints, planClusters } from './DropPoints';
 import { placeLandmarks } from './Landmarks';
+import { sitePublicPads } from './PublicPads';
 import { generateRadioZones, radioZoneFromSpec } from './Radio';
 import { inNoFly as inNoFlyZones, zoneFromSpec } from './NoFly';
 import { featuresForSize, type LayoutFeatures } from './features';
@@ -129,6 +130,14 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   const wind = generateWind(cfg.seed, bounds, cfg.wind, (x, z) => layout.isWater(x, z));
   const shards = createShardGrid(bounds, depots);
   for (const d of depots) d.catchmentShards = shards.ids.filter((id) => shards.depotOf[id] === d.id);
+
+  // ---- public charging pads (own sites, no RNG; removed from the drop-site pool) -----------------------------------
+  if ((cfg.publicPads ?? 0) > 0) {
+    const pub = sitePublicPads(Math.min(8, Math.round(cfg.publicPads!)), ctx.groundSites, depots, noFlyZones, GROUND_Y);
+    pads.push(...pub.pads);
+    chargers.push(...pub.chargers);
+    for (const g of pub.used) ctx.groundSites.splice(ctx.groundSites.indexOf(g), 1);
+  }
 
   // ---- drop points ------------------------------------------------------------------------------------------------
   let landKm2 = 0;

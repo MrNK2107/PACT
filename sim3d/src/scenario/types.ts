@@ -33,6 +33,8 @@ export type FaultDef =
   | { t: number; type: 'close_zone'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; until?: number }
   | { t: number; type: 'urgent_job_burst'; n?: number; window_s?: number; priority?: Priority; cluster_type?: DropType }
   | { t: number; type: 'clock_drift'; id: string; ppm: number }
+  | { t: number; type: 'pad_outage'; id: string; until?: number }
+  | { t: number; type: 'depot_outage'; id: string; until?: number }
   | { t: number; type: 'radio_blackout'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; box?: { x0: number; y0: number; x1: number; y1: number }; range_factor?: number; loss?: number; max_alt_m?: number; until?: number };
 
 export interface NoFlyFileSpec {
@@ -83,6 +85,8 @@ export interface Scenario {
     size_m: [number, number];
     depots: number;
     pads_per_depot: number;
+    /** Standalone public charging pads outside the depots. */
+    public_pads: number;
     no_fly: ('auto' | NoFlyFileSpec)[];
     /** Extra radio dead zones on top of the map's. */
     radio_zones: RadioFileSpec[];

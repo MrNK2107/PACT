@@ -295,7 +295,10 @@ export interface PadData {
   pos: Vec3;
   radius: number;
   rooftop: boolean;
+  /** Owning depot; '' for a public pad outside any depot. */
   depotId: string;
+  /** False while the pad / charger is out of service (pad_outage, depot_outage). */
+  enabled: boolean;
 }
 
 export interface ChargerData {
@@ -588,6 +591,8 @@ export interface WorldGenConfig {
   /** Target density of drop points. */
   dropPointsPerKm2: number;
   noFly: NoFlySpec[];
+  /** Standalone public charging pads outside the depots. */
+  publicPads?: number;
   /** Radio dead zones: generated automatically and/or listed explicitly. Absent = none. */
   radio?: { auto: boolean; zones: RadioSpec[] };
   wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };

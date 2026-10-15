@@ -77,6 +77,7 @@ export function loadMap(text: string, path: string): MapDef {
       depots: { layout, count: num(path, dep.count ?? 3, 'logistics.depots.count', 1, 8), pads: num(path, dep.pads ?? 2, 'logistics.depots.pads', 1, layout === 'single_hub' ? 6 : 3) },
       drop_points_per_km2: num(path, log.drop_points_per_km2 ?? 35, 'logistics.drop_points_per_km2', 1, 200),
       rooftop_only: log.rooftop_only === true,
+      public_pads: num(path, log.public_pads ?? 0, 'logistics.public_pads', 0, 8),
     },
     mechanics: {
       wind: {

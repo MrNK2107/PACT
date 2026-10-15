@@ -54,6 +54,8 @@ export interface MapDef {
     drop_points_per_km2: number;
     /** Drop points only on rooftops (dense-city maps). */
     rooftop_only: boolean;
+    /** Standalone public charging pads outside the depots. */
+    public_pads: number;
   };
   mechanics: {
     wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };
