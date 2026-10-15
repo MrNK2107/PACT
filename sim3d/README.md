@@ -52,7 +52,8 @@ task is `{ t, task_id?, origin_depot?, drop_id | drop {x,y} | cluster_type, prio
 missing fields are filled from the generator's distributions. Ground coordinates in files are PRD
 `{x, y}`; `y` maps onto the world's `z` axis.
 
-Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/polygon), `battery_drain`,
+Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/polygon), `radio_blackout` (switch a radio
+dead zone on, or create a temporary circle/box/polygon), `battery_drain`,
 `kill_drone` (in-flight parcel re-ordered after the endurance timeout). `partition`, `kill_service`,
 `link_loss` and `clock_drift` are parsed and logged as unsupported until the network model exists.
 
@@ -77,6 +78,8 @@ Generated deterministically from `(seed, size_m, depots, pads_per_depot)` by `sr
   and priority affinities, so the workload is clustered and urgent jobs lean medical.
 * **Airspace** (`NoFly.ts`): circle, box and polygon no-fly zones (hospital helipads, airport, government
   quarter, substations, broadcast mast) plus *closable* zones (stadium) that faults can activate.
+* **Radio dead zones** (`Radio.ts`, `sim/Radio.ts`): areas where the radio range shrinks and packets are lost, either
+  generated from the city (urban canyons around tall buildings, clutter around cranes) or listed in a map or scenario.
 * **Wind** (`Wind.ts`): a 100 m vector field (mean + gusts) that changes energy use only (assumption T11).
 * **Shards** (`Shards.ts`): 500 m hex grid, ids `H-q-r`, each assigned to its nearest depot (catchments
   for the ownership protocol's shard leases). Every task and drop point carries its shard.
