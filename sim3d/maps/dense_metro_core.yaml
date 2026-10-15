@@ -27,5 +27,6 @@ logistics:
   rooftop_only: true
 mechanics:
   wind: { mean_mps: 6, dir_deg: 200, gust_mps: 3.5 }
+  radio: { dead_zones: auto }
 no_fly: [auto]
-scenarios: [dm_healthy, dm_event_closures]
+scenarios: [dm_healthy, dm_canyon_shadow, dm_event_closures]

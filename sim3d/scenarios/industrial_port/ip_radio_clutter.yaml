@@ -1,0 +1,11 @@
+# Metal clutter around cranes and tank farms degrades the radio; the hub-and-spoke network must cope.
+name: ip_radio_clutter
+map: industrial_port
+tier: standard
+description: Radio range 500 m with industrial clutter zones (range x0.45, +15 % packet loss) around the cranes.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.02, latency_ms: [50, 800], range_m: 500 }
+policy: { partition: QUORUM }
+faults: []

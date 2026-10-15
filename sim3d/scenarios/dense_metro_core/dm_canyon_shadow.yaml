@@ -1,0 +1,13 @@
+# Urban canyons: tall buildings shadow the radio. With a 450 m nominal range the shadowed links shrink
+# to under 100 m and lose packets, so drones must coordinate through the gaps and across zone edges.
+name: dm_canyon_shadow
+map: dense_metro_core
+tier: hard
+description: Radio range 450 m with canyon dead zones (range x0.2, +30 % packet loss) in the tallest districts. Coordination must survive degraded links.
+duration_s: 1800
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 3, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.05, latency_ms: [50, 800], range_m: 450 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 600, type: radio_blackout, id: RAD-01, range_factor: 0, until: 900 }
