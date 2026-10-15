@@ -36,7 +36,7 @@ function describe(id: string, snap: SimSnapshot): { title: string; kind: string;
     }
     case 'depot': {
       const h = e.data as DepotData;
-      const occupants = snap.drones.filter((d) => h.padIds.includes(d.homePad));
+      const occupants = snap.drones.filter((d) => h.padIds.includes(d.pad));
       return {
         title: h.name,
         kind: 'Depot · parcel hand-off + charging pads (local resource)',

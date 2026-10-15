@@ -183,9 +183,9 @@ function Depots() {
     if (!m) return;
     for (let i = 0; i < chargers.length; i++) {
       const ch = chargers[i];
-      const charging = engine.agents.some((a) => a.pad.id === ch.padId && a.controller.phase === 'charging');
-      const occupied = engine.agents.some((a) => a.pad.id === ch.padId && !a.airborne);
-      col.set(charging ? '#22c55e' : occupied ? '#f59e0b' : '#64748b');
+      const charging = engine.agents.some((a) => a.controller.padId === ch.padId && a.controller.phase === 'charging');
+      const occupied = engine.agents.some((a) => a.controller.padId === ch.padId && !a.airborne);
+      col.set(!engine.pads.isEnabled(ch.padId) ? '#ef4444' : charging ? '#22c55e' : occupied ? '#f59e0b' : '#64748b');
       m.setColorAt(i, col);
     }
     if (m.instanceColor) m.instanceColor.needsUpdate = true;
@@ -209,7 +209,7 @@ function Depots() {
       ))}
       <Instances count={lines.length} geometry={unitBox} material={mats.yellowPaint} setup={(i, o) => { o.position.set(lines[i].x, 0.33, lines[i].z); o.scale.set(lines[i].sx, 0.03, lines[i].sz); }} />
       {world.pads.map((p) => (
-        <Pad key={p.id} x={p.pos.x} y={p.pos.y} z={p.pos.z} r={p.radius} tex={padTex} onClick={click(select, p.depotId)} />
+        <Pad key={p.id} x={p.pos.x} y={p.pos.y} z={p.pos.z} r={p.radius} tex={padTex} onClick={click(select, p.depotId || p.id)} />
       ))}
       <Instances count={chargers.length} geometry={unitBox} material={mats.metalDark} setup={setCharger} castShadow />
       <Instances meshRef={lightRef} count={chargers.length} geometry={unitBox} material={lightMat} setup={(i, o, c) => { setLight(i, o); c.set('#64748b'); }} colored />

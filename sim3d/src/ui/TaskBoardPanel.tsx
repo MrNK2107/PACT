@@ -41,6 +41,7 @@ export function TaskBoardPanel() {
         ))}
         {s.faultsPending > 0 && <span className="pri fault">{s.faultsPending} fault{s.faultsPending > 1 ? 's' : ''} pending</span>}
         {s.closedZones.length > 0 && <span className="pri fault">closed: {s.closedZones.join(', ')}</span>}
+        {s.padOutages.length > 0 && <span className="pri fault">pads out: {s.padOutages.join(', ')}</span>}
       </div>
       <ul className="tasks">
         {s.openTasks.slice(0, 8).map((t) => {
