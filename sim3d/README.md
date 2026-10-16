@@ -54,7 +54,8 @@ missing fields are filled from the generator's distributions. Ground coordinates
 
 Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/polygon), `radio_blackout` (switch a radio
 dead zone on, or create a temporary circle/box/polygon), `pad_outage` / `depot_outage` (charging out of
-service for a window), `battery_drain`,
+service for a window), `weather_front` (wind ramps to new speed, direction and gusts), `storm_cell` (a closed,
+optionally drifting circle with extra wind) and `altitude_cap` (a ceiling over the whole map or an area), `battery_drain`,
 `kill_drone` (in-flight parcel re-ordered after the endurance timeout). `partition`, `kill_service`,
 `link_loss` and `clock_drift` are parsed and logged as unsupported until the network model exists.
 
@@ -83,7 +84,9 @@ Generated deterministically from `(seed, size_m, depots, pads_per_depot)` by `sr
   `public_pads` adds standalone pads outside the depots.
 * **Radio dead zones** (`Radio.ts`, `sim/Radio.ts`): areas where the radio range shrinks and packets are lost, either
   generated from the city (urban canyons around tall buildings, clutter around cranes) or listed in a map or scenario.
-* **Wind** (`Wind.ts`): a 100 m vector field (mean + gusts) that changes energy use only (assumption T11).
+* **Wind** (`Wind.ts`): a 100 m vector field (mean + gusts) that changes energy use only (assumption T11). Weather
+  faults retarget the field at runtime and storm cells add local boosts; a ceiling (`minY` on a no-fly zone) closes only
+  the air above it.
 * **Shards** (`Shards.ts`): 500 m hex grid, ids `H-q-r`, each assigned to its nearest depot (catchments
   for the ownership protocol's shard leases). Every task and drop point carries its shard.
 
