@@ -379,6 +379,8 @@ export interface NoFlyZone {
   reason: string;
   shape: NoFlyShape;
   maxY: number;
+  /** The zone applies at altitudes from `minY` (default 0). A zone with `minY > 0` is a ceiling: flight below it is allowed. */
+  minY?: number;
   /** Zone can be opened / closed at runtime (`close_zone` fault). */
   closable: boolean;
   /** Only active zones constrain flight. */
@@ -430,6 +432,10 @@ export interface WindField {
   gust: number;
   vx: Float32Array;
   vz: Float32Array;
+  /** Generation data, kept so weather fronts can retarget the field (see world/Wind.ts). */
+  seed?: number;
+  bounds?: WorldBounds;
+  water?: Uint8Array;
 }
 
 /** 500 m pointy-top hex shard grid (PRD section 15). */

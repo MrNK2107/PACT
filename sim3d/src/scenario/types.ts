@@ -33,6 +33,9 @@ export type FaultDef =
   | { t: number; type: 'close_zone'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; until?: number }
   | { t: number; type: 'urgent_job_burst'; n?: number; window_s?: number; priority?: Priority; cluster_type?: DropType }
   | { t: number; type: 'clock_drift'; id: string; ppm: number }
+  | { t: number; type: 'weather_front'; mean_mps?: number; dir_deg?: number; gust_mps?: number; ramp_s?: number; until?: number }
+  | { t: number; type: 'storm_cell'; name?: string; circle: { x: number; y: number; r: number }; to?: { x: number; y: number }; duration_s?: number; wind_mps?: number; ceiling_m?: number; until?: number }
+  | { t: number; type: 'altitude_cap'; name?: string; cap_m: number; circle?: { x: number; y: number; r: number }; box?: { x0: number; y0: number; x1: number; y1: number }; polygon?: { x: number; y: number }[]; until?: number }
   | { t: number; type: 'pad_outage'; id: string; until?: number }
   | { t: number; type: 'depot_outage'; id: string; until?: number }
   | { t: number; type: 'radio_blackout'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; box?: { x0: number; y0: number; x1: number; y1: number }; range_factor?: number; loss?: number; max_alt_m?: number; until?: number };

@@ -147,13 +147,41 @@ export function loadScenario(
     wl.tasks = parseTasksYaml(JSON.stringify(rawTasks), path);
   } else wl.tasks = [];
   if (!Array.isArray(s.faults)) fail(path, 'faults must be a list');
+  // the map's default weather schedule runs in every scenario on it
+  if (map && map.mechanics.weather.length) s.faults = [...map.mechanics.weather, ...s.faults];
   s.faults.forEach((fd, i) => {
     if (!isObj(fd) || typeof fd.t !== 'number' || typeof fd.type !== 'string') fail(path, `faults[${i}] needs numeric t and a type`);
     if (fd.type === 'radio_blackout') radioSpec(path, fd, `faults[${i}]`, true);
+    if (fd.type === 'weather_front' || fd.type === 'storm_cell' || fd.type === 'altitude_cap') weatherFault(path, fd, `faults[${i}]`);
     if ((fd.type === 'pad_outage' || fd.type === 'depot_outage') && typeof fd.id !== 'string') fail(path, `faults[${i}] (${fd.type}) needs the id of a ${fd.type === 'pad_outage' ? 'pad' : 'depot'}`);
   });
   s.faults = [...s.faults].sort((a, b) => a.t - b.t) as FaultDef[];
   return s;
+}
+
+/** Validates weather faults: wind front, storm cell, altitude cap. */
+function weatherFault(path: string, f: Record<string, unknown>, where: string): void {
+  const opt = (k: string, lo: number, hi: number) => {
+    if (f[k] !== undefined) num(path, f[k], `${where}.${k}`, lo, hi);
+  };
+  if (f.until !== undefined) num(path, f.until, `${where}.until`, 0, 1e7);
+  if (f.type === 'weather_front') {
+    if (f.mean_mps === undefined && f.dir_deg === undefined && f.gust_mps === undefined) fail(path, `${where} (weather_front) needs mean_mps, dir_deg or gust_mps`);
+    opt('mean_mps', 0, 40);
+    opt('dir_deg', 0, 360);
+    opt('gust_mps', 0, 30);
+    opt('ramp_s', 0, 3600);
+  } else if (f.type === 'storm_cell') {
+    const c = f.circle as { r?: unknown } | undefined;
+    if (!isObj(c) || typeof c.r !== 'number' || !(c.r > 0)) fail(path, `${where} (storm_cell) needs circle {x, y, r > 0}`);
+    if (f.to !== undefined && !isObj(f.to)) fail(path, `${where}.to must be {x, y}`);
+    opt('duration_s', 1, 1e6);
+    opt('wind_mps', 0, 40);
+    opt('ceiling_m', 10, 200);
+  } else {
+    num(path, f.cap_m, `${where}.cap_m`, 10, 200);
+    if (f.circle !== undefined && !isObj(f.circle)) fail(path, `${where}.circle must be {x, y, r}`);
+  }
 }
 
 /** Validates the shape and numbers of a radio zone spec (file coordinates). `fault` allows a bare id reference. */

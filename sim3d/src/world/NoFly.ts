@@ -127,6 +127,11 @@ export function shapeDistance(s: NoFlyShape, x: number, z: number): { d: number;
   return { d: inside ? -dist : dist, nx, nz };
 }
 
+/** A ceiling: a zone that only closes the air above `minY` (altitude cap, storm ceiling). */
+export function isCap(z: NoFlyZone): boolean {
+  return (z.minY ?? 0) > 0;
+}
+
 /** True if (x,z) is inside any zone (inflated by `margin`). `onlyActive` ignores opened zones. */
 export function inNoFly(zones: readonly NoFlyZone[], x: number, z: number, margin = 0, onlyActive = true): boolean {
   for (const n of zones) {

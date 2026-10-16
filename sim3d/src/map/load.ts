@@ -1,6 +1,7 @@
 import { parse } from 'yaml';
 import { DEPOT_LAYOUTS, TIERS, WATER_MODES, type MapDef } from './types';
 
+const WEATHER_TYPES = ['weather_front', 'storm_cell', 'altitude_cap'];
 const BIAS_KEYS = ['cbd', 'industrial', 'park', 'suburb', 'farmland'];
 const LANDMARKS = ['landmarktower', 'cathedral', 'tvmast', 'gasometer'];
 
@@ -32,6 +33,11 @@ export function loadMap(text: string, path: string): MapDef {
   const wind = isObj(mech.wind) ? mech.wind : {};
   const radio = isObj(mech.radio) ? mech.radio : {};
   if (radio.zones !== undefined && !Array.isArray(radio.zones)) fail(path, 'mechanics.radio.zones must be a list');
+  if (mech.weather !== undefined && !Array.isArray(mech.weather)) fail(path, 'mechanics.weather must be a list');
+  const weather = (mech.weather as unknown[] | undefined) ?? [];
+  weather.forEach((w, i) => {
+    if (!isObj(w) || typeof w.t !== 'number' || !WEATHER_TYPES.includes(String(w.type))) fail(path, `mechanics.weather[${i}] needs a numeric t and a type of ${WEATHER_TYPES.join(' | ')}`);
+  });
   const layout = oneOf(path, dep.layout ?? 'distributed', 'logistics.depots.layout', DEPOT_LAYOUTS);
   const optBool = (v: unknown, name: string): boolean | undefined => {
     if (v === undefined) return undefined;
@@ -86,6 +92,7 @@ export function loadMap(text: string, path: string): MapDef {
         gust_mps: wind.gust_mps === undefined ? undefined : num(path, wind.gust_mps, 'mechanics.wind.gust_mps', 0, 30),
       },
       radio: { dead_zones: oneOf(path, radio.dead_zones ?? 'none', 'mechanics.radio.dead_zones', ['none', 'auto'] as const), zones: (radio.zones as MapDef['mechanics']['radio']['zones'] | undefined) ?? [] },
+      weather: weather as MapDef['mechanics']['weather'],
     },
     no_fly: Array.isArray(raw.no_fly) ? (raw.no_fly as MapDef['no_fly']) : ['auto'],
     scenarios: Array.isArray(raw.scenarios) ? raw.scenarios.map(String) : [],
