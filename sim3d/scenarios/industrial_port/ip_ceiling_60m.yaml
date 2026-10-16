@@ -1,0 +1,12 @@
+# A temporary altitude ceiling over the whole port: cranes and stacks above it become obstacles to route around.
+name: ip_ceiling_60m
+map: industrial_port
+tier: hard
+description: Everything above 60 m closes at t=200 s until t=1200 s (cranes at the port reach higher). Drones must descend and re-plan below the ceiling.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 200, type: altitude_cap, name: Port ceiling, cap_m: 60, until: 1200 }

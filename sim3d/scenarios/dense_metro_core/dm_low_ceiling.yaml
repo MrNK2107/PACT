@@ -1,0 +1,12 @@
+# Low-altitude corridor: a 55 m ceiling over the downtown core forces drones to weave between the towers.
+name: dm_low_ceiling
+map: dense_metro_core
+tier: hard
+description: Ceiling of 55 m from t=300 s to t=1500 s. Towers above it become walls, so routes lengthen and some rooftop drops become unreachable.
+duration_s: 1800
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 3, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 300, type: altitude_cap, name: Downtown ceiling, cap_m: 55, until: 1500 }

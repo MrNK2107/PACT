@@ -1,0 +1,13 @@
+# A gale front rolls in from the sea and a storm cell drifts across the harbour.
+name: ip_storm_front
+map: industrial_port
+tier: hard
+description: Wind ramps to 11 m/s from the west (t=100 s, back to normal at t=1400 s) and a storm cell with 8 m/s extra wind drifts across the port from t=300 s to t=1500 s. Drones must route around the closed cell and budget energy for headwinds.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 100, type: weather_front, mean_mps: 11, dir_deg: 270, gust_mps: 4, ramp_s: 120, until: 1400 }
+  - { t: 300, type: storm_cell, name: Harbour storm, circle: { x: -500, y: -200, r: 320 }, to: { x: 600, y: 300 }, duration_s: 1000, wind_mps: 8, until: 1500 }

@@ -28,4 +28,4 @@ logistics:
 mechanics:
   wind: { mean_mps: 8, dir_deg: 270, gust_mps: 2 }
 no_fly: [auto]
-scenarios: [fr_healthy, fr_battery_crunch, fr_pad_outage, fr_public_pads]
+scenarios: [fr_healthy, fr_battery_crunch, fr_gale, fr_pad_outage, fr_public_pads]

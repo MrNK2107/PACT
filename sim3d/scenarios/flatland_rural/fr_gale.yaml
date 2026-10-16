@@ -1,0 +1,15 @@
+# A building gale over open farmland: strong headwinds eat the batteries on the long hauls.
+name: fr_gale
+map: flatland_rural
+tier: hard
+description: Wind ramps from 8 to 16 m/s from the west between t=600 s and t=900 s and stays until t=2400 s. Energy-bound legs get much longer in a headwind.
+duration_s: 3600
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload:
+  arrival_rate_per_min: 1.4
+  priority_mix: [0.1, 0.3, 0.6]
+  deadline_s: { 1: [600, 1200], 2: [1200, 2400], 3: [2400, 4800] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 3000 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 600, type: weather_front, mean_mps: 16, dir_deg: 270, gust_mps: 4, ramp_s: 300, until: 2400 }
