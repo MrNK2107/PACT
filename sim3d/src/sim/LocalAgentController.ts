@@ -57,6 +57,7 @@ export class LocalAgentController implements AgentController {
   private intent: Vec3 = ZERO;
   private lastHoldT = -Infinity;
   private padRetryAt = 0;
+  private seenCap = -1;
   private padWaitLogged = false;
 
   constructor(
@@ -233,6 +234,23 @@ export class LocalAgentController implements AgentController {
   private doFly(p: Percept, out: Command): void {
     const now = p.time;
     const pos = p.body.pos;
+    // an altitude ceiling appeared or changed: re-plan below it (from a position clamped under the ceiling)
+    if (p.obstacles.capVersion !== this.seenCap) {
+      const first = this.seenCap === -1;
+      this.seenCap = p.obstacles.capVersion;
+      if (!first && this.destination) {
+        const ceil = p.obstacles.ceilingAt(pos.x, pos.z);
+        const from = ceil < Infinity ? { x: pos.x, y: Math.min(pos.y, Math.max(1, ceil - 11)), z: pos.z } : pos;
+        const plan = p.planner.plan(from, this.destination, this.layerFor(p, this.destination));
+        if (plan) {
+          this.setRoute(plan.waypoints, plan.cruiseAlt);
+          out.events.push({ type: 'replanned', detail: 'altitude ceiling' });
+        } else if (this.phase !== 'returning') {
+          this.abortTask(p, out, 'no route under the altitude ceiling');
+          return;
+        }
+      }
+    }
     const wp = this.route[this.routeIndex];
     if (!wp) {
       this.onRouteEnd(p, out);
@@ -348,7 +366,12 @@ export class LocalAgentController implements AgentController {
 
   private doWork(p: Percept, out: Command): void {
     const now = p.time;
-    if (now < this.timer || !this.task) return;
+    if (!this.task) {
+      // the task was dropped while I was working (lease lost, abort): do not hold the site
+      this.enterIdle(now);
+      return;
+    }
+    if (now < this.timer) return;
     if (this.phase === 'loading') {
       // depot arbitration: only the highest valid epoch's owner receives the parcel (REQ-OWN-003)
       const verdict = p.tasks.pickup(this.task.task_id, this.id, this.task.epoch, now);
@@ -440,6 +463,7 @@ export class LocalAgentController implements AgentController {
         this.padWaitLogged = true;
         out.events.push({ type: 'pad_unavailable', detail: `no free enabled pad (preferred ${this.homePad!.id})` });
       }
+      this.leaveDeadPhase(now);
       return;
     }
     this.padWaitLogged = false;
@@ -450,11 +474,23 @@ export class LocalAgentController implements AgentController {
     if (!this.startRoute(p, out, pad.pos, 'returning', pad.id)) {
       p.pads?.release(this.id);
       this.backoffUntil = now + 3;
+      this.leaveDeadPhase(now);
     }
   }
 
+  /** A drone with no task that could not start its way home must not stay in a task phase: wait idle and retry. */
+  private leaveDeadPhase(now: number): void {
+    if (!this.task && (this.phase === 'to_pickup' || this.phase === 'loading' || this.phase === 'to_delivery' || this.phase === 'unloading' || this.phase === 'claiming')) this.enterIdle(now);
+  }
+
+  /** My preferred cruise layer, lowered to fit under any altitude ceiling over my position or my destination. */
+  private layerFor(p: Percept, dest: Vec3): number {
+    const c = Math.min(p.obstacles.ceilingAt(p.body.pos.x, p.body.pos.z), p.obstacles.ceilingAt(dest.x, dest.z));
+    return c < Infinity ? Math.min(this.layerAlt, Math.max(12, c - 9)) : this.layerAlt;
+  }
+
   private startRoute(p: Percept, out: Command, dest: Vec3, phase: DronePhase, label: string): boolean {
-    const plan = p.planner.plan(p.body.pos, dest, this.layerAlt);
+    const plan = p.planner.plan(p.body.pos, dest, this.layerFor(p, dest));
     if (!plan) {
       out.events.push({ type: 'plan_failed', detail: label });
       return false;

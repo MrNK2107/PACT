@@ -1,4 +1,4 @@
-import { pointInShape, shapeBounds } from '../world/NoFly';
+import { isCap, pointInShape, shapeBounds } from '../world/NoFly';
 import type { StaticObstacle, Vec3, WorldBounds } from '../world/types';
 import { SIM } from './config';
 import { ObstacleManager } from './ObstacleManager';
@@ -153,7 +153,7 @@ export class PathPlanner {
       else rasterCircle(o.cx, o.cz, o.r + INFLATE);
     }
     for (const z of this.obs.zonesInAABB(minX - pad, maxX + pad, minZ - pad, maxZ + pad)) {
-      if (alt > z.maxY) continue;
+      if (alt > z.maxY || alt < (z.minY ?? 0)) continue;
       const s = z.shape;
       if (s.type === 'circle') rasterCircle(s.x, s.z, s.r + INFLATE);
       else if (s.type === 'box') rasterBox(s.minX - INFLATE, s.maxX + INFLATE, s.minZ - INFLATE, s.maxZ + INFLATE);
@@ -510,7 +510,7 @@ export function computeAvoidance(inp: AvoidanceInput): AvoidanceResult {
   if (!inp.terminal) {
     // No-fly boundaries
     for (const z of inp.obstacles.noFly) {
-      if (inp.pos.y > z.maxY) continue;
+      if (inp.pos.y > z.maxY || isCap(z)) continue; // ceilings are handled below, not by horizontal repulsion
       const nd = inp.obstacles.noFlyDistance(z, inp.pos.x, inp.pos.z);
       if (nd.d >= SIM.noFlyRange) continue;
       const k = (nd.d < 0 ? 1.6 : ((SIM.noFlyRange - nd.d) / SIM.noFlyRange) * 1.2) * V;
@@ -518,6 +518,15 @@ export function computeAvoidance(inp: AvoidanceInput): AvoidanceResult {
       av.z += nd.nz * k;
       avoiding = true;
       if (nd.d < 1) conflicts.push(z.id);
+    }
+  }
+
+  if (!inp.terminal) {
+    // altitude ceiling over my position: descend below it
+    const ceil = inp.obstacles.ceilingAt(inp.pos.x, inp.pos.z);
+    if (ceil < Infinity && inp.pos.y > ceil - 3) {
+      av.y -= Math.min(SIM.maxVz, (inp.pos.y - (ceil - 3)) * 0.8 + 1);
+      avoiding = true;
     }
   }
 

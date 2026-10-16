@@ -6,6 +6,9 @@ import type { Priority } from './Task';
 export interface FaultHooks {
   urgentBurst(n: number, priority: Priority, windowS: number, clusterType: DropType | undefined, now: number): void;
   closeZone(def: Extract<FaultDef, { type: 'close_zone' }>, now: number): boolean;
+  weatherFront(def: Extract<FaultDef, { type: 'weather_front' }>, now: number): boolean;
+  stormCell(def: Extract<FaultDef, { type: 'storm_cell' }>, now: number): boolean;
+  altitudeCap(def: Extract<FaultDef, { type: 'altitude_cap' }>, now: number): boolean;
   padOutage(target: { pad?: string; depot?: string }, now: number, until?: number): boolean;
   radioBlackout(def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number): boolean;
   batteryDrain(id: string, factor: number, now: number): void;
@@ -16,7 +19,7 @@ export interface FaultHooks {
 
 /**
  * Scripted fault injector (REQ-SIM-004). Faults fire once, in time order, from the simulation clock —
- * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, battery_drain, kill_drone.
+ * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, weather_front, storm_cell, altitude_cap, pad_outage, depot_outage, battery_drain, kill_drone.
  */
 export class FaultInjector {
   private idx = 0;
@@ -39,6 +42,21 @@ export class FaultInjector {
         case 'close_zone': {
           const ok = this.hooks.closeZone(def, now);
           this.hooks.log(ok ? 'fault_close_zone' : 'fault_close_zone_failed', { id: def.id, name: def.name, until: def.until }, now);
+          break;
+        }
+        case 'weather_front': {
+          const ok = this.hooks.weatherFront(def, now);
+          this.hooks.log(ok ? 'fault_weather_front' : 'fault_weather_front_failed', { mean_mps: def.mean_mps, dir_deg: def.dir_deg, until: def.until }, now);
+          break;
+        }
+        case 'storm_cell': {
+          const ok = this.hooks.stormCell(def, now);
+          this.hooks.log(ok ? 'fault_storm_cell' : 'fault_storm_cell_failed', { name: def.name, until: def.until }, now);
+          break;
+        }
+        case 'altitude_cap': {
+          const ok = this.hooks.altitudeCap(def, now);
+          this.hooks.log(ok ? 'fault_altitude_cap' : 'fault_altitude_cap_failed', { cap_m: def.cap_m, until: def.until }, now);
           break;
         }
         case 'pad_outage':

@@ -1,4 +1,4 @@
-import { pointInShape, shapeBounds, shapeDistance } from '../world/NoFly';
+import { isCap, pointInShape, shapeBounds, shapeDistance } from '../world/NoFly';
 import type { DynamicObstacleDef, NoFlyZone, StaticObstacle, Vec3, WorldBounds, WorldData } from '../world/types';
 
 export interface DynamicObstacle {
@@ -29,6 +29,9 @@ export class ObstacleManager {
   private stamp = new Map<string, number>();
   private stampCounter = 0;
   private active: NoFlyZone[] = [];
+  private capSig = '';
+  /** Bumped whenever the set of active altitude ceilings changes. */
+  capVersion = 0;
 
   constructor(world: WorldData) {
     this.statics = world.obstacles;
@@ -64,6 +67,28 @@ export class ObstacleManager {
 
   private refreshActive(): void {
     this.active = this.allNoFly.filter((z) => z.active);
+    const sig = this.active.filter(isCap).map((z) => `${z.id}:${z.minY}`).join('|');
+    if (sig !== this.capSig) {
+      this.capSig = sig;
+      this.capVersion++;
+    }
+  }
+
+  /** Lowest ceiling over (x, z) from active altitude caps, or Infinity. */
+  ceilingAt(x: number, z: number): number {
+    let c = Infinity;
+    for (const n of this.active) if (isCap(n) && n.minY! < c && pointInShape(n.shape, x, z)) c = n.minY!;
+    return c;
+  }
+
+  /** Moves a zone (a storm cell drifting); planners re-rasterise on the next query. */
+  updateZoneShape(id: string, shape: NoFlyZone['shape']): boolean {
+    const z = this.allNoFly.find((q) => q.id === id);
+    if (!z) return false;
+    z.shape = shape;
+    this.refreshActive();
+    this.zoneVersion++;
+    return true;
   }
 
   /** Open / close a zone (fault injection). Returns false if the zone is unknown. */
@@ -197,7 +222,7 @@ export class ObstacleManager {
 
   /** True if (x,z) is inside an active zone (inflated by `margin`). */
   inActiveNoFly(x: number, z: number, margin = 0): boolean {
-    for (const n of this.active) if (pointInShape(n.shape, x, z, margin)) return true;
+    for (const n of this.active) if (!isCap(n) && pointInShape(n.shape, x, z, margin)) return true;
     return false;
   }
 

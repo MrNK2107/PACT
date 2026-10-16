@@ -2,8 +2,9 @@ import type { BridgeState, ExternalBridge } from '../integration/ExternalBridge'
 import type { FaultDef, Scenario } from '../scenario/types';
 import { polygonShape } from '../world/NoFly';
 import { radioSpecsFrom, radioZoneFromSpec } from '../world/Radio';
+import { blendWindParams, boostWind, retargetWind, type WindBoost, type WindParams } from '../world/Wind';
 import { Rng } from '../world/rng';
-import type { DropType, NoFlyZone, PadData, Vec3, WorldData } from '../world/types';
+import type { DropType, NoFlyShape, NoFlyZone, PadData, Vec3, WindField, WorldData } from '../world/types';
 import { MessageBus } from './AgentCoordinator';
 import { drainPct, makeEnergyModel, type EnergyModel } from './Battery';
 import { applyScenario, SIM } from './config';
@@ -76,6 +77,9 @@ export interface DroneSummary {
   drainFactor: number;
 }
 
+const WIND_STEP_S = 10;
+const STORM_STEP_S = 30;
+
 export interface SimSnapshot {
   status: SimStatus;
   time: number;
@@ -104,6 +108,8 @@ export interface SimSnapshot {
   closedZones: string[];
   /** Pads currently out of service. */
   padOutages: string[];
+  /** Wind parameters in force (weather fronts change them). */
+  wind: { mean: number; dirDeg: number; gust: number };
 }
 
 /**
@@ -117,6 +123,14 @@ export class SimulationEngine {
   readonly planner: PathPlanner;
   readonly radio: RadioModel;
   readonly pads: PadBook;
+  /** Bumped whenever the wind field is rebuilt (weather fronts, storm cells). */
+  windVersion = 0;
+  private baseWind: WindField;
+  private baseWindParams: Required<WindParams>;
+  private windParams: Required<WindParams>;
+  private windRamp: { from: Required<WindParams>; to: Required<WindParams>; t0: number; dur: number; lastStep: number } | null = null;
+  private windRevert: { at: number; ramp: number } | null = null;
+  private storms: { zoneId: string; r: number; from: { x: number; z: number }; to: { x: number; z: number }; t0: number; dur: number; end?: number; boost: WindBoost | null; lastStep: number }[] = [];
   readonly energy: EnergyModel;
   board: TaskBoard;
   workload: WorkloadGenerator;
@@ -165,6 +179,9 @@ export class SimulationEngine {
     this.planner = new PathPlanner(this.obstacles, world.bounds);
     this.radio = new RadioModel(world.radioZones);
     this.pads = new PadBook(world.pads);
+    this.baseWind = world.wind;
+    this.baseWindParams = { mean_mps: world.wind.mean, dir_deg: world.wind.dirDeg, gust_mps: world.wind.gust };
+    this.windParams = { ...this.baseWindParams };
     this.rng = new Rng(world.seed + 7);
     this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s });
     this.workload = new WorkloadGenerator(world, scenario, new Rng(world.seed + 11));
@@ -204,6 +221,12 @@ export class SimulationEngine {
     this.obstacles.step(0);
     this.radio.reset();
     this.pads.reset();
+    this.world.wind = this.baseWind;
+    this.windParams = { ...this.baseWindParams };
+    this.windRamp = null;
+    this.windRevert = null;
+    this.storms = [];
+    this.windVersion++;
     for (let i = 0; i < this.initialDrones; i++) this.spawnDrone(false);
     // a few orders are waiting when the simulation starts (demo convenience; the Poisson stream takes over)
     for (let i = 0; i < SIM.initialOrders; i++) this.addTask(this.workload.makeTask(0, {}));
@@ -262,6 +285,70 @@ export class SimulationEngine {
       steps++;
     }
     if (steps >= SIM.maxStepsPerFrame) this.acc = 0;
+  }
+
+  // ---- weather ---------------------------------------------------------------------------------------
+
+  /** The wind field is rebuilt from the base field, the current parameters and the live storm boosts. */
+  private rebuildWind(): void {
+    const f = retargetWind(this.baseWind, this.windParams);
+    this.world.wind = boostWind(f, this.storms.filter((s) => s.boost).map((s) => s.boost!));
+    this.windVersion++;
+  }
+
+  private beginWindChange(to: Required<WindParams>, rampS: number, now: number): void {
+    if (rampS > 0) {
+      this.windRamp = { from: { ...this.windParams }, to, t0: now, dur: rampS, lastStep: now };
+      return;
+    }
+    this.windRamp = null;
+    this.windParams = to;
+    this.rebuildWind();
+  }
+
+  /** Advances ramps, reverts and drifting storms. Everything is a function of sim time. */
+  private stepWeather(now: number): void {
+    let rebuild = false;
+    if (this.windRevert && now >= this.windRevert.at) {
+      const r = this.windRevert;
+      this.windRevert = null;
+      this.beginWindChange({ ...this.baseWindParams }, r.ramp, now);
+    }
+    const ramp = this.windRamp;
+    if (ramp) {
+      const t = Math.min(1, (now - ramp.t0) / ramp.dur);
+      if (t >= 1 || now - ramp.lastStep >= WIND_STEP_S) {
+        this.windParams = blendWindParams(ramp.from, ramp.to, t);
+        ramp.lastStep = now;
+        rebuild = true;
+      }
+      if (t >= 1) this.windRamp = null;
+    }
+    for (const s of this.storms) {
+      if (s.end !== undefined && now >= s.end) {
+        if (s.boost) rebuild = true;
+        s.boost = null;
+        continue;
+      }
+      if (s.dur > 0 && now - s.lastStep >= STORM_STEP_S) {
+        const t = Math.min(1, (now - s.t0) / s.dur);
+        const x = s.from.x + (s.to.x - s.from.x) * t;
+        const z = s.from.z + (s.to.z - s.from.z) * t;
+        this.obstacles.updateZoneShape(s.zoneId, { type: 'circle', x, z, r: s.r });
+        if (s.boost) {
+          s.boost.x = x;
+          s.boost.z = z;
+          rebuild = true;
+        }
+        s.lastStep = now;
+      }
+    }
+    if (rebuild) this.rebuildWind();
+  }
+
+  /** Wind parameters in force (before storm boosts). */
+  get windNow(): Required<WindParams> {
+    return this.windParams;
   }
 
   // ---- fleet -----------------------------------------------------------------------------------------
@@ -378,6 +465,49 @@ export class SimulationEngine {
         }
         return false;
       },
+      weatherFront: (def: Extract<FaultDef, { type: 'weather_front' }>, now: number) => {
+        const to = { mean_mps: def.mean_mps ?? this.windParams.mean_mps, dir_deg: def.dir_deg ?? this.windParams.dir_deg, gust_mps: def.gust_mps ?? this.windParams.gust_mps };
+        this.beginWindChange(to, def.ramp_s ?? 0, now);
+        this.windRevert = def.until !== undefined ? { at: def.until, ramp: def.ramp_s ?? 0 } : null;
+        this.note('fault', `Weather front: wind ${to.mean_mps.toFixed(1)} m/s from ${to.dir_deg.toFixed(0)}°, gusts ${to.gust_mps.toFixed(1)}${def.ramp_s ? ` (ramp ${def.ramp_s} s)` : ''}${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'weather_front', ...to, t: now });
+        return true;
+      },
+      stormCell: (def: Extract<FaultDef, { type: 'storm_cell' }>, now: number) => {
+        const zid = `NFZ-STORM-${this.obstacles.allNoFly.filter((z) => z.id.startsWith('NFZ-STORM-')).length + 1}`;
+        const shape: NoFlyShape = { type: 'circle', x: def.circle.x, z: def.circle.y, r: def.circle.r };
+        const zone: NoFlyZone = {
+          id: zid,
+          name: def.name ?? 'Storm cell',
+          reason: 'Weather: storm cell',
+          shape,
+          maxY: 400,
+          minY: def.ceiling_m,
+          closable: true,
+          active: true,
+          closedFrom: now,
+          closedUntil: def.until,
+          source: 'fault',
+        };
+        this.obstacles.addZone(zone);
+        const boost: WindBoost | null = def.wind_mps && def.wind_mps > 0 ? { x: def.circle.x, z: def.circle.y, r: def.circle.r * 1.6, mps: def.wind_mps } : null;
+        const dur = def.to ? (def.duration_s ?? 600) : 0;
+        this.storms.push({ zoneId: zid, r: def.circle.r, from: { x: def.circle.x, z: def.circle.y }, to: def.to ? { x: def.to.x, z: def.to.y } : { x: def.circle.x, z: def.circle.y }, t0: now, dur, end: def.until, boost, lastStep: now });
+        if (boost) this.rebuildWind();
+        this.note('fault', `Storm cell ${zid} over (${def.circle.x.toFixed(0)}, ${def.circle.y.toFixed(0)})${def.ceiling_m ? ` above ${def.ceiling_m} m` : ''}${def.to ? ` drifting to (${def.to.x.toFixed(0)}, ${def.to.y.toFixed(0)})` : ''}${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'storm_cell', id: zid, t: now });
+        return true;
+      },
+      altitudeCap: (def: Extract<FaultDef, { type: 'altitude_cap' }>, now: number) => {
+        const b = this.world.bounds;
+        let shape: NoFlyShape;
+        if (def.polygon) shape = polygonShape(def.polygon.map((p) => ({ x: p.x, z: p.y })));
+        else if (def.circle) shape = { type: 'circle', x: def.circle.x, z: def.circle.y, r: def.circle.r };
+        else if (def.box) shape = { type: 'box', minX: Math.min(def.box.x0, def.box.x1), maxX: Math.max(def.box.x0, def.box.x1), minZ: Math.min(def.box.y0, def.box.y1), maxZ: Math.max(def.box.y0, def.box.y1) };
+        else shape = { type: 'box', minX: b.minX, maxX: b.maxX, minZ: b.minZ, maxZ: b.maxZ };
+        const zid = `NFZ-CAP-${this.obstacles.allNoFly.filter((z) => z.id.startsWith('NFZ-CAP-')).length + 1}`;
+        this.obstacles.addZone({ id: zid, name: def.name ?? 'Altitude ceiling', reason: `Ceiling ${def.cap_m} m`, shape, maxY: 10000, minY: def.cap_m, closable: true, active: true, closedFrom: now, closedUntil: def.until, source: 'fault' });
+        this.note('fault', `Altitude ceiling ${def.cap_m} m (${zid})${def.circle || def.box || def.polygon ? ' over an area' : ' everywhere'}${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'altitude_cap', id: zid, cap_m: def.cap_m, t: now });
+        return true;
+      },
       padOutage: (target: { pad?: string; depot?: string }, now: number, until?: number) => {
         const ids = target.pad ? [target.pad] : (this.world.depots.find((d) => d.id === target.depot)?.padIds ?? []);
         const n = this.pads.disable(ids, until);
@@ -431,6 +561,7 @@ export class SimulationEngine {
     this.obstacles.step(this.time);
     this.radio.step(this.time);
     this.pads.step(this.time);
+    this.stepWeather(this.time);
     this.obstacles.expireZones(this.time);
     this.faults.step(this.time);
     for (const t of this.workload.step(this.time)) this.addTask(t);
@@ -809,6 +940,7 @@ export class SimulationEngine {
       faultsFired: this.faults.fired.map((f) => ({ t: f.t, type: f.def.type })),
       openTasks: openTasks.slice(0, 40),
       padOutages: this.pads.disabledIds,
+      wind: { mean: this.windParams.mean_mps, dirDeg: this.windParams.dir_deg, gust: this.windParams.gust_mps },
       closedZones: this.obstacles.allNoFly.filter((z) => z.active && (z.source === 'fault' || z.closedFrom !== undefined)).map((z) => z.id),
     };
   }
