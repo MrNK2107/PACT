@@ -154,6 +154,8 @@ function zoneColour(z: NoFlyZone): string {
 }
 
 function NoFlyZone({ z, hatch, labels }: { z: NoFlyZone; hatch: THREE.Texture; labels: boolean }) {
+  const cap = (z.minY ?? 0) > 0;
+  const y0 = cap ? z.minY! : 0;
   const H = Math.min(60, z.maxY);
   const colour = zoneColour(z);
   const { floor, volume, edges, cx, cz, label } = useMemo(() => {
@@ -181,22 +183,24 @@ function NoFlyZone({ z, hatch, labels }: { z: NoFlyZone; hatch: THREE.Texture; l
       floor = new THREE.ShapeGeometry(shape).rotateX(-Math.PI / 2);
       volume = new THREE.ExtrudeGeometry(shape, { depth: H, bevelEnabled: false }).rotateX(-Math.PI / 2);
     }
-    return { floor, volume, edges: new THREE.EdgesGeometry(volume, 30), cx, cz, label: `${z.id} · ${z.active ? (z.closedFrom !== undefined ? 'closed' : 'no-fly') : 'open (closable)'}` };
+    return { floor, volume, edges: new THREE.EdgesGeometry(volume, 30), cx, cz, label: cap ? `${z.id} · ceiling ${y0} m` : `${z.id} · ${z.active ? (z.closedFrom !== undefined ? 'closed' : 'no-fly') : 'open (closable)'}` };
   }, [z, hatch, H, z.active, z.closedFrom]);
   const floorMat = useMemo(() => new THREE.MeshBasicMaterial({ map: hatch, transparent: true, opacity: z.active ? 0.55 : 0.18, depthWrite: false, color: colour }), [hatch, z.active, colour]);
   return (
     <group position={[cx, 0, cz]}>
-      <mesh geometry={floor} position={[0, 0.6, 0]} renderOrder={2} material={floorMat} />
-      {z.active && (
+      <mesh geometry={floor} position={[0, y0 + 0.6, 0]} renderOrder={2} material={floorMat} />
+      {z.active && !cap && (
         <mesh geometry={volume}>
           <meshBasicMaterial color={colour} transparent opacity={0.09} depthWrite={false} side={THREE.DoubleSide} />
         </mesh>
       )}
-      <lineSegments geometry={edges}>
-        <lineBasicMaterial color={colour} transparent opacity={z.active ? 0.55 : 0.35} />
-      </lineSegments>
+      {!cap && (
+        <lineSegments geometry={edges}>
+          <lineBasicMaterial color={colour} transparent opacity={z.active ? 0.55 : 0.35} />
+        </lineSegments>
+      )}
       {labels && (
-        <group position={[0, H + 3, 0]}>
+        <group position={[0, (cap ? y0 : H) + 3, 0]}>
           <Html center style={{ pointerEvents: 'none' }}>
             <div className="chip chip-nofly" style={{ background: z.active ? undefined : 'rgba(60,70,80,.8)' }}>{label}</div>
           </Html>
@@ -352,6 +356,11 @@ function ObstacleVolumes() {
 
 function WindArrows() {
   const show = useUI((s) => s.showWind);
+  // weather fronts and storm cells rebuild the field; re-draw when it changes
+  const [wv, setWv] = useState(0);
+  useFrame(() => {
+    setWv((v) => (v === engine.windVersion ? v : engine.windVersion));
+  });
   const f = world.wind;
   const n = f.nx * f.nz;
   const geo = useMemo(() => {
@@ -386,6 +395,7 @@ function WindArrows() {
       }}
       lod={3500}
       chunk={1000}
+      version={wv}
     />
   );
 }
