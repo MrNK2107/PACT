@@ -1,0 +1,16 @@
+# Rural flatland with failing chargers: one pad drops out for 20 minutes, then a whole depot.
+name: fr_pad_outage
+map: flatland_rural
+tier: hard
+description: 10 drones on 8 micro-depot pads plus 3 public pads. Pad PAD-D1-1 fails at t=300 s (20 min) and depot D3 at t=600 s (20 min). Displaced drones must find working pads.
+duration_s: 3600
+fleet: { n_drones: 10, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload:
+  arrival_rate_per_min: 1.5
+  priority_mix: [0.1, 0.3, 0.6]
+  deadline_s: { 1: [600, 1200], 2: [1200, 2400], 3: [2400, 4800] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 3000 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 300, type: pad_outage, id: PAD-D1-1, until: 1500 }
+  - { t: 600, type: depot_outage, id: D3, until: 1800 }

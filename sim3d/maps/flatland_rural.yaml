@@ -23,8 +23,9 @@ geography:
   district_bias: { farmland: 2.6, suburb: 1.6, cbd: 0.4, industrial: 0.5 }
 logistics:
   depots: { layout: micro, count: 8, pads: 1 }
+  public_pads: 3
   drop_points_per_km2: 9
 mechanics:
   wind: { mean_mps: 8, dir_deg: 270, gust_mps: 2 }
 no_fly: [auto]
-scenarios: [fr_healthy, fr_battery_crunch]
+scenarios: [fr_healthy, fr_battery_crunch, fr_pad_outage, fr_public_pads]

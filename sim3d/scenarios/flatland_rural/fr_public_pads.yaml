@@ -1,0 +1,17 @@
+# Rural flatland where the depot chargers fail for good and only the public pads and spare depot pads remain.
+name: fr_public_pads
+map: flatland_rural
+tier: stress
+description: Depots D2, D4 and D6 lose all charging at t=200 s and never recover. Their drones must share the 3 public pads and the working depot pads, or wait.
+duration_s: 3600
+fleet: { n_drones: 10, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload:
+  arrival_rate_per_min: 1.5
+  priority_mix: [0.1, 0.3, 0.6]
+  deadline_s: { 1: [600, 1200], 2: [1200, 2400], 3: [2400, 4800] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 3000 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 200, type: depot_outage, id: D2 }
+  - { t: 200, type: depot_outage, id: D4 }
+  - { t: 200, type: depot_outage, id: D6 }

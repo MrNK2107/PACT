@@ -28,4 +28,4 @@ mechanics:
   wind: { mean_mps: 7, dir_deg: 250, gust_mps: 3 }
   radio: { dead_zones: auto }
 no_fly: [auto]
-scenarios: [ip_healthy, ip_radio_clutter, ip_urgent_burst]
+scenarios: [ip_healthy, ip_radio_clutter, ip_urgent_burst, ip_hub_outage]

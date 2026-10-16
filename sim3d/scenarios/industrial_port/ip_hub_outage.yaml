@@ -1,0 +1,12 @@
+# The port hub loses its chargers: the three drones based there must use the single-pad spokes.
+name: ip_hub_outage
+map: industrial_port
+tier: hard
+description: Hub D1 (3 pads) loses charging at t=500 s for 15 minutes. With 6 drones on 6 pads, the displaced drones compete for the spokes' pads.
+duration_s: 1800
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 500, type: depot_outage, id: D1, until: 1400 }
