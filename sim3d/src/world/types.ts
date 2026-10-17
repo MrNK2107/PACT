@@ -1,4 +1,5 @@
 import type { DepotLayout, LayoutFeatures } from './features';
+import type { TerrainConfig } from './Terrain';
 /**
  * World data model.
  *
@@ -201,6 +202,8 @@ export interface BuildingData {
   color: string;
   material: 'plaster' | 'brick' | 'concrete' | 'glass' | 'metal' | 'corrugated' | 'stone' | 'panel';
   hasBalconies: boolean;
+  /** Depth of the foundation below `baseY` where the ground falls away (0 on flat ground). */
+  foundation?: number;
   /** Solid collision volume (includes roof equipment / masts for flat roofs). */
   bounds: AABB;
   rooftopPadIds: string[];
@@ -420,6 +423,19 @@ export interface RadioSpec {
   active?: boolean;
 }
 
+/** Ground heights on a regular grid (m above the flat-world datum). A flat map is an all-zero field with `flat` set. */
+export interface HeightField {
+  cell: number;
+  nx: number;
+  nz: number;
+  originX: number;
+  originZ: number;
+  h: Float32Array;
+  minY: number;
+  maxY: number;
+  flat: boolean;
+}
+
 /** Wind field sampled on a regular grid (m/s). Affects energy only (assumption T11). */
 export interface WindField {
   cell: number;
@@ -555,6 +571,7 @@ export interface WorldData {
   clusters: DemandCluster[];
   noFlyZones: NoFlyZone[];
   radioZones: RadioZone[];
+  terrain: HeightField;
   wind: WindField;
   shards: ShardGrid;
   obstacles: StaticObstacle[];
@@ -599,6 +616,8 @@ export interface WorldGenConfig {
   noFly: NoFlySpec[];
   /** Standalone public charging pads outside the depots. */
   publicPads?: number;
+  /** Ground elevation (default flat). */
+  terrain?: TerrainConfig;
   /** Radio dead zones: generated automatically and/or listed explicitly. Absent = none. */
   radio?: { auto: boolean; zones: RadioSpec[] };
   wind: { mean_mps: number; dir_deg?: number; gust_mps?: number };

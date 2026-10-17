@@ -1,5 +1,9 @@
 import { Rng } from './rng';
-import type { BalconyData, BuildingData, BuildingKind, RoofEquipment, RoofKind, TreeData, ZoneType } from './types';
+import { flatTerrain, footprintGround, heightAt } from './Terrain';
+import type { BalconyData, BuildingData, BuildingKind, HeightField, RoofEquipment, RoofKind, TreeData, ZoneType } from './types';
+
+/** Top of the paved lot slabs: every ground-level landing surface sits this far above the terrain. */
+export const GROUND_Y = 0.32;
 
 export interface BuildingSpec {
   name: string;
@@ -48,6 +52,8 @@ export interface GroundSite {
   zone: ZoneType;
   x: number;
   z: number;
+  /** Landing surface height (terrain + lot slab). */
+  y: number;
   name: string;
   buildingId?: string;
 }
@@ -103,9 +109,16 @@ export class BuildContext {
   readonly groundSites: GroundSite[] = [];
   private bn = 0;
   private tn = 0;
+  /** Ground elevation (flat unless the world generator sets it before the fillers run). */
+  terrain: HeightField = flatTerrain({ minX: -1, maxX: 1, minZ: -1, maxZ: 1, minY: 0, maxY: 1 });
 
   constructor(seed: number) {
     this.rng = new Rng(seed);
+  }
+
+  /** Ground height at (x, z). */
+  groundAt(x: number, z: number): number {
+    return heightAt(this.terrain, x, z);
   }
 
   keepout(x: number, z: number, r: number): void {
@@ -136,7 +149,11 @@ export class BuildContext {
 
   addBuilding(s: BuildingSpec): BuildingData {
     const rng = this.rng;
-    const baseY = s.baseY ?? 0;
+    // free-standing buildings stand on the highest ground under the footprint, with a foundation below;
+    // stacked parts (explicit baseY) sit on the part beneath
+    const g = s.baseY === undefined ? footprintGround(this.terrain, s.cx, s.cz, s.w, s.d) : null;
+    // never below the datum: on a river bank the interpolated ground can dip slightly under it
+    const baseY = s.baseY ?? Math.max(0, g!.max);
     const roof = s.roof ?? 'flat';
     let extra = 0;
     if (roof === 'gable' || roof === 'hip') extra = gableRise(s.w, s.d);
@@ -160,6 +177,7 @@ export class BuildContext {
       color: s.color,
       material: s.material,
       hasBalconies: !!s.balconies,
+      ...(g && baseY - g.min > 0.05 ? { foundation: baseY - g.min } : {}),
       bounds: {
         minX: s.cx - s.w / 2,
         maxX: s.cx + s.w / 2,
