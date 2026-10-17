@@ -1,4 +1,4 @@
-import { BuildContext, FLOOR_H, type BuildingSpec } from './BuildContext';
+import { BuildContext, FLOOR_H, GROUND_Y, type BuildingSpec } from './BuildContext';
 import type { CityLayout, LayoutBlock } from './CityLayout';
 import { polygonShape } from './NoFly';
 import type { Noise2D } from './noise';
@@ -230,7 +230,7 @@ function spec(b: LayoutBlock, s: Omit<BuildingSpec, 'zone' | 'blockId'>): Buildi
 
 function ground(ctx: BuildContext, b: LayoutBlock, x: number, z: number, name: string, buildingId?: string): void {
   if (!ctx.clear(x, z, 5)) return;
-  ctx.groundSites.push({ blockId: b.id, districtId: b.districtId, zone: b.zone, x, z, name, buildingId });
+  ctx.groundSites.push({ blockId: b.id, districtId: b.districtId, zone: b.zone, x, z, y: ctx.groundAt(x, z) + GROUND_Y, name, buildingId });
   ctx.keepout(x, z, 6);
 }
 
@@ -698,7 +698,7 @@ function fillTower(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut
     const oz = rng.range(-(pd - td) / 2 + 3, (pd - td) / 2 - 3) * 0.5;
     const fl = floors(rng.range(14, 30), mult, 10, env.tall ? 56 : 42);
     const fc = facade(p, rng, 0.5);
-    const t = ctx.addBuilding(spec(b, { name: `${pair ? 'Twin ' : ''}Tower ${b.id}-${i + 1}`, kind: 'tower', cx: b.cx + ox, cz: b.cz + oz, w: tw, d: td, h: fl * FLOOR_H, baseY: podH, color: fc.color, material: fc.material === 'brick' ? 'glass' : fc.material, equipment: 2 }));
+    const t = ctx.addBuilding(spec(b, { name: `${pair ? 'Twin ' : ''}Tower ${b.id}-${i + 1}`, kind: 'tower', cx: b.cx + ox, cz: b.cz + oz, w: tw, d: td, h: fl * FLOOR_H, baseY: podium.baseY + podH, color: fc.color, material: fc.material === 'brick' ? 'glass' : fc.material, equipment: 2 }));
     if (fl > 24 && rng.chance(0.6)) {
       ctx.addBuilding(spec(b, { name: `Crown ${b.id}-${i + 1}`, kind: 'crown', cx: t.cx, cz: t.cz, w: tw * 0.55, d: td * 0.55, h: rng.range(6, 10), baseY: t.baseY + t.h, color: fc.color, material: 'glass', mast: rng.chance(0.6) }));
     } else if (rng.chance(0.5)) {

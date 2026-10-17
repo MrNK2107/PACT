@@ -17,7 +17,7 @@ export interface PublicPadResult {
 
 const MIN_SEPARATION = 150;
 
-export function sitePublicPads(n: number, candidates: readonly GroundSite[], depots: readonly DepotData[], noFly: readonly NoFlyZone[], groundY: number): PublicPadResult {
+export function sitePublicPads(n: number, candidates: readonly GroundSite[], depots: readonly DepotData[], noFly: readonly NoFlyZone[]): PublicPadResult {
   const out: PublicPadResult = { pads: [], chargers: [], used: [] };
   const anchors: { x: number; z: number }[] = depots.map((d) => ({ x: d.pos.x, z: d.pos.z }));
   const nearApron = (x: number, z: number) => depots.some((d) => x > d.apron.minX - 15 && x < d.apron.maxX + 15 && z > d.apron.minZ - 15 && z < d.apron.maxZ + 15);
@@ -38,8 +38,8 @@ export function sitePublicPads(n: number, candidates: readonly GroundSite[], dep
     out.used.push(best);
     anchors.push({ x: best.x, z: best.z });
     const padId = `PAD-P${i + 1}`;
-    out.pads.push({ id: padId, pos: { x: best.x, y: groundY + 0.1, z: best.z }, radius: 3, rooftop: false, depotId: '', enabled: true });
-    out.chargers.push({ id: `CHG-P${i + 1}`, depotId: '', padId, pos: { x: best.x + 4.6, y: groundY + 0.1, z: best.z } });
+    out.pads.push({ id: padId, pos: { x: best.x, y: best.y + 0.1, z: best.z }, radius: 3, rooftop: false, depotId: '', enabled: true });
+    out.chargers.push({ id: `CHG-P${i + 1}`, depotId: '', padId, pos: { x: best.x + 4.6, y: best.y + 0.1, z: best.z } });
   }
   return out;
 }

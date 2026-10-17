@@ -1,10 +1,11 @@
 import type { BuildContext } from './BuildContext';
 import type { CityLayout, SuperBlock } from './CityLayout';
 import { inNoFly } from './NoFly';
+import { heightAt } from './Terrain';
 import type { Noise2D } from './noise';
 import type { Rng } from './rng';
 import { shardOf } from './Shards';
-import type { DemandCluster, DepotData, DistrictKind, DropPointData, DropType, NoFlyZone, ShardGrid } from './types';
+import type { DemandCluster, DepotData, DistrictKind, DropPointData, DropType, HeightField, NoFlyZone, ShardGrid } from './types';
 
 /**
  * Drop points are grouped into demand clusters (one per district, plus small clinic clusters in some
@@ -97,7 +98,7 @@ export function generateDropPoints(
   depots: DepotData[],
   noFly: NoFlyZone[],
   shards: ShardGrid,
-  cfg: { dropPointsPerKm2: number; landKm2: number; groundY: number; rooftopOnly?: boolean },
+  cfg: { dropPointsPerKm2: number; landKm2: number; groundY: number; rooftopOnly?: boolean; terrain?: HeightField },
   rng: Rng,
 ): { clusters: DemandCluster[]; dropPoints: DropPointData[] } {
   const clusters: DemandCluster[] = [];
@@ -162,8 +163,8 @@ export function generateDropPoints(
     // prefer roofs for office / hospital, ground elsewhere; interleave the rest
     const cands: { x: number; y: number; z: number; name: string; buildingId?: string; rooftop: boolean }[] = [];
     const roofFirst = p.type === 'office' || p.type === 'hospital' || p.type === 'clinic';
-    const A = roofFirst ? roofs.map((r) => ({ x: r.x, y: r.y + 0.15, z: r.z, name: r.name, buildingId: r.buildingId, rooftop: true })) : grounds.map((g) => ({ x: g.x, y: cfg.groundY, z: g.z, name: g.name, buildingId: g.buildingId, rooftop: false }));
-    const B = roofFirst ? grounds.map((g) => ({ x: g.x, y: cfg.groundY, z: g.z, name: g.name, buildingId: g.buildingId, rooftop: false })) : roofs.map((r) => ({ x: r.x, y: r.y + 0.15, z: r.z, name: r.name, buildingId: r.buildingId, rooftop: true }));
+    const A = roofFirst ? roofs.map((r) => ({ x: r.x, y: r.y + 0.15, z: r.z, name: r.name, buildingId: r.buildingId, rooftop: true })) : grounds.map((g) => ({ x: g.x, y: g.y, z: g.z, name: g.name, buildingId: g.buildingId, rooftop: false }));
+    const B = roofFirst ? grounds.map((g) => ({ x: g.x, y: g.y, z: g.z, name: g.name, buildingId: g.buildingId, rooftop: false })) : roofs.map((r) => ({ x: r.x, y: r.y + 0.15, z: r.z, name: r.name, buildingId: r.buildingId, rooftop: true }));
     const n = Math.max(A.length, B.length);
     for (let k = 0; k < n; k++) {
       if (k < A.length) cands.push(A[k]);
@@ -173,7 +174,7 @@ export function generateDropPoints(
     for (const c of cands) {
       if (cluster.pointIds.length >= want) break;
       if (inNoFly(noFly, c.x, c.z, 3, false) || nearApron(c.x, c.z)) continue;
-      if (c.rooftop && c.y > 60) continue; // rooftop drops stay well under the flight ceiling
+      if (c.rooftop && c.y - (cfg.terrain ? heightAt(cfg.terrain, c.x, c.z) : 0) > 60) continue; // rooftop drops stay well under the flight ceiling (measured above the ground)
       if (overhung(c.x, c.z, c.y, c.rooftop ? c.buildingId : undefined)) continue;
       if (used.some((u) => Math.abs(u.x - c.x) < 15 && Math.abs(u.z - c.z) < 15)) continue;
       used.push({ x: c.x, z: c.z });

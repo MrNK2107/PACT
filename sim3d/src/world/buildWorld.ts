@@ -1,10 +1,11 @@
 import { airportNoFly, fillBlock, fillDepot, type DepotBuild, type FillEnv, type FillOut } from './BlockFillers';
-import { BuildContext } from './BuildContext';
+import { BuildContext, GROUND_Y } from './BuildContext';
 import { generateLayout, type LayoutBlock } from './CityLayout';
 import { assembleDepots, siteDepotBlocks } from './Depots';
 import { generateDropPoints, planClusters } from './DropPoints';
 import { placeLandmarks } from './Landmarks';
 import { sitePublicPads } from './PublicPads';
+import { generateTerrain, heightAt } from './Terrain';
 import { generateRadioZones, radioZoneFromSpec } from './Radio';
 import { inNoFly as inNoFlyZones, zoneFromSpec } from './NoFly';
 import { featuresForSize, type LayoutFeatures } from './features';
@@ -17,8 +18,7 @@ import { generateStreetscape } from './Streetscape';
 import type { DynamicObstacleDef, NoFlyZone, PowerLineData, RadioZone, UtilityStructure, WorldData, WorldGenConfig } from './types';
 import { generateWind } from './Wind';
 
-/** Top of the paved lot slabs: every ground-level landing surface sits here. */
-export const GROUND_Y = 0.32;
+export { GROUND_Y };
 
 export const DEFAULT_WORLD_CONFIG: WorldGenConfig = {
   seed: 20240611,
@@ -51,7 +51,18 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   const bounds = cfg.bounds ?? { minX: -half, maxX: half, minZ: -half, maxZ: half, minY: 0, maxY: 120 };
 
   const layout = generateLayout(cfg.seed, cfg.size, f);
+  // ---- terrain (own noise stream; the flat default leaves everything below untouched) --------------------------------
+  const terrain = generateTerrain(cfg.seed, bounds, cfg.terrain ?? { kind: 'none' }, {
+    coast: !!layout.coast,
+    river: layout.rivers.length > 0,
+    shoreX: layout.shoreX,
+    riverX: layout.riverX,
+    riverWidth: layout.riverWidth,
+    airport: layout.airport,
+  });
+  if (!cfg.bounds) bounds.maxY += Math.ceil(terrain.maxY);
   const ctx = new BuildContext(cfg.seed + 1);
+  ctx.terrain = terrain;
   const rng = new Rng(cfg.seed + 2);
   const noise = new Noise2D(cfg.seed + 3);
   const kindNoise = new Noise2D(cfg.seed + 4);
@@ -96,7 +107,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     else fillBlock(ctx, b, env, out);
   }
   depotBuilds.sort((a, b) => depotBlocks.indexOf(a.block) - depotBlocks.indexOf(b.block));
-  const { depots, pads, chargers } = assembleDepots(depotBuilds, GROUND_Y);
+  const { depots, pads, chargers } = assembleDepots(depotBuilds, GROUND_Y, terrain);
 
   // ---- no-fly zones -------------------------------------------------------------------------------------------
   const noFlyZones: NoFlyZone[] = [];
@@ -133,7 +144,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
 
   // ---- public charging pads (own sites, no RNG; removed from the drop-site pool) -----------------------------------
   if ((cfg.publicPads ?? 0) > 0) {
-    const pub = sitePublicPads(Math.min(8, Math.round(cfg.publicPads!)), ctx.groundSites, depots, noFlyZones, GROUND_Y);
+    const pub = sitePublicPads(Math.min(8, Math.round(cfg.publicPads!)), ctx.groundSites, depots, noFlyZones);
     pads.push(...pub.pads);
     chargers.push(...pub.chargers);
     for (const g of pub.used) ctx.groundSites.splice(ctx.groundSites.indexOf(g), 1);
@@ -142,7 +153,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   // ---- drop points ------------------------------------------------------------------------------------------------
   let landKm2 = 0;
   for (const d of layout.districts) if (d.kind !== 'water' && d.kind !== 'airport') landKm2 += ((d.maxX - d.minX) * (d.maxZ - d.minZ)) / 1e6;
-  const { clusters, dropPoints } = generateDropPoints(plans, ctx, depots, noFlyZones, shards, { dropPointsPerKm2: cfg.dropPointsPerKm2, landKm2, groundY: GROUND_Y, rooftopOnly: cfg.rooftopOnly }, rng);
+  const { clusters, dropPoints } = generateDropPoints(plans, ctx, depots, noFlyZones, shards, { dropPointsPerKm2: cfg.dropPointsPerKm2, landKm2, groundY: GROUND_Y, rooftopOnly: cfg.rooftopOnly, terrain }, rng);
 
   // ---- streetscape ---------------------------------------------------------------------------------------------------
   const street = generateStreetscape(layout, ctx, rng, { coastal: (x, z) => x > layout.shoreX(z) - 450 });
@@ -198,7 +209,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     const id = `DO-${String(i + 1).padStart(2, '0')}`;
     if (kind === 'balloon' && parks.length) {
       const d = rng.pick(parks);
-      dynamicObstacles.push({ id, name: 'Survey balloon', kind, radius: 5, motion: { type: 'orbit', cx: (d.minX + d.maxX) / 2, cz: (d.minZ + d.maxZ) / 2, r: rng.range(60, 120), y: rng.range(34, 48), speed: rng.range(3, 4.5), phase: rng.range(0, 6.28) } });
+      dynamicObstacles.push({ id, name: 'Survey balloon', kind, radius: 5, motion: { type: 'orbit', cx: (d.minX + d.maxX) / 2, cz: (d.minZ + d.maxZ) / 2, r: rng.range(60, 120), y: rng.range(34, 48) + terrain.maxY, speed: rng.range(3, 4.5), phase: rng.range(0, 6.28) } });
     } else {
       // patrol between two random land points
       let ax = 0;
@@ -215,12 +226,12 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
         bz = rng.range(bounds.minZ + 300, bounds.maxZ - 300);
         if (!layout.isWater(bx, bz) && Math.hypot(bx - ax, bz - az) > 500) break;
       }
-      dynamicObstacles.push({ id, name: kind === 'blimp' ? 'Inspection blimp' : 'News helicopter', kind, radius: kind === 'blimp' ? 6 : 7, motion: { type: 'patrol', ax, az, bx, bz, y: kind === 'blimp' ? rng.range(30, 40) : rng.range(50, 62), speed: kind === 'blimp' ? rng.range(3.5, 5) : rng.range(14, 20) } });
+      dynamicObstacles.push({ id, name: kind === 'blimp' ? 'Inspection blimp' : 'News helicopter', kind, radius: kind === 'blimp' ? 6 : 7, motion: { type: 'patrol', ax, az, bx, bz, y: (kind === 'blimp' ? rng.range(30, 40) : rng.range(50, 62)) + terrain.maxY, speed: kind === 'blimp' ? rng.range(3.5, 5) : rng.range(14, 20) } });
     }
   }
 
   // ---- obstacles + assembly ------------------------------------------------------------------------------------------
-  const obstacles = buildObstacles(ctx.buildings, out.cranes, utilities, ctx.trees);
+  const obstacles = buildObstacles(ctx.buildings, out.cranes, utilities, ctx.trees, (x, z) => heightAt(terrain, x, z));
   const world: WorldData = {
     seed: cfg.seed,
     size: cfg.size,
@@ -254,6 +265,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     clusters,
     noFlyZones,
     radioZones,
+    terrain,
     wind,
     shards,
     obstacles,
@@ -293,6 +305,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     vehicles: world.vehicles.length,
     props: world.props.length,
     landKm2: Math.round(landKm2 * 100) / 100,
+    ...(terrain.flat ? {} : { terrainMinY: Math.round(terrain.minY * 10) / 10, terrainMaxY: Math.round(terrain.maxY * 10) / 10 }),
   };
   void shardOf;
   return world;

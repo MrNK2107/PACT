@@ -1,7 +1,8 @@
 import type { DepotBuild } from './BlockFillers';
 import type { CityLayout, LayoutBlock } from './CityLayout';
 import type { DepotLayout } from './features';
-import type { ChargerData, DepotData, PadData } from './types';
+import { heightAt } from './Terrain';
+import type { ChargerData, DepotData, HeightField, PadData } from './types';
 
 /**
  * Depot siting. Depots are local resources (parcel hand-off + 1–3 scarce charging pads) spread over
@@ -33,11 +34,17 @@ const CAND_TIERS_MICRO: typeof CAND_TIERS = [
   { kinds: [], w: 70, d: 55, maxArea: Infinity },
 ];
 
+/** A single hub is the operations centre: it goes where the town is, not into an industrial estate at the edge. */
+const CAND_TIERS_HUB: typeof CAND_TIERS = [
+  { kinds: ['logistics', 'industrial', 'commercial', 'mixed', 'apartments', 'townhouses', 'houses', 'suburb'], w: 90, d: 70, maxArea: Infinity },
+  { kinds: [], w: 80, d: 60, maxArea: Infinity },
+];
+
 export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number, kind: DepotLayout = 'distributed'): LayoutBlock[] {
   const minSep = kind === 'micro' ? 250 : layout.size < 2500 ? 300 : 600;
   const excluded = new Set(['airport', 'water', 'hospital', 'stadium']);
   let cands: LayoutBlock[] = [];
-  for (const tier of kind === 'micro' ? CAND_TIERS_MICRO : CAND_TIERS) {
+  for (const tier of kind === 'micro' ? CAND_TIERS_MICRO : kind === 'single_hub' ? CAND_TIERS_HUB : CAND_TIERS) {
     cands = layout.blocks.filter((b) => !b.kind && !b.nearWater && !excluded.has(b.district) && (tier.kinds.length === 0 || tier.kinds.includes(b.district)) && fits(b, tier.w, tier.d, tier.maxArea));
     if (cands.length >= n) break;
   }
@@ -118,10 +125,11 @@ export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: num
 }
 
 /** Turns the built depot blocks into depot / pad / charger records. */
-export function assembleDepots(builds: { block: LayoutBlock; build: DepotBuild }[], groundY: number): { depots: DepotData[]; pads: PadData[]; chargers: ChargerData[] } {
+export function assembleDepots(builds: { block: LayoutBlock; build: DepotBuild }[], groundY: number, terrain?: HeightField): { depots: DepotData[]; pads: PadData[]; chargers: ChargerData[] } {
   const depots: DepotData[] = [];
   const pads: PadData[] = [];
   const chargers: ChargerData[] = [];
+  const gy = (x: number, z: number) => (terrain ? heightAt(terrain, x, z) : 0) + groundY;
   builds.forEach(({ block, build }, i) => {
     const id = `D${i + 1}`;
     const depot: DepotData = {
@@ -131,22 +139,22 @@ export function assembleDepots(builds: { block: LayoutBlock; build: DepotBuild }
       zone: block.zone,
       districtId: block.districtId,
       rooftop: false,
-      pos: { x: (build.apron.minX + build.apron.maxX) / 2, y: groundY, z: (build.apron.minZ + build.apron.maxZ) / 2 },
+      pos: { x: (build.apron.minX + build.apron.maxX) / 2, y: gy((build.apron.minX + build.apron.maxX) / 2, (build.apron.minZ + build.apron.maxZ) / 2), z: (build.apron.minZ + build.apron.maxZ) / 2 },
       buildingId: build.building.id,
       padIds: [],
       chargerIds: [],
-      handoff: build.handoff.map((h) => ({ x: h.x, y: groundY, z: h.z })),
+      handoff: build.handoff.map((h) => ({ x: h.x, y: gy(h.x, h.z), z: h.z })),
       apron: { ...build.apron },
       catchmentShards: [],
     };
     const alongX = build.apron.maxX - build.apron.minX >= build.apron.maxZ - build.apron.minZ;
     build.pads.forEach((p, k) => {
       const padId = `PAD-${id}-${k + 1}`;
-      pads.push({ id: padId, pos: { x: p.x, y: groundY + 0.1, z: p.z }, radius: 3, rooftop: false, depotId: id, enabled: true });
+      pads.push({ id: padId, pos: { x: p.x, y: gy(p.x, p.z) + 0.1, z: p.z }, radius: 3, rooftop: false, depotId: id, enabled: true });
       depot.padIds.push(padId);
       const chId = `CHG-${id}-${k + 1}`;
       const away = alongX ? (p.z > build.building.cz ? 1 : -1) : p.x > build.building.cx ? 1 : -1;
-      chargers.push({ id: chId, depotId: id, padId, pos: { x: alongX ? p.x : p.x + away * 4.6, y: groundY + 0.1, z: alongX ? p.z + away * 4.6 : p.z } });
+      chargers.push({ id: chId, depotId: id, padId, pos: { x: alongX ? p.x : p.x + away * 4.6, y: gy(p.x, p.z) + 0.1, z: alongX ? p.z + away * 4.6 : p.z } });
       depot.chargerIds.push(chId);
     });
     depots.push(depot);
