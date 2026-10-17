@@ -9,6 +9,7 @@ import { CityScene } from './CityScene';
 import { DroneLayer } from './DroneLayer';
 import { LogisticsScene } from './LogisticsScene';
 import { getMaterials } from './materials';
+import { buildGroundTiles, hasTerrain } from './terrain';
 import { Overlays } from './Overlays';
 import { RouteOverlay } from './RouteOverlay';
 
@@ -64,6 +65,8 @@ function Lighting() {
 function Terrain() {
   const mats = getMaterials();
   const coast = world.coast;
+  // hilly maps draw the ground as a height-field mesh (the flat plane stays underneath as the horizon)
+  const groundTiles = useMemo(() => (hasTerrain ? buildGroundTiles(4) : []), []);
   const sea = useMemo(() => {
     if (!coast) return null;
     const pts = coast.shore;
@@ -127,9 +130,12 @@ function Terrain() {
   });
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={mats.grass}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, hasTerrain ? -0.06 : 0, 0]} receiveShadow material={mats.grass}>
         <planeGeometry args={[EXTENT * 2, EXTENT * 2]} />
       </mesh>
+      {groundTiles.map((g, i) => (
+        <mesh key={i} geometry={g} material={mats.grass} receiveShadow />
+      ))}
       {sea && (
         <>
           <mesh geometry={sea.beach} material={mats.sand} receiveShadow />
@@ -183,10 +189,21 @@ function CameraRig() {
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    // home: looking at the most central depot
+    // home: looking at the most central depot (`?view=overview` frames the whole map instead;
+    // `?cam=px,py,pz,tx,ty,tz` places the camera explicitly)
+    const params = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
+    const cam = params?.get('cam')?.split(',').map(Number);
+    if (cam && cam.length === 6 && cam.every((n) => isFinite(n))) {
+      camera.position.set(cam[0], cam[1], cam[2]);
+      c.target.set(cam[3], cam[4], cam[5]);
+      c.update();
+      return;
+    }
+    const overview = params?.get('view') === 'overview';
     const d0 = world.depots[0];
-    const t = d0 ? new THREE.Vector3(d0.pos.x, 0, d0.pos.z) : HOME_CAMERA.target.clone();
-    camera.position.copy(t).add(new THREE.Vector3(520, 420, 520));
+    const t = overview || !d0 ? HOME_CAMERA.target.clone() : new THREE.Vector3(d0.pos.x, d0.pos.y, d0.pos.z);
+    if (overview) camera.position.set(SIZE * 0.42, SIZE * 0.3 + world.terrain.maxY, SIZE * 0.42);
+    else camera.position.copy(t).add(new THREE.Vector3(520, 420, 520));
     c.target.copy(t);
     c.update();
   }, [camera, resetNonce]);
