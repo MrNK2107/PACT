@@ -1,4 +1,5 @@
 import { parse } from 'yaml';
+import { TERRAIN_PRESETS, type TerrainConfig } from '../world/Terrain';
 import { DEPOT_LAYOUTS, TIERS, WATER_MODES, type MapDef } from './types';
 
 const WEATHER_TYPES = ['weather_front', 'storm_cell', 'altitude_cap'];
@@ -45,6 +46,13 @@ export function loadMap(text: string, path: string): MapDef {
     return v;
   };
   const optNum = (v: unknown, name: string, lo: number, hi: number): number | undefined => (v === undefined ? undefined : num(path, v, name, lo, hi));
+  let terrain: TerrainConfig | undefined;
+  if (typeof geo.terrain === 'string') {
+    terrain = TERRAIN_PRESETS[geo.terrain];
+    if (!terrain) fail(path, `geography.terrain "${geo.terrain}" is not one of ${Object.keys(TERRAIN_PRESETS).join(' | ')}`);
+  } else if (isObj(geo.terrain)) {
+    terrain = { kind: 'hills', amplitude_m: num(path, geo.terrain.amplitude_m, 'geography.terrain.amplitude_m', 0, 80), wavelength_m: num(path, geo.terrain.wavelength_m ?? 2000, 'geography.terrain.wavelength_m', 500, 6000) };
+  } else if (geo.terrain !== undefined) fail(path, 'geography.terrain must be a preset name or {amplitude_m, wavelength_m}');
   const specialsRaw = isObj(geo.specials) ? geo.specials : {};
   const biasRaw = isObj(geo.district_bias) ? geo.district_bias : {};
   for (const k of Object.keys(biasRaw)) if (!BIAS_KEYS.includes(k)) fail(path, `geography.district_bias.${k} is not one of ${BIAS_KEYS.join(' | ')}`);
@@ -65,6 +73,7 @@ export function loadMap(text: string, path: string): MapDef {
     hidden: raw.hidden === true,
     geography: {
       water: oneOf(path, geo.water ?? 'coast_river', 'geography.water', WATER_MODES),
+      terrain,
       airport: optBool(geo.airport, 'geography.airport'),
       port: optBool(geo.port, 'geography.port'),
       rail: optBool(geo.rail, 'geography.rail'),

@@ -1,0 +1,35 @@
+# Hilly river valley: a town along a meandering river with hills on both sides. One operations hub,
+# long climbs and descents, hills that close the low altitude layers, and a radio shadow on the valley floor.
+id: river_valley
+name: River Valley
+description: 5 km valley town along a river, rolling hills either side, one 5-pad hub depot. Hills block the low layers, so drones climb and route around ridges.
+tier: hard
+seed: 31004
+size_m: 5000
+geography:
+  water: river
+  terrain: hilly
+  airport: false
+  port: false
+  rail: true
+  motorway_ring: false
+  secondary_centres: 1
+  landmarks: [cathedral, tvmast]
+  specials: { hospital: 1, campus: 1, stadium: 0, cemetery: 1 }
+  old_town_districts: 2
+  tall_buildings: false
+  turbines: 4
+  power_lines: false
+  dynamic_obstacle_density: 0.5
+  district_bias: { suburb: 1.4, cbd: 0.5, park: 1.3 }
+logistics:
+  depots: { layout: single_hub, count: 1, pads: 5 }
+  drop_points_per_km2: 22
+mechanics:
+  wind: { mean_mps: 7, dir_deg: 180, gust_mps: 3 }
+  radio:
+    dead_zones: auto
+    zones:
+      - { id: RAD-VALLEY, name: Valley floor shadow, circle: { x: 0, y: 0, r: 650 }, range_factor: 0.35, loss: 0.12, max_alt_m: 60 }
+no_fly: [auto]
+scenarios: [rv_healthy]

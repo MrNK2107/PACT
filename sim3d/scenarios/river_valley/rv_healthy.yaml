@@ -1,0 +1,11 @@
+# River valley, healthy operations: 5 drones from one hub over hilly terrain, no faults.
+name: rv_healthy
+map: river_valley
+tier: standard
+description: 5 drones from one 5-pad hub over rolling hills. Hills close the 28 m layer over high ground, so routes climb and weave.
+duration_s: 1800
+fleet: { n_drones: 5, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 1.8, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults: []

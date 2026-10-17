@@ -214,6 +214,7 @@ export function worldConfigFrom(s: Scenario): WorldGenConfig {
     features: map ? featuresFromMap(map, size) : featuresForSize(size),
     depotLayout: map?.logistics.depots.layout ?? 'distributed',
     rooftopOnly: map?.logistics.rooftop_only ?? false,
+    terrain: map?.geography.terrain,
     depots: s.world.depots,
     padsPerDepot: s.world.pads_per_depot,
     publicPads: s.world.public_pads,

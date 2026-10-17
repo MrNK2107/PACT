@@ -1,5 +1,6 @@
 import type { FaultDef, NoFlyFileSpec, RadioFileSpec } from '../scenario/types';
 import type { DepotLayout } from '../world/features';
+import type { TerrainConfig } from '../world/Terrain';
 
 export type { DepotLayout };
 
@@ -32,6 +33,8 @@ export interface MapDef {
   hidden: boolean;
   geography: {
     water: WaterMode;
+    /** Ground elevation: a preset (none, gentle, hilly, mountain) or explicit hills. Undefined = flat. */
+    terrain?: TerrainConfig;
     /** Optional flags; undefined = derived from the map size like the legacy generator. */
     airport?: boolean;
     port?: boolean;
