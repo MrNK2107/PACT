@@ -1,5 +1,6 @@
 import { isCap, pointInShape, shapeBounds, shapeDistance } from '../world/NoFly';
-import type { DynamicObstacleDef, NoFlyZone, StaticObstacle, Vec3, WorldBounds, WorldData } from '../world/types';
+import { heightAt } from '../world/Terrain';
+import type { DynamicObstacleDef, HeightField, NoFlyZone, StaticObstacle, Vec3, WorldBounds, WorldData } from '../world/types';
 
 export interface DynamicObstacle {
   id: string;
@@ -30,11 +31,13 @@ export class ObstacleManager {
   private stampCounter = 0;
   private active: NoFlyZone[] = [];
   private capSig = '';
+  readonly terrain: HeightField;
   /** Bumped whenever the set of active altitude ceilings changes. */
   capVersion = 0;
 
   constructor(world: WorldData) {
     this.statics = world.obstacles;
+    this.terrain = world.terrain;
     this.allNoFly = world.noFlyZones;
     this.bounds = world.bounds;
     this.refreshActive();
@@ -72,6 +75,11 @@ export class ObstacleManager {
       this.capSig = sig;
       this.capVersion++;
     }
+  }
+
+  /** Ground height at (x, z). */
+  groundAt(x: number, z: number): number {
+    return heightAt(this.terrain, x, z);
   }
 
   /** Lowest ceiling over (x, z) from active altitude caps, or Infinity. */

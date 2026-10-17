@@ -1,4 +1,5 @@
 import { isCap, pointInShape, shapeBounds } from '../world/NoFly';
+import { heightAt } from '../world/Terrain';
 import type { StaticObstacle, Vec3, WorldBounds } from '../world/types';
 import { SIM } from './config';
 import { ObstacleManager } from './ObstacleManager';
@@ -87,6 +88,10 @@ export interface OccupancyWindow {
  * size cost memory proportional to the area actually flown. Every drone owns its plans; nothing here
  * coordinates drones with each other.
  */
+/** Clearance the planner keeps above the ground (m), and the margin below which the reflex climbs. */
+const GROUND_CLEAR = 8;
+const TERRAIN_MARGIN = 6;
+
 export class PathPlanner {
   readonly cell = CELL;
   readonly nx: number;
@@ -167,6 +172,15 @@ export class PathPlanner {
           for (let i = a0; i <= a1; i++) {
             if (pointInShape(s, minX + (i + 0.5) * CELL, minZ + (j + 0.5) * CELL, INFLATE)) g[j * CHUNK + i] = 1;
           }
+        }
+      }
+    }
+    // hills: a cell is blocked where the ground (plus a safety clearance) reaches this altitude layer
+    const ter = this.obs.terrain;
+    if (!ter.flat) {
+      for (let j = 0; j < CHUNK; j++) {
+        for (let i = 0; i < CHUNK; i++) {
+          if (heightAt(ter, minX + (i + 0.5) * CELL, minZ + (j + 0.5) * CELL) + GROUND_CLEAR > alt) g[j * CHUNK + i] = 1;
         }
       }
     }
@@ -518,6 +532,15 @@ export function computeAvoidance(inp: AvoidanceInput): AvoidanceResult {
       av.z += nd.nz * k;
       avoiding = true;
       if (nd.d < 1) conflicts.push(z.id);
+    }
+  }
+
+  if (!inp.terminal && !inp.obstacles.terrain.flat) {
+    // too close to the ground (flying over a slope): climb
+    const agl = inp.pos.y - inp.obstacles.groundAt(inp.pos.x, inp.pos.z);
+    if (agl < TERRAIN_MARGIN) {
+      av.y += Math.min(SIM.maxVz, (TERRAIN_MARGIN - agl) * 0.8 + 0.5);
+      avoiding = true;
     }
   }
 

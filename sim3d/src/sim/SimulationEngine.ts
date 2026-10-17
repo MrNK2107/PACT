@@ -2,6 +2,7 @@ import type { BridgeState, ExternalBridge } from '../integration/ExternalBridge'
 import type { FaultDef, Scenario } from '../scenario/types';
 import { polygonShape } from '../world/NoFly';
 import { radioSpecsFrom, radioZoneFromSpec } from '../world/Radio';
+import { heightAt } from '../world/Terrain';
 import { blendWindParams, boostWind, retargetWind, type WindBoost, type WindParams } from '../world/Wind';
 import { Rng } from '../world/rng';
 import type { DropType, NoFlyShape, NoFlyZone, PadData, Vec3, WindField, WorldData } from '../world/types';
@@ -95,6 +96,7 @@ export interface SimSnapshot {
   minSeparation: number | null;
   collisions: number;
   structureHits: number;
+  terrainHits: number;
   drones: DroneSummary[];
   events: SimEvent[];
   canAddDrone: boolean;
@@ -157,6 +159,8 @@ export class SimulationEngine {
   minSeparation: number | null = null;
   collisions = 0;
   structureHits = 0;
+  /** Airborne samples below the ground surface (never on flat maps: the floor clamp prevents it). */
+  terrainHits = 0;
 
   private rng: Rng;
   private acc = 0;
@@ -211,6 +215,7 @@ export class SimulationEngine {
     this.minSeparation = null;
     this.collisions = 0;
     this.structureHits = 0;
+    this.terrainHits = 0;
     this.conflicts.clear();
     this.collisionPairs.clear();
     this.droneSeq = 0;
@@ -651,8 +656,11 @@ export class SimulationEngine {
     b.pos.x += b.vel.x * dt;
     b.pos.y += b.vel.y * dt;
     b.pos.z += b.vel.z * dt;
-    if (b.pos.y < 0.05) {
-      b.pos.y = 0.05;
+    // floor: the datum on flat maps; on hills a soft floor just under the ground, so a pad cell whose interpolated
+    // ground is a little above the pad can never trap a landing drone
+    const floorY = this.world.terrain.flat ? 0.05 : Math.max(0.05, heightAt(this.world.terrain, b.pos.x, b.pos.z) - 3);
+    if (b.pos.y < floorY) {
+      b.pos.y = floorY;
       if (b.vel.y < 0) b.vel.y = 0;
     }
     const bd = this.world.bounds;
@@ -777,6 +785,10 @@ export class SimulationEngine {
 
     for (let i = 0; i < this.agents.length; i++) {
       const A = this.agents[i];
+      if (A.airborne && !this.world.terrain.flat && A.body.pos.y < this.obstacles.groundAt(A.body.pos.x, A.body.pos.z) - 0.5) {
+        this.terrainHits++;
+        this.note('warn', `${A.id} below the ground surface`, A.id, 'terrain_hit', {});
+      }
       if (A.airborne) {
         const hit = this.obstacles.insideSolid(A.body.pos, 0.4, ['building']);
         const wp = A.controller.route[A.controller.routeIndex];
@@ -931,6 +943,7 @@ export class SimulationEngine {
       minSeparation: this.minSeparation,
       collisions: this.collisions,
       structureHits: this.structureHits,
+      terrainHits: this.terrainHits,
       drones,
       events: this.log.slice(-14).reverse(),
       canAddDrone: this.canAddDrone,
