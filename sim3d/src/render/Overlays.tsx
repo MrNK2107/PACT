@@ -11,6 +11,7 @@ import type { BuildingData, DepotData, DistrictData, NoFlyZone, RadioZone, Stati
 import { windAt } from '../world/Wind';
 import { ChunkedInstances } from './ChunkedInstances';
 import { hatchTexture } from './textures';
+import { GROUND_TOP } from './terrain';
 
 const NOFLY = '#dc2626';
 const CLOSED = '#f59e0b';
@@ -33,8 +34,8 @@ function NavGrid() {
   const { minor, major } = useMemo(() => {
     const minorP: number[] = [];
     const majorP: number[] = [];
-    for (let x = Math.ceil(b.minX / 100) * 100; x <= b.maxX; x += 100) (x % 500 === 0 ? majorP : minorP).push(x, 0.5, b.minZ, x, 0.5, b.maxZ);
-    for (let z = Math.ceil(b.minZ / 100) * 100; z <= b.maxZ; z += 100) (z % 500 === 0 ? majorP : minorP).push(b.minX, 0.5, z, b.maxX, 0.5, z);
+    for (let x = Math.ceil(b.minX / 100) * 100; x <= b.maxX; x += 100) (x % 500 === 0 ? majorP : minorP).push(x, 0.5 + GROUND_TOP, b.minZ, x, 0.5 + GROUND_TOP, b.maxZ);
+    for (let z = Math.ceil(b.minZ / 100) * 100; z <= b.maxZ; z += 100) (z % 500 === 0 ? majorP : minorP).push(b.minX, 0.5 + GROUND_TOP, z, b.maxX, 0.5 + GROUND_TOP, z);
     const mk = (p: number[]) => new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
     return { minor: mk(minorP), major: mk(majorP) };
   }, [b]);
@@ -56,12 +57,12 @@ function NavGrid() {
       </lineSegments>
       {ticks.map((t) => (
         <group key={t}>
-          <group position={[t, 0.5, b.maxZ + 30]}>
+          <group position={[t, 0.5 + GROUND_TOP, b.maxZ + 30]}>
             <Html center style={{ pointerEvents: 'none' }}>
               <div className="axis-chip">x {t}</div>
             </Html>
           </group>
-          <group position={[b.minX - 40, 0.5, t]}>
+          <group position={[b.minX - 40, 0.5 + GROUND_TOP, t]}>
             <Html center style={{ pointerEvents: 'none' }}>
               <div className="axis-chip">z {t}</div>
             </Html>
@@ -124,7 +125,7 @@ function OccupancyLayer() {
     ctx.putImageData(img, 0, 0);
     tex.needsUpdate = true;
     const [x0, z0] = planner.centre(w.i0, w.j0);
-    m.position.set(x0 - planner.cell / 2 + (w.nx * planner.cell) / 2, 0.55, z0 - planner.cell / 2 + (w.nz * planner.cell) / 2);
+    m.position.set(x0 - planner.cell / 2 + (w.nx * planner.cell) / 2, 0.55 + GROUND_TOP, z0 - planner.cell / 2 + (w.nz * planner.cell) / 2);
     m.scale.set(w.nx * planner.cell, w.nz * planner.cell, 1);
   });
 
@@ -134,7 +135,7 @@ function OccupancyLayer() {
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial map={tex} transparent depthWrite={false} />
       </mesh>
-      <group position={[world.bounds.minX + 60, 0.6, world.bounds.minZ + 6]}>
+      <group position={[world.bounds.minX + 60, 0.6 + GROUND_TOP, world.bounds.minZ + 6]}>
         <Html center style={{ pointerEvents: 'none' }}>
           <div className="axis-chip">planner occupancy @ {alt} m (around view)</div>
         </Html>
@@ -188,7 +189,7 @@ function NoFlyZone({ z, hatch, labels }: { z: NoFlyZone; hatch: THREE.Texture; l
   const floorMat = useMemo(() => new THREE.MeshBasicMaterial({ map: hatch, transparent: true, opacity: z.active ? 0.55 : 0.18, depthWrite: false, color: colour }), [hatch, z.active, colour]);
   return (
     <group position={[cx, 0, cz]}>
-      <mesh geometry={floor} position={[0, y0 + 0.6, 0]} renderOrder={2} material={floorMat} />
+      <mesh geometry={floor} position={[0, y0 + 0.6 + (cap ? 0 : GROUND_TOP), 0]} renderOrder={2} material={floorMat} />
       {z.active && !cap && (
         <mesh geometry={volume}>
           <meshBasicMaterial color={colour} transparent opacity={0.09} depthWrite={false} side={THREE.DoubleSide} />
@@ -259,7 +260,7 @@ function RadioZoneMesh({ z, hatch, labels }: { z: RadioZone; hatch: THREE.Textur
   const label = `${z.id} · radio ×${z.rangeFactor.toFixed(2)}${z.lossAdd > 0 ? ` · loss +${Math.round(z.lossAdd * 100)}%` : ''}`;
   return (
     <group position={[cx, 0, cz]}>
-      <mesh geometry={floor} position={[0, 0.7, 0]} renderOrder={2} material={mat} />
+      <mesh geometry={floor} position={[0, 0.7 + GROUND_TOP, 0]} renderOrder={2} material={mat} />
       <lineSegments geometry={edges}>
         <lineBasicMaterial color={RADIO} transparent opacity={0.45} />
       </lineSegments>
@@ -389,7 +390,7 @@ function WindArrows() {
         const z = f.originZ + Math.floor(i / f.nx) * f.cell;
         const w = windAt(f, x, z);
         const sp = Math.hypot(w.vx, w.vz);
-        o.position.set(x, 24, z);
+        o.position.set(x, 24 + GROUND_TOP, z);
         o.rotation.y = -Math.atan2(w.vz, w.vx);
         o.scale.set(4 + sp * 3, 2, 2);
       }}

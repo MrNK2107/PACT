@@ -14,3 +14,5 @@ export const map = selection.map;
 export const scenario = selection.scenario;
 export const world = createWorld(worldConfigFrom(scenario));
 export const engine = new SimulationEngine(world, scenario);
+// `?autostart` starts the run on load (demos, screenshots)
+if (params?.has('autostart')) engine.start();

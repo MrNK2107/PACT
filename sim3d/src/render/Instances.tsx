@@ -1,6 +1,7 @@
-import { useLayoutEffect, useRef, type MutableRefObject } from 'react';
+import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
+import { drapeDepth, drapeMaterial, GROUND_TOP, type DrapeMode } from './terrain';
 
 export type Setup = (i: number, o: THREE.Object3D, c: THREE.Color) => boolean | void;
 
@@ -19,6 +20,9 @@ interface Props {
   /** Bump to re-run `setup` (for static instance sets that change). */
   version?: number;
   meshRef?: MutableRefObject<THREE.InstancedMesh | null>;
+  /** Lift the instances onto the terrain (see render/terrain.ts). */
+  drape?: DrapeMode;
+  lift?: number;
 }
 
 const dummy = new THREE.Object3D();
@@ -28,7 +32,9 @@ const color = new THREE.Color();
  * Thin wrapper over <instancedMesh>: fills instance matrices/colours once from `setup` (static
  * scenery) and exposes the ref so animated sets can rewrite matrices in useFrame.
  */
-export function Instances({ count, geometry, material, setup, colored, castShadow, receiveShadow, visible = true, onPick, renderOrder, version, meshRef }: Props) {
+export function Instances({ count, geometry, material, setup, colored, castShadow, receiveShadow, visible = true, onPick, renderOrder, version, meshRef, drape, lift = 0 }: Props) {
+  const mat = useMemo(() => (drape ? drapeMaterial(material, drape, lift) : material), [material, drape, lift]);
+  const depthMat = useMemo(() => (drape && castShadow ? drapeDepth(drape, lift) : undefined), [drape, lift, castShadow]);
   const local = useRef<THREE.InstancedMesh | null>(null);
   const ref = meshRef ?? local;
   useLayoutEffect(() => {
@@ -49,12 +55,14 @@ export function Instances({ count, geometry, material, setup, colored, castShado
     if (m.instanceColor) m.instanceColor.needsUpdate = true;
     m.computeBoundingSphere();
     m.computeBoundingBox();
-  }, [count, setup, colored, version]);
+    if (drape && m.boundingSphere) m.boundingSphere.radius += GROUND_TOP + 2;
+  }, [count, setup, colored, version, drape]);
   return (
     <instancedMesh
       ref={ref}
-      args={[geometry, material, Math.max(count, 1)]}
+      args={[geometry, mat, Math.max(count, 1)]}
       count={count}
+      customDepthMaterial={depthMat}
       castShadow={castShadow}
       receiveShadow={receiveShadow}
       visible={visible}

@@ -7,11 +7,18 @@ import { gableRise } from '../world/BuildContext';
 import type { BuildingData, PropData, RoadKind, VehicleRoute } from '../world/types';
 import { ChunkedInstances } from './ChunkedInstances';
 import { getMaterials } from './materials';
+import { drapeDepth, drapeMaterial, groundAt, hasTerrain, type DrapeMode } from './terrain';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
 const centredBox = new THREE.BoxGeometry(1, 1, 1);
 const flatPlane = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
 const unitCyl = new THREE.CylinderGeometry(0.5, 0.5, 1, 14).translate(0, 0.5, 0);
+// subdivided variants for long or wide pieces that must follow a slope (vertex draping needs vertices to move)
+const slabBox = new THREE.BoxGeometry(1, 1, 1, 8, 1, 8).translate(0, 0.5, 0);
+const centredSlab = new THREE.BoxGeometry(1, 1, 1, 8, 1, 8);
+const flatPlaneSub = new THREE.PlaneGeometry(1, 1, 8, 8).rotateX(-Math.PI / 2);
+/** The subdivided stand-in for a geometry (itself on a flat map). */
+const subdivided = (g: THREE.BufferGeometry): THREE.BufferGeometry => (!hasTerrain ? g : g === unitBox ? slabBox : g === centredBox ? centredSlab : g === flatPlane ? flatPlaneSub : g);
 
 /** Triangular prism, ridge along X, unit footprint, unit rise. */
 function makeGableGeometry(ridge = 0.5): THREE.BufferGeometry {
@@ -87,22 +94,33 @@ const ROAD_TINT: Record<RoadKind, number> = { motorway: 0.78, arterial: 0.9, col
 // Roads, junctions, markings, bridges, rail
 // -------------------------------------------------------------------------------------------------
 
+/** Roads are one instance each on a flat map and 30 m pieces on a hilly one (so they can follow the slope). */
+const ROAD_PIECE = 30;
+
 function Roads() {
   const mats = getMaterials();
   const roads = world.roads;
   const junctions = world.junctions;
+  const segs = useMemo(() => {
+    const out: { r: (typeof roads)[number]; ri: number; a: number; b: number }[] = [];
+    roads.forEach((r, ri) => {
+      const n = hasTerrain ? Math.max(1, Math.ceil((r.b - r.a) / ROAD_PIECE)) : 1;
+      for (let k = 0; k < n; k++) out.push({ r, ri, a: r.a + ((r.b - r.a) * k) / n, b: r.a + ((r.b - r.a) * (k + 1)) / n });
+    });
+    return out;
+  }, [roads]);
   const setRoad = useCallback(
     (i: number, o: THREE.Object3D, c: THREE.Color) => {
-      const r = roads[i];
-      const len = r.b - r.a;
-      o.position.set(r.dir === 'EW' ? (r.a + r.b) / 2 : r.c, 0.02 + (i % 3) * 0.002, r.dir === 'EW' ? r.c : (r.a + r.b) / 2);
+      const { r, ri, a, b } = segs[i];
+      const len = b - a;
+      o.position.set(r.dir === 'EW' ? (a + b) / 2 : r.c, 0.02 + (ri % 3) * 0.002, r.dir === 'EW' ? r.c : (a + b) / 2);
       o.rotation.y = r.dir === 'EW' ? 0 : Math.PI / 2;
       o.scale.set(len, 1, r.width);
       c.setScalar(ROAD_TINT[r.kind]);
     },
-    [roads],
+    [segs],
   );
-  const roadPos = useCallback((i: number): [number, number] => (roads[i].dir === 'EW' ? [(roads[i].a + roads[i].b) / 2, roads[i].c] : [roads[i].c, (roads[i].a + roads[i].b) / 2]), [roads]);
+  const roadPos = useCallback((i: number): [number, number] => (segs[i].r.dir === 'EW' ? [(segs[i].a + segs[i].b) / 2, segs[i].r.c] : [segs[i].r.c, (segs[i].a + segs[i].b) / 2]), [segs]);
   const setJunction = useCallback(
     (i: number, o: THREE.Object3D, c: THREE.Color) => {
       const j = junctions[i];
@@ -211,6 +229,21 @@ function Roads() {
 
   // rail ballast, rails and sleepers
   const rails = world.rails;
+  const railSegs = useMemo(() => {
+    const out: { r: (typeof rails)[number]; a: number; b: number }[] = [];
+    if (!hasTerrain) return out;
+    for (const r of rails) {
+      const n = Math.max(1, Math.ceil((r.b - r.a) / 25));
+      for (let k = 0; k < n; k++) out.push({ r, a: r.a + ((r.b - r.a) * k) / n, b: r.a + ((r.b - r.a) * (k + 1)) / n });
+    }
+    return out;
+  }, [rails]);
+  const railSeg = (i: number, o: THREE.Object3D, y: number, h: number, w: number, off = 0) => {
+    const { r, a, b } = railSegs[i];
+    o.position.set(r.dir === 'EW' ? (a + b) / 2 : r.c + off, y, r.dir === 'EW' ? r.c + off : (a + b) / 2);
+    o.rotation.y = r.dir === 'EW' ? 0 : Math.PI / 2;
+    o.scale.set(b - a, h, w);
+  };
   const sleepers = useMemo(() => {
     const out: { x: number; z: number; ew: boolean }[] = [];
     for (const r of rails) for (let t = r.a + 1; t < r.b; t += 2.2) out.push(r.dir === 'EW' ? { x: t, z: r.c, ew: true } : { x: r.c, z: t, ew: false });
@@ -219,14 +252,20 @@ function Roads() {
 
   return (
     <group>
-      <ChunkedInstances count={roads.length} positionOf={roadPos} geometry={flatPlane} material={mats.asphalt} setup={setRoad} colored receiveShadow chunk={1500} />
-      <ChunkedInstances count={junctions.length} positionOf={junctionPos} geometry={flatPlane} material={mats.asphalt} setup={setJunction} colored receiveShadow chunk={600} />
-      <ChunkedInstances count={dashes.length} positionOf={(i) => [dashes[i].x, dashes[i].z]} geometry={flatPlane} material={mats.paint} setup={setDash} lod={900} />
-      <ChunkedInstances count={crosswalks.length} positionOf={(i) => [crosswalks[i].x, crosswalks[i].z]} geometry={flatPlane} material={mats.paint} setup={setCross} lod={600} />
+      <ChunkedInstances count={segs.length} positionOf={roadPos} geometry={flatPlane} material={mats.asphalt} setup={setRoad} colored receiveShadow chunk={1500} drape="vertex" lift={0.05} />
+      <ChunkedInstances count={junctions.length} positionOf={junctionPos} geometry={flatPlane} material={mats.asphalt} setup={setJunction} colored receiveShadow chunk={600} drape="vertex" lift={0.05} />
+      <ChunkedInstances count={dashes.length} positionOf={(i) => [dashes[i].x, dashes[i].z]} geometry={flatPlane} material={mats.paint} setup={setDash} lod={900} drape="vertex" lift={0.05} />
+      <ChunkedInstances count={crosswalks.length} positionOf={(i) => [crosswalks[i].x, crosswalks[i].z]} geometry={flatPlane} material={mats.paint} setup={setCross} lod={600} drape="vertex" lift={0.05} />
       <ChunkedInstances count={bridges.length} positionOf={(i) => [bridges[i].x, bridges[i].z]} geometry={unitBox} material={mats.concrete} setup={setDeck} castShadow receiveShadow chunk={2000} />
       <ChunkedInstances count={bridges.length * 2} positionOf={(i) => [bridges[Math.floor(i / 2)].x, bridges[Math.floor(i / 2)].z]} geometry={unitBox} material={mats.concrete} setup={setRail} castShadow chunk={2000} />
       <ChunkedInstances count={bridges.length * 2} positionOf={(i) => [bridges[Math.floor(i / 2)].x, bridges[Math.floor(i / 2)].z]} geometry={unitBox} material={mats.concrete} setup={setPier} castShadow chunk={2000} />
-      {rails.map((r) => (
+      {hasTerrain && (
+        <>
+          <ChunkedInstances count={railSegs.length} positionOf={(i) => [(railSegs[i].a + railSegs[i].b) / 2, railSegs[i].r.c]} geometry={unitBox} material={mats.ballast} setup={(i, o) => railSeg(i, o, 0, 0.35, railSegs[i].r.width)} receiveShadow chunk={1500} drape="vertex" />
+          <ChunkedInstances count={railSegs.length * 2} positionOf={(i) => [(railSegs[i >> 1].a + railSegs[i >> 1].b) / 2, railSegs[i >> 1].r.c]} geometry={unitBox} material={mats.metalDark} setup={(i, o) => railSeg(i >> 1, o, 0.42, 0.12, 0.12, i % 2 ? 0.75 : -0.75)} chunk={1500} drape="vertex" />
+        </>
+      )}
+      {!hasTerrain && rails.map((r) => (
         <group key={r.id} position={[r.dir === 'EW' ? (r.a + r.b) / 2 : r.c, 0, r.dir === 'EW' ? r.c : (r.a + r.b) / 2]} rotation={[0, r.dir === 'EW' ? 0 : Math.PI / 2, 0]}>
           <mesh geometry={unitBox} material={mats.ballast} scale={[r.b - r.a, 0.35, r.width]} receiveShadow />
           {[-0.75, 0.75].map((s) => (
@@ -234,9 +273,9 @@ function Roads() {
           ))}
         </group>
       ))}
-      <ChunkedInstances count={sleepers.length} positionOf={(i) => [sleepers[i].x, sleepers[i].z]} geometry={unitBox} material={mats.trunk} setup={(i, o) => { o.position.set(sleepers[i].x, 0.33, sleepers[i].z); o.rotation.y = sleepers[i].ew ? 0 : Math.PI / 2; o.scale.set(0.3, 0.12, 2.4); }} lod={500} />
+      <ChunkedInstances count={sleepers.length} positionOf={(i) => [sleepers[i].x, sleepers[i].z]} geometry={unitBox} material={mats.trunk} setup={(i, o) => { o.position.set(sleepers[i].x, 0.33, sleepers[i].z); o.rotation.y = sleepers[i].ew ? 0 : Math.PI / 2; o.scale.set(0.3, 0.12, 2.4); }} lod={500} drape="rigid" />
       {world.stations.map((s) => (
-        <group key={s.id} position={[s.x, 0, s.z]}>
+        <group key={s.id} position={[s.x, groundAt(s.x, s.z), s.z]}>
           {[-1, 1].map((side) => (
             <group key={side}>
               <mesh geometry={unitBox} material={mats.paving} position={[0, 0, side * 10.5]} scale={[s.length, 1.0, 5]} castShadow receiveShadow />
@@ -283,10 +322,10 @@ function Blocks() {
   const matFor: Record<(typeof SURFACES)[number], THREE.Material> = { lawn: mats.lawn, paving: mats.paving, gravel: mats.gravel, asphalt: mats.asphalt, sand: mats.sand, turf: mats.turf };
   return (
     <group>
-      <ChunkedInstances count={blocks.length} positionOf={(i) => [blocks[i].cx, blocks[i].cz]} geometry={unitBox} material={mats.concrete} setup={setWalk} receiveShadow chunk={600} />
+      <ChunkedInstances count={blocks.length} positionOf={(i) => [blocks[i].cx, blocks[i].cz]} geometry={subdivided(unitBox)} material={mats.concrete} setup={setWalk} receiveShadow chunk={600} drape="vertex" />
       {SURFACES.map((s) => {
         const list = groups.get(s)!;
-        return <ChunkedInstances key={s} count={list.length} positionOf={(i) => [list[i].cx, list[i].cz]} geometry={unitBox} material={matFor[s]} setup={lotSetter(list)} colored receiveShadow chunk={600} />;
+        return <ChunkedInstances key={s} count={list.length} positionOf={(i) => [list[i].cx, list[i].cz]} geometry={subdivided(unitBox)} material={matFor[s]} setup={lotSetter(list)} colored receiveShadow chunk={600} drape="vertex" />;
       })}
     </group>
   );
@@ -322,6 +361,7 @@ function Buildings() {
     }
     return out;
   }, []);
+  const foundations = useMemo(() => world.buildings.filter((b) => b.foundation), []);
   const stadiums = useMemo(() => world.buildings.filter((b) => b.kind === 'stadium'), []);
   const spires = useMemo(() => world.buildings.filter((b) => b.kind === 'spire'), []);
   const hvac = useMemo(() => world.equipment.filter((e) => e.type === 'hvac' || e.type === 'stairhead' || e.type === 'skylight'), []);
@@ -398,6 +438,7 @@ function Buildings() {
           />
         );
       })}
+      <ChunkedInstances count={foundations.length} positionOf={(i) => [foundations[i].cx, foundations[i].cz]} geometry={unitBox} material={mats.concrete} setup={(i, o) => { const b = foundations[i]; o.position.set(b.cx, b.baseY - b.foundation!, b.cz); o.rotation.y = b.rot ?? 0; o.scale.set(b.w + 0.3, b.foundation! + 0.05, b.d + 0.3); }} castShadow receiveShadow visible={visible} shadowLod={600} />
       <ChunkedInstances count={gables.length} positionOf={(i) => [gables[i].cx, gables[i].cz]} geometry={gableGeo} material={mats.roofTile} setup={roofSetter(gables)} colored castShadow receiveShadow visible={visible} shadowLod={700} onPick={(i) => select(gables[i].id)} />
       <ChunkedInstances count={hips.length} positionOf={(i) => [hips[i].cx, hips[i].cz]} geometry={hipGeo} material={mats.roofTile} setup={roofSetter(hips)} colored castShadow receiveShadow visible={visible} shadowLod={700} onPick={(i) => select(hips[i].id)} />
       <ChunkedInstances count={barrels.length} positionOf={(i) => [barrels[i].cx, barrels[i].cz]} geometry={barrelGeo} material={mats.metalGrey} setup={setBarrel} colored castShadow visible={visible} />
@@ -448,10 +489,10 @@ function Vegetation() {
   const palms = useMemo(() => trees.filter((t) => t.species === 'palm'), [trees]);
   return (
     <group>
-      <ChunkedInstances count={trees.length} positionOf={(i) => [trees[i].x, trees[i].z]} geometry={trunkGeo} material={mats.trunk} setup={(i, o) => { const t = trees[i]; o.position.set(t.x, 0.2, t.z); const tall = t.species === 'palm' ? 0.85 : t.species === 'conifer' || t.species === 'cypress' ? 0.35 : 0.5; o.scale.set(t.radius * 0.3 + 0.5, t.height * tall, t.radius * 0.3 + 0.5); }} castShadow lod={1300} shadowLod={500} />
-      <ChunkedInstances count={broad.length} positionOf={(i) => [broad[i].x, broad[i].z]} geometry={broadGeo} material={mats.foliage} setup={(i, o, c) => { const t = broad[i]; o.position.set(t.x, t.height * 0.62, t.z); o.scale.set(t.radius, t.radius * 0.9, t.radius); o.rotation.y = hash01(t.id) * 6; c.setHSL(0.22 + hash01(t.id) * 0.08, 0.34, 0.25 * t.shade); }} colored castShadow receiveShadow lod={2600} shadowLod={500} />
-      <ChunkedInstances count={conifers.length} positionOf={(i) => [conifers[i].x, conifers[i].z]} geometry={coniferGeo} material={mats.foliage} setup={(i, o, c) => { const t = conifers[i]; const slim = t.species === 'cypress' ? 0.5 : 0.85; o.position.set(t.x, t.height * 0.25, t.z); o.scale.set(t.radius * slim, t.height * 0.5, t.radius * slim); c.setHSL(0.38, 0.32, 0.16 * t.shade); }} colored castShadow lod={2600} shadowLod={500} />
-      <ChunkedInstances count={palms.length} positionOf={(i) => [palms[i].x, palms[i].z]} geometry={palmGeo} material={mats.foliage} setup={(i, o, c) => { const t = palms[i]; o.position.set(t.x, t.height * 0.85, t.z); o.scale.set(t.radius * 1.3, t.radius * 1.3, t.radius * 1.3); o.rotation.y = hash01(t.id) * 6; c.setHSL(0.26, 0.45, 0.28 * t.shade); }} colored castShadow lod={2600} shadowLod={500} />
+      <ChunkedInstances count={trees.length} positionOf={(i) => [trees[i].x, trees[i].z]} geometry={trunkGeo} material={mats.trunk} setup={(i, o) => { const t = trees[i]; o.position.set(t.x, 0.2, t.z); const tall = t.species === 'palm' ? 0.85 : t.species === 'conifer' || t.species === 'cypress' ? 0.35 : 0.5; o.scale.set(t.radius * 0.3 + 0.5, t.height * tall, t.radius * 0.3 + 0.5); }} castShadow lod={1300} shadowLod={500} drape="rigid" />
+      <ChunkedInstances count={broad.length} positionOf={(i) => [broad[i].x, broad[i].z]} geometry={broadGeo} material={mats.foliage} setup={(i, o, c) => { const t = broad[i]; o.position.set(t.x, t.height * 0.62, t.z); o.scale.set(t.radius, t.radius * 0.9, t.radius); o.rotation.y = hash01(t.id) * 6; c.setHSL(0.22 + hash01(t.id) * 0.08, 0.34, 0.25 * t.shade); }} colored castShadow receiveShadow lod={2600} shadowLod={500} drape="rigid" />
+      <ChunkedInstances count={conifers.length} positionOf={(i) => [conifers[i].x, conifers[i].z]} geometry={coniferGeo} material={mats.foliage} setup={(i, o, c) => { const t = conifers[i]; const slim = t.species === 'cypress' ? 0.5 : 0.85; o.position.set(t.x, t.height * 0.25, t.z); o.scale.set(t.radius * slim, t.height * 0.5, t.radius * slim); c.setHSL(0.38, 0.32, 0.16 * t.shade); }} colored castShadow lod={2600} shadowLod={500} drape="rigid" />
+      <ChunkedInstances count={palms.length} positionOf={(i) => [palms[i].x, palms[i].z]} geometry={palmGeo} material={mats.foliage} setup={(i, o, c) => { const t = palms[i]; o.position.set(t.x, t.height * 0.85, t.z); o.scale.set(t.radius * 1.3, t.radius * 1.3, t.radius * 1.3); o.rotation.y = hash01(t.id) * 6; c.setHSL(0.26, 0.45, 0.28 * t.shade); }} colored castShadow lod={2600} shadowLod={500} drape="rigid" />
     </group>
   );
 }
@@ -468,9 +509,9 @@ function Streetlights() {
   const setArm = useCallback((i: number, o: THREE.Object3D) => { o.position.set(lights[i].x, 7.9, lights[i].z); o.rotation.y = lights[i].rot; }, [lights]);
   return (
     <group>
-      <ChunkedInstances count={lights.length} positionOf={pos} geometry={pole} material={mats.metalDark} setup={setPole} castShadow lod={800} shadowLod={300} />
-      <ChunkedInstances count={lights.length} positionOf={pos} geometry={arm} material={mats.metalDark} setup={setArm} lod={800} />
-      <ChunkedInstances count={lights.length} positionOf={pos} geometry={head} material={lampMat} setup={setArm} lod={800} />
+      <ChunkedInstances count={lights.length} positionOf={pos} geometry={pole} material={mats.metalDark} setup={setPole} castShadow lod={800} shadowLod={300} drape="rigid" />
+      <ChunkedInstances count={lights.length} positionOf={pos} geometry={arm} material={mats.metalDark} setup={setArm} lod={800} drape="rigid" />
+      <ChunkedInstances count={lights.length} positionOf={pos} geometry={head} material={lampMat} setup={setArm} lod={800} drape="rigid" />
     </group>
   );
 }
@@ -485,6 +526,11 @@ interface PropStyle {
   /** Extra sub-parts of the same prop (posts, water, …). */
   parts?: number;
 }
+
+/** Props that stay as placed: rooftop helipads carry their absolute height, boats float on the water. */
+const NO_DRAPE = new Set(['helipad', 'boat']);
+/** Props wide or long enough that they must follow the slope along their length. */
+const LONG_PROPS = new Set(['fence', 'hedge', 'planter', 'platform', 'pitch', 'court', 'runway', 'taxiway', 'solarfarm', 'pool', 'playground']);
 
 function Props() {
   const mats = getMaterials();
@@ -578,8 +624,9 @@ function Props() {
       {[...byType.entries()].map(([type, list]) => {
         const st = styles[type];
         if (!st) return null;
+        const mode: DrapeMode | undefined = NO_DRAPE.has(type) ? undefined : LONG_PROPS.has(type) ? 'vertex' : 'rigid';
         return st.map((s, k) => (
-          <ChunkedInstances key={`${type}-${k}`} count={list.length} positionOf={(i) => [list[i].x, list[i].z]} geometry={s.geo} material={s.mat} setup={(i, o, c) => s.place(list[i], o, c)} colored={s.colored} castShadow={s.castShadow} lod={s.lod} shadowLod={400} />
+          <ChunkedInstances key={`${type}-${k}`} count={list.length} positionOf={(i) => [list[i].x, list[i].z]} geometry={mode === 'vertex' ? subdivided(s.geo) : s.geo} material={s.mat} setup={(i, o, c) => s.place(list[i], o, c)} colored={s.colored} castShadow={s.castShadow} lod={s.lod} shadowLod={400} drape={mode} />
         ));
       })}
     </group>
@@ -660,6 +707,9 @@ function Traffic() {
     update(buses, near.current.buses, [refs.current.bus ?? null]);
   });
 
+  const carBodyM = useMemo(() => drapeMaterial(mats.carBody, 'rigid', 0.06), [mats]);
+  const carGlassM = useMemo(() => drapeMaterial(mats.carGlass, 'rigid', 0.06), [mats]);
+  const depthM = useMemo(() => drapeDepth('rigid', 0.06), []);
   const colorSetup = (list: VehicleRoute[]) => (i: number, _o: THREE.Object3D, c: THREE.Color) => {
     c.set(list[i].color);
   };
@@ -674,11 +724,11 @@ function Traffic() {
   };
   return (
     <group>
-      <instancedMesh ref={reg('carBody')} args={[carBodyGeo, mats.carBody, Math.max(1, cars.length)]} count={cars.length} castShadow frustumCulled={false} onUpdate={(m) => { cars.forEach((_, i) => { vanSetup(i, tmp, col); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
-      <instancedMesh ref={reg('carCabin')} args={[carCabinGeo, mats.carGlass, Math.max(1, cars.length)]} count={cars.length} castShadow frustumCulled={false} />
-      <instancedMesh ref={reg('truckCargo')} args={[truckCargoGeo, mats.carBody, Math.max(1, trucks.length)]} count={trucks.length} castShadow frustumCulled={false} onUpdate={(m) => { trucks.forEach((_, i) => { colorSetup(trucks)(i, tmp, col); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
-      <instancedMesh ref={reg('truckCab')} args={[truckCabGeo, mats.carBody, Math.max(1, trucks.length)]} count={trucks.length} castShadow frustumCulled={false} onUpdate={(m) => { trucks.forEach((_, i) => { col.set('#cfd3d6'); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
-      <instancedMesh ref={reg('bus')} args={[busGeo, mats.carBody, Math.max(1, buses.length)]} count={buses.length} castShadow frustumCulled={false} onUpdate={(m) => { buses.forEach((_, i) => { col.set('#d9b43a'); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
+      <instancedMesh ref={reg('carBody')} args={[carBodyGeo, carBodyM, Math.max(1, cars.length)]} customDepthMaterial={depthM} count={cars.length} castShadow frustumCulled={false} onUpdate={(m) => { cars.forEach((_, i) => { vanSetup(i, tmp, col); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
+      <instancedMesh ref={reg('carCabin')} args={[carCabinGeo, carGlassM, Math.max(1, cars.length)]} customDepthMaterial={depthM} count={cars.length} castShadow frustumCulled={false} />
+      <instancedMesh ref={reg('truckCargo')} args={[truckCargoGeo, carBodyM, Math.max(1, trucks.length)]} customDepthMaterial={depthM} count={trucks.length} castShadow frustumCulled={false} onUpdate={(m) => { trucks.forEach((_, i) => { colorSetup(trucks)(i, tmp, col); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
+      <instancedMesh ref={reg('truckCab')} args={[truckCabGeo, carBodyM, Math.max(1, trucks.length)]} customDepthMaterial={depthM} count={trucks.length} castShadow frustumCulled={false} onUpdate={(m) => { trucks.forEach((_, i) => { col.set('#cfd3d6'); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
+      <instancedMesh ref={reg('bus')} args={[busGeo, carBodyM, Math.max(1, buses.length)]} customDepthMaterial={depthM} count={buses.length} castShadow frustumCulled={false} onUpdate={(m) => { buses.forEach((_, i) => { col.set('#d9b43a'); m.setColorAt(i, col); }); if (m.instanceColor) m.instanceColor.needsUpdate = true; }} />
     </group>
   );
 }

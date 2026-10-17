@@ -8,6 +8,7 @@ import { useFleetVersion } from '../app/hooks';
 import { useUI } from '../app/uiStore';
 import { SIM } from '../sim/config';
 import type { DroneAgent } from '../sim/DroneAgent';
+import { groundAt } from './terrain';
 
 /**
  * Delivery quadcopter: X-frame with carbon-tube arms, motor pods with two-blade props (swapped for
@@ -247,11 +248,11 @@ export function DroneLayer() {
       r.gimbal.rotation.x = THREE.MathUtils.lerp(r.gimbal.rotation.x, airborne ? 0.6 : 0, 0.08);
       r.pkg.visible = a.controller.carrying;
       r.avoid.visible = a.controller.avoiding;
-      const alt = Math.max(0.01, b.pos.y);
+      const alt = Math.max(0.01, b.pos.y - groundAt(b.pos.x, b.pos.z));
       r.drop.scale.y = alt;
       r.drop.position.y = -alt / 2;
       r.ring.visible = sel === a.id;
-      r.ring.position.y = -b.pos.y + 0.6;
+      r.ring.position.y = -alt + 0.6;
     }
   });
 

@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { world } from '../app/simContext';
+import { drapeDepth, drapeMaterial, GROUND_TOP, type DrapeMode } from './terrain';
 
 /** Chunk sizes are specified for a 4 km map and grow with the world so draw calls stay bounded. */
 const CHUNK_SCALE = Math.min(3, Math.max(1, world.size / 4000));
@@ -28,6 +29,10 @@ interface Props {
   onPick?: (index: number) => void;
   renderOrder?: number;
   version?: number;
+  /** Lift the instances onto the terrain (see render/terrain.ts). */
+  drape?: DrapeMode;
+  /** Extra height above the ground for draped instances (m). */
+  lift?: number;
 }
 
 const dummy = new THREE.Object3D();
@@ -43,8 +48,10 @@ interface Chunk {
  * Instanced rendering of a large static set, split into square chunks so that frustum culling and
  * distance-based level of detail work per chunk instead of per draw call. One InstancedMesh per chunk.
  */
-export function ChunkedInstances({ count, positionOf, geometry, material, setup, colored, castShadow, receiveShadow, visible = true, chunk: chunkBase = 400, lod, shadowLod = 700, onPick, renderOrder, version }: Props) {
+export function ChunkedInstances({ count, positionOf, geometry, material, setup, colored, castShadow, receiveShadow, visible = true, chunk: chunkBase = 400, lod, shadowLod = 700, onPick, renderOrder, version, drape, lift = 0 }: Props) {
   const chunk = chunkBase * CHUNK_SCALE;
+  const mat = useMemo(() => (drape ? drapeMaterial(material, drape, lift) : material), [material, drape, lift]);
+  const depthMat = useMemo(() => (drape && castShadow ? drapeDepth(drape, lift) : undefined), [drape, lift, castShadow]);
   const chunks = useMemo(() => {
     const map = new Map<string, Chunk>();
     for (let i = 0; i < count; i++) {
@@ -83,8 +90,10 @@ export function ChunkedInstances({ count, positionOf, geometry, material, setup,
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
       m.computeBoundingSphere();
       m.computeBoundingBox();
+      // draped instances rise by up to the highest ground: keep them inside the culling sphere
+      if (drape && m.boundingSphere) m.boundingSphere.radius += GROUND_TOP + 2;
     });
-  }, [chunks, setup, colored]);
+  }, [chunks, setup, colored, drape]);
 
   useFrame((s) => {
     if (s.clock.elapsedTime - last.current < 0.25) return;
@@ -109,8 +118,9 @@ export function ChunkedInstances({ count, positionOf, geometry, material, setup,
           ref={(el) => {
             meshes.current[k] = el;
           }}
-          args={[geometry, material, c.ids.length]}
+          args={[geometry, mat, c.ids.length]}
           count={c.ids.length}
+          customDepthMaterial={depthMat}
           castShadow={castShadow}
           receiveShadow={receiveShadow}
           visible={visible}

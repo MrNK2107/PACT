@@ -9,8 +9,11 @@ import { ChunkedInstances } from './ChunkedInstances';
 import { Instances } from './Instances';
 import { getMaterials } from './materials';
 import { padTexture } from './textures';
+import { drapeMaterial, groundAt, hasTerrain } from './terrain';
 
 const unitBox = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+// aprons and their markings are large flat slabs: subdivided so they can follow a slope
+const slabBox = new THREE.BoxGeometry(1, 1, 1, 8, 1, 8).translate(0, 0.5, 0);
 const cylGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 20).translate(0, 0.5, 0);
 const discGeo = new THREE.CircleGeometry(1, 36).rotateX(-Math.PI / 2);
 const ringBaseGeo = new THREE.CylinderGeometry(1, 1, 0.06, 36);
@@ -174,6 +177,7 @@ function Depots() {
   const lightRef = useRef<THREE.InstancedMesh | null>(null);
   const col = useMemo(() => new THREE.Color(), []);
   const lightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#ffffff' }), []);
+  const apronMat = useMemo(() => drapeMaterial(mats.asphalt, 'vertex', 0.02), [mats]);
 
   const setCharger = useCallback((i: number, o: THREE.Object3D) => { o.position.set(chargers[i].pos.x, chargers[i].pos.y, chargers[i].pos.z); o.scale.set(0.9, 1.5, 0.7); }, [chargers]);
   const setLight = useCallback((i: number, o: THREE.Object3D) => { o.position.set(chargers[i].pos.x, chargers[i].pos.y + 1.55, chargers[i].pos.z + 0.38); o.scale.set(0.5, 0.16, 0.05); }, [chargers]);
@@ -205,9 +209,9 @@ function Depots() {
   return (
     <group>
       {aprons.map((a, i) => (
-        <mesh key={i} geometry={unitBox} material={mats.asphalt} position={[(a.minX + a.maxX) / 2, 0.3, (a.minZ + a.maxZ) / 2]} scale={[a.maxX - a.minX, 0.04, a.maxZ - a.minZ]} receiveShadow />
+        <mesh key={i} geometry={hasTerrain ? slabBox : unitBox} material={apronMat} position={[(a.minX + a.maxX) / 2, 0.3, (a.minZ + a.maxZ) / 2]} scale={[a.maxX - a.minX, 0.04, a.maxZ - a.minZ]} receiveShadow />
       ))}
-      <Instances count={lines.length} geometry={unitBox} material={mats.yellowPaint} setup={(i, o) => { o.position.set(lines[i].x, 0.33, lines[i].z); o.scale.set(lines[i].sx, 0.03, lines[i].sz); }} />
+      <Instances count={lines.length} geometry={hasTerrain ? slabBox : unitBox} material={mats.yellowPaint} setup={(i, o) => { o.position.set(lines[i].x, 0.33, lines[i].z); o.scale.set(lines[i].sx, 0.03, lines[i].sz); }} drape="vertex" lift={0.02} />
       {world.pads.map((p) => (
         <Pad key={p.id} x={p.pos.x} y={p.pos.y} z={p.pos.z} r={p.radius} tex={padTex} onClick={click(select, p.depotId || p.id)} />
       ))}
@@ -247,13 +251,13 @@ function YardDetails() {
   const bays = world.loadingBays;
   return (
     <group>
-      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={unitBox} material={mats.container} setup={(i, o, c) => { const s = stacks[i]; o.position.set(s.x, s.y, s.z); o.rotation.y = s.rot; o.scale.set(6.1, 2.55, 2.45); c.set(s.color); }} colored castShadow receiveShadow lod={2500} shadowLod={600} />
-      <ChunkedInstances count={parking.length} positionOf={(i) => [parking[i].x, parking[i].z]} geometry={unitBox} material={mats.paint} setup={(i, o) => { const p = parking[i]; o.position.set(p.x, 0.31, p.z); o.rotation.y = p.rot; o.scale.set(0.12, 0.02, p.d); o.translateX(-p.w / 2); }} lod={700} />
-      <ChunkedInstances count={cars.length} positionOf={(i) => [cars[i].x, cars[i].z]} geometry={carBodyGeo} material={mats.carBody} setup={(i, o, c) => { const p = cars[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; c.set(['#d8d8d4', '#2d3640', '#7d8791', '#9c3a35', '#355c8a', '#b8b49a'][i % 6]); }} colored castShadow lod={1000} shadowLod={400} />
-      <ChunkedInstances count={cars.length} positionOf={(i) => [cars[i].x, cars[i].z]} geometry={carCabinGeo} material={mats.carGlass} setup={(i, o) => { const p = cars[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; }} lod={1000} />
-      <ChunkedInstances count={trailers.length} positionOf={(i) => [trailers[i].x, trailers[i].z]} geometry={trailerGeo} material={mats.carBody} setup={(i, o, c) => { const p = trailers[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; c.set(['#e8e8e4', '#b9bcc0', '#2c5f8a', '#c8392f'][i % 4]); }} colored castShadow lod={1500} shadowLod={500} />
-      <ChunkedInstances count={bays.length} positionOf={(i) => [bays[i].x, bays[i].z]} geometry={unitBox} material={mats.metalDark} setup={(i, o) => { const b = bays[i]; o.position.set(b.x, 0.3, b.z); o.rotation.y = b.rot; o.scale.set(3.6, 4.2, 0.3); o.translateZ(0.15); }} castShadow lod={900} />
-      <ChunkedInstances count={bays.length} positionOf={(i) => [bays[i].x, bays[i].z]} geometry={unitBox} material={mats.yellowPaint} setup={(i, o) => { const b = bays[i]; o.position.set(b.x, 0.3, b.z); o.rotation.y = b.rot; o.scale.set(3.6, 1.2, 2.0); o.translateZ(1.2); }} lod={900} />
+      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={unitBox} material={mats.container} setup={(i, o, c) => { const s = stacks[i]; o.position.set(s.x, s.y, s.z); o.rotation.y = s.rot; o.scale.set(6.1, 2.55, 2.45); c.set(s.color); }} colored castShadow receiveShadow lod={2500} shadowLod={600} drape="rigid" />
+      <ChunkedInstances count={parking.length} positionOf={(i) => [parking[i].x, parking[i].z]} geometry={unitBox} material={mats.paint} setup={(i, o) => { const p = parking[i]; o.position.set(p.x, 0.31, p.z); o.rotation.y = p.rot; o.scale.set(0.12, 0.02, p.d); o.translateX(-p.w / 2); }} lod={700} drape="rigid" lift={0.03} />
+      <ChunkedInstances count={cars.length} positionOf={(i) => [cars[i].x, cars[i].z]} geometry={carBodyGeo} material={mats.carBody} setup={(i, o, c) => { const p = cars[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; c.set(['#d8d8d4', '#2d3640', '#7d8791', '#9c3a35', '#355c8a', '#b8b49a'][i % 6]); }} colored castShadow lod={1000} shadowLod={400} drape="rigid" lift={0.03} />
+      <ChunkedInstances count={cars.length} positionOf={(i) => [cars[i].x, cars[i].z]} geometry={carCabinGeo} material={mats.carGlass} setup={(i, o) => { const p = cars[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; }} lod={1000} drape="rigid" lift={0.03} />
+      <ChunkedInstances count={trailers.length} positionOf={(i) => [trailers[i].x, trailers[i].z]} geometry={trailerGeo} material={mats.carBody} setup={(i, o, c) => { const p = trailers[i]; o.position.set(p.x, 0.3, p.z); o.rotation.y = p.rot + Math.PI / 2; c.set(['#e8e8e4', '#b9bcc0', '#2c5f8a', '#c8392f'][i % 4]); }} colored castShadow lod={1500} shadowLod={500} drape="rigid" lift={0.03} />
+      <ChunkedInstances count={bays.length} positionOf={(i) => [bays[i].x, bays[i].z]} geometry={unitBox} material={mats.metalDark} setup={(i, o) => { const b = bays[i]; o.position.set(b.x, 0.3, b.z); o.rotation.y = b.rot; o.scale.set(3.6, 4.2, 0.3); o.translateZ(0.15); }} castShadow lod={900} drape="rigid" lift={0.03} />
+      <ChunkedInstances count={bays.length} positionOf={(i) => [bays[i].x, bays[i].z]} geometry={unitBox} material={mats.yellowPaint} setup={(i, o) => { const b = bays[i]; o.position.set(b.x, 0.3, b.z); o.rotation.y = b.rot; o.scale.set(3.6, 1.2, 2.0); o.translateZ(1.2); }} lod={900} drape="rigid" lift={0.03} />
     </group>
   );
 }
@@ -292,7 +296,7 @@ function Cranes() {
       if (!m) return;
       towers.forEach((c, i) => {
         const a = c.jibAngle + t.current * 0.04;
-        tmp.position.set(c.x, c.mastHeight, c.z);
+        tmp.position.set(c.x, c.mastHeight + groundAt(c.x, c.z), c.z);
         tmp.rotation.set(0, a, 0);
         tmp.scale.setScalar(1);
         tmp.updateMatrix();
@@ -307,7 +311,7 @@ function Cranes() {
       gantries.forEach((c, i) => {
         const alongX = c.kind === 'quay' ? true : Math.abs(Math.cos(c.jibAngle)) > 0.5;
         const s = c.kind === 'quay' ? c.jibLength * 0.5 + Math.sin(t.current * 0.25) * c.jibLength * 0.4 : Math.sin(t.current * 0.25) * 9;
-        tmp.position.set(c.x + (alongX ? s : 0), c.mastHeight - (c.kind === 'quay' ? 2 : 4.2), c.z + (alongX ? 0 : s));
+        tmp.position.set(c.x + (alongX ? s : 0), groundAt(c.x, c.z) + c.mastHeight - (c.kind === 'quay' ? 2 : 4.2), c.z + (alongX ? 0 : s));
         tmp.rotation.set(0, 0, 0);
         tmp.scale.set(3.2, 1.4, 3);
         tmp.updateMatrix();
@@ -340,13 +344,13 @@ function Cranes() {
 
   return (
     <group>
-      <ChunkedInstances count={towers.length * 4} positionOf={(i) => [towers[Math.floor(i / 4)].x, towers[Math.floor(i / 4)].z]} geometry={unitBox} material={mats.craneYellow} setup={(i, o) => { const c = towers[Math.floor(i / 4)]; const k = i % 4; o.position.set(c.x + (k % 2 ? 0.7 : -0.7), 0.3, c.z + (k < 2 ? -0.7 : 0.7)); o.scale.set(0.22, c.mastHeight, 0.22); }} castShadow />
-      <ChunkedInstances count={braces.length * 2} positionOf={(i) => [braces[Math.floor(i / 2)].c.x, braces[Math.floor(i / 2)].c.z]} geometry={unitBox} material={mats.craneYellow} setup={(i, o) => { const b = braces[Math.floor(i / 2)]; o.position.set(b.c.x, b.y, b.c.z); o.rotation.y = i % 2 ? Math.PI / 2 : 0; o.scale.set(1.5, 0.1, 0.1); }} lod={1500} />
-      <ChunkedInstances count={towers.length} positionOf={(i) => [towers[i].x, towers[i].z]} geometry={unitBox} material={mats.concrete} setup={(i, o) => { o.position.set(towers[i].x, 0.3, towers[i].z); o.scale.set(5, 1.2, 5); }} castShadow />
+      <ChunkedInstances count={towers.length * 4} positionOf={(i) => [towers[Math.floor(i / 4)].x, towers[Math.floor(i / 4)].z]} geometry={unitBox} material={mats.craneYellow} setup={(i, o) => { const c = towers[Math.floor(i / 4)]; const k = i % 4; o.position.set(c.x + (k % 2 ? 0.7 : -0.7), 0.3, c.z + (k < 2 ? -0.7 : 0.7)); o.scale.set(0.22, c.mastHeight, 0.22); }} castShadow drape="rigid" />
+      <ChunkedInstances count={braces.length * 2} positionOf={(i) => [braces[Math.floor(i / 2)].c.x, braces[Math.floor(i / 2)].c.z]} geometry={unitBox} material={mats.craneYellow} setup={(i, o) => { const b = braces[Math.floor(i / 2)]; o.position.set(b.c.x, b.y, b.c.z); o.rotation.y = i % 2 ? Math.PI / 2 : 0; o.scale.set(1.5, 0.1, 0.1); }} lod={1500} drape="rigid" />
+      <ChunkedInstances count={towers.length} positionOf={(i) => [towers[i].x, towers[i].z]} geometry={unitBox} material={mats.concrete} setup={(i, o) => { o.position.set(towers[i].x, 0.3, towers[i].z); o.scale.set(5, 1.2, 5); }} castShadow drape="rigid" />
       {SLEW.map((p, k) => (
         <instancedMesh key={k} ref={(el) => { slewRefs.current[k] = el; }} args={[unitBox, p.mat, Math.max(1, towers.length)]} count={towers.length} castShadow frustumCulled={false} />
       ))}
-      <ChunkedInstances count={gantryParts.length} positionOf={(i) => [gantryParts[i].x, gantryParts[i].z]} geometry={unitBox} material={redMat} setup={(i, o, c) => { const p = gantryParts[i]; o.position.set(p.x, p.y, p.z); o.scale.set(p.sx, p.sy, p.sz); c.set(p.red ? '#a8362e' : '#5d6b7a'); }} colored castShadow />
+      <ChunkedInstances count={gantryParts.length} positionOf={(i) => [gantryParts[i].x, gantryParts[i].z]} geometry={unitBox} material={redMat} setup={(i, o, c) => { const p = gantryParts[i]; o.position.set(p.x, p.y, p.z); o.scale.set(p.sx, p.sy, p.sz); c.set(p.red ? '#a8362e' : '#5d6b7a'); }} colored castShadow drape="rigid" />
       <instancedMesh ref={trolleyRef} args={[unitBox, mats.metalDark, Math.max(1, gantries.length)]} count={gantries.length} castShadow frustumCulled={false} />
     </group>
   );
@@ -380,7 +384,7 @@ function Utilities() {
     if (engine.status !== 'paused') spin.current += dt * 0.9;
     turbines.forEach((u, i) => {
       for (let k = 0; k < 3; k++) {
-        tmp.position.set(u.x, u.height, u.z + 2.5);
+        tmp.position.set(u.x, groundAt(u.x, u.z) + u.height, u.z + 2.5);
         tmp.rotation.set(0, 0, spin.current + (k * Math.PI * 2) / 3);
         tmp.scale.set(1.2, u.radius * 8, 0.3);
         tmp.updateMatrix();
@@ -403,7 +407,7 @@ function Utilities() {
             const pts: THREE.Vector3[] = [];
             for (let s = 0; s <= 16; s++) {
               const u = s / 16;
-              pts.push(new THREE.Vector3(a.x + (b.x - a.x) * u + ax, a.height * f - Math.sin(u * Math.PI) * 5, a.z + (b.z - a.z) * u));
+              pts.push(new THREE.Vector3(a.x + (b.x - a.x) * u + ax, groundAt(a.x, a.z) + (groundAt(b.x, b.z) - groundAt(a.x, a.z)) * u + a.height * f - Math.sin(u * Math.PI) * 5, a.z + (b.z - a.z) * u));
             }
             geos.push(new THREE.BufferGeometry().setFromPoints(pts));
           }
@@ -416,18 +420,18 @@ function Utilities() {
 
   return (
     <group>
-      <ChunkedInstances count={tanks.length} positionOf={(i) => [tanks[i].x, tanks[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = tanks[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height, u.radius * 2); }} castShadow receiveShadow />
-      <ChunkedInstances count={tanks.length} positionOf={(i) => [tanks[i].x, tanks[i].z]} geometry={sphereGeo} material={tankMat} setup={(i, o) => { const u = tanks[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius, u.radius * 0.6, u.radius); }} castShadow />
-      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={cylGeo} material={whiteMat} setup={(i, o) => { const u = stacks[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height * 0.7, u.radius * 2); }} castShadow />
-      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={cylGeo} material={redMat} setup={(i, o) => { const u = stacks[i]; o.position.set(u.x, 0.3 + u.height * 0.7, u.z); o.scale.set(u.radius * 1.8, u.height * 0.3, u.radius * 1.8); }} castShadow />
-      <ChunkedInstances count={pylons.length} positionOf={(i) => [pylons[i].x, pylons[i].z]} geometry={pylonGeo} material={mats.metalGrey} setup={(i, o) => { const u = pylons[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(1, u.height, 1); }} castShadow />
-      <ChunkedInstances count={pylons.length * 2} positionOf={(i) => [pylons[Math.floor(i / 2)].x, pylons[Math.floor(i / 2)].z]} geometry={unitBox} material={mats.metalGrey} setup={(i, o) => { const u = pylons[Math.floor(i / 2)]; o.position.set(u.x, u.height * (i % 2 ? 0.66 : 0.8), u.z); o.scale.set(11, 0.35, 0.35); }} castShadow />
-      <ChunkedInstances count={silos.length} positionOf={(i) => [silos[i].x, silos[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = silos[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height, u.radius * 2); }} castShadow />
-      <ChunkedInstances count={silos.length} positionOf={(i) => [silos[i].x, silos[i].z]} geometry={coneGeo} material={mats.metalGrey} setup={(i, o) => { const u = silos[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius, u.radius * 0.8, u.radius); }} castShadow />
-      <ChunkedInstances count={towersW.length} positionOf={(i) => [towersW[i].x, towersW[i].z]} geometry={cylGeo} material={mats.concrete} setup={(i, o) => { const u = towersW[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(3.2, u.height, 3.2); }} castShadow />
-      <ChunkedInstances count={towersW.length} positionOf={(i) => [towersW[i].x, towersW[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = towersW[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius * 2, 6, u.radius * 2); }} castShadow />
-      <ChunkedInstances count={turbines.length} positionOf={(i) => [turbines[i].x, turbines[i].z]} geometry={cylGeo} material={whiteMat} setup={(i, o) => { const u = turbines[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 1.4, u.height, u.radius * 1.4); }} castShadow />
-      <ChunkedInstances count={turbines.length} positionOf={(i) => [turbines[i].x, turbines[i].z]} geometry={unitBox} material={whiteMat} setup={(i, o) => { const u = turbines[i]; o.position.set(u.x, u.height - 1.5, u.z); o.scale.set(3, 3, 7); }} castShadow />
+      <ChunkedInstances count={tanks.length} positionOf={(i) => [tanks[i].x, tanks[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = tanks[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height, u.radius * 2); }} castShadow receiveShadow drape="rigid" />
+      <ChunkedInstances count={tanks.length} positionOf={(i) => [tanks[i].x, tanks[i].z]} geometry={sphereGeo} material={tankMat} setup={(i, o) => { const u = tanks[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius, u.radius * 0.6, u.radius); }} castShadow drape="rigid" />
+      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={cylGeo} material={whiteMat} setup={(i, o) => { const u = stacks[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height * 0.7, u.radius * 2); }} castShadow drape="rigid" />
+      <ChunkedInstances count={stacks.length} positionOf={(i) => [stacks[i].x, stacks[i].z]} geometry={cylGeo} material={redMat} setup={(i, o) => { const u = stacks[i]; o.position.set(u.x, 0.3 + u.height * 0.7, u.z); o.scale.set(u.radius * 1.8, u.height * 0.3, u.radius * 1.8); }} castShadow drape="rigid" />
+      <ChunkedInstances count={pylons.length} positionOf={(i) => [pylons[i].x, pylons[i].z]} geometry={pylonGeo} material={mats.metalGrey} setup={(i, o) => { const u = pylons[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(1, u.height, 1); }} castShadow drape="rigid" />
+      <ChunkedInstances count={pylons.length * 2} positionOf={(i) => [pylons[Math.floor(i / 2)].x, pylons[Math.floor(i / 2)].z]} geometry={unitBox} material={mats.metalGrey} setup={(i, o) => { const u = pylons[Math.floor(i / 2)]; o.position.set(u.x, u.height * (i % 2 ? 0.66 : 0.8), u.z); o.scale.set(11, 0.35, 0.35); }} castShadow drape="rigid" />
+      <ChunkedInstances count={silos.length} positionOf={(i) => [silos[i].x, silos[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = silos[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 2, u.height, u.radius * 2); }} castShadow drape="rigid" />
+      <ChunkedInstances count={silos.length} positionOf={(i) => [silos[i].x, silos[i].z]} geometry={coneGeo} material={mats.metalGrey} setup={(i, o) => { const u = silos[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius, u.radius * 0.8, u.radius); }} castShadow drape="rigid" />
+      <ChunkedInstances count={towersW.length} positionOf={(i) => [towersW[i].x, towersW[i].z]} geometry={cylGeo} material={mats.concrete} setup={(i, o) => { const u = towersW[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(3.2, u.height, 3.2); }} castShadow drape="rigid" />
+      <ChunkedInstances count={towersW.length} positionOf={(i) => [towersW[i].x, towersW[i].z]} geometry={cylGeo} material={tankMat} setup={(i, o) => { const u = towersW[i]; o.position.set(u.x, 0.3 + u.height, u.z); o.scale.set(u.radius * 2, 6, u.radius * 2); }} castShadow drape="rigid" />
+      <ChunkedInstances count={turbines.length} positionOf={(i) => [turbines[i].x, turbines[i].z]} geometry={cylGeo} material={whiteMat} setup={(i, o) => { const u = turbines[i]; o.position.set(u.x, 0.3, u.z); o.scale.set(u.radius * 1.4, u.height, u.radius * 1.4); }} castShadow drape="rigid" />
+      <ChunkedInstances count={turbines.length} positionOf={(i) => [turbines[i].x, turbines[i].z]} geometry={unitBox} material={whiteMat} setup={(i, o) => { const u = turbines[i]; o.position.set(u.x, u.height - 1.5, u.z); o.scale.set(3, 3, 7); }} castShadow drape="rigid" />
       <instancedMesh ref={bladeRef} args={[unitBox, whiteMat, Math.max(1, turbines.length * 3)]} count={turbines.length * 3} castShadow frustumCulled={false} />
       {lines.map((g, i) => (
         <primitive key={i} object={new THREE.Line(g, lineMat)} />
