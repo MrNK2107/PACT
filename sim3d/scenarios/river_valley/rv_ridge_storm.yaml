@@ -1,0 +1,14 @@
+# A storm sits over the ridge: it closes only the air above 45 m, so drones can still creep along the valley floor
+# below it, while a gale front builds up the valley.
+name: rv_ridge_storm
+map: river_valley
+tier: hard
+description: A storm cell with a 45 m base drifts across the valley from t=300 s (drones may fly below it) and a 12 m/s south wind builds from t=200 s.
+duration_s: 1800
+fleet: { n_drones: 5, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 1.8, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 200, type: weather_front, mean_mps: 12, dir_deg: 180, gust_mps: 4, ramp_s: 300, until: 1500 }
+  - { t: 300, type: storm_cell, name: Ridge storm, circle: { x: -900, y: -300, r: 500 }, to: { x: 900, y: 400 }, duration_s: 1000, wind_mps: 6, ceiling_m: 45, until: 1400 }

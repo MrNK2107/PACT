@@ -32,4 +32,4 @@ mechanics:
     zones:
       - { id: RAD-VALLEY, name: Valley floor shadow, circle: { x: 0, y: 0, r: 650 }, range_factor: 0.35, loss: 0.12, max_alt_m: 60 }
 no_fly: [auto]
-scenarios: [rv_healthy]
+scenarios: [rv_healthy, rv_radio_shadow, rv_ridge_storm, rv_hub_outage]

@@ -1,0 +1,13 @@
+# The valley floor is a radio shadow. With a 600 m nominal range the shadowed links shrink to ~200 m, and
+# a short total blackout hits the floor at t=600 s.
+name: rv_radio_shadow
+map: river_valley
+tier: hard
+description: Radio range 600 m; the valley-floor zone cuts it to x0.35 with +12 % loss, and goes fully dark from t=600 s to t=900 s.
+duration_s: 1800
+fleet: { n_drones: 5, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 1.8, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.02, latency_ms: [50, 800], range_m: 600 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 600, type: radio_blackout, id: RAD-VALLEY, range_factor: 0, until: 900 }

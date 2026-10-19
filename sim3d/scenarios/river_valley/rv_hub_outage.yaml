@@ -1,0 +1,13 @@
+# The only hub loses part of its chargers: with one depot, two of its five pads going dark halves the fleet's charging.
+name: rv_hub_outage
+map: river_valley
+tier: stress
+description: Two of the hub's five pads fail at t=400 s for 15 minutes. With 5 drones and one hub, displaced drones queue for the remaining pads.
+duration_s: 1800
+fleet: { n_drones: 5, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload: { arrival_rate_per_min: 2.2, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 400, type: pad_outage, id: PAD-D1-1, until: 1300 }
+  - { t: 400, type: pad_outage, id: PAD-D1-2, until: 1300 }
