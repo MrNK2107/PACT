@@ -75,6 +75,11 @@ export interface Percept {
   socReserve: number;
   /** Depot-arbitrated pad reservations (absent: every drone keeps its own pad). */
   pads?: PadBook;
+  /**
+   * On-board sensing: drones within `senseRange`, with their observed position and velocity. Independent of the
+   * radio (invariant I4: separation must work with the network off, e.g. inside a radio dead zone).
+   */
+  sensed?: { id: string; pos: Vec3; vel: Vec3 }[];
 }
 
 export interface Command {

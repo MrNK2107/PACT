@@ -165,6 +165,42 @@ describe('radio zones in the world and engine', () => {
   });
 });
 
+describe('separation without a radio (invariant I4)', () => {
+  it('drones keep apart when the whole map is a radio dead zone', () => {
+    // every link is dark: heartbeats never arrive, so only on-board sensing can keep the drones apart
+    const dark = { id: 'RAD-ALL', circle: { x: 0, y: 0, r: 5000 }, range_factor: 0, max_alt_m: 200 };
+    const scn = scenarioWith(getScenario('test_small'), { fleet: { n_drones: 6 }, workload: { arrival_rate_per_min: 6 }, world: { radio_zones: [dark] } });
+    const eng = new SimulationEngine(createWorld(worldConfigFrom(scn)), scn);
+    expect(eng.radio.zones).toHaveLength(1);
+    eng.start();
+    let heard = 0;
+    for (let i = 0; i < 20 * 400; i++) {
+      eng.update(0.05);
+      if (i % 20 === 0) for (const a of eng.agents) heard += a.controller.neighborCount;
+    }
+    const s = eng.snapshot();
+    expect(heard).toBe(0); // nobody heard a heartbeat
+    expect(s.collisions).toBe(0);
+    expect(s.completed).toBeGreaterThan(5);
+  });
+
+  it('sensed drones are added as neighbours with my own priority, so the id tie-break is symmetric', () => {
+    const scn = scenarioWith(getScenario('test_small'), { fleet: { n_drones: 2 } });
+    const eng = new SimulationEngine(createWorld(worldConfigFrom(scn)), scn);
+    const [a, b] = eng.agents;
+    b.body.pos.x = a.body.pos.x + 20;
+    b.body.pos.y = a.body.pos.y + 5;
+    b.body.pos.z = a.body.pos.z;
+    eng.start();
+    eng.update(0.05);
+    // within 45 m but nothing has been heard yet: the controller still lists the other drone
+    expect(a.controller.neighbors.map((n) => n.id)).toContain(b.id);
+    expect(b.controller.neighbors.map((n) => n.id)).toContain(a.id);
+    const na = a.controller.neighbors.find((n) => n.id === b.id)!;
+    expect(na.priority).toBe(a.controller.priority);
+  });
+});
+
 describe('radio zone validation', () => {
   const find = (id: string) => findMap(id);
   it('rejects a zone without a shape and out-of-range values', () => {

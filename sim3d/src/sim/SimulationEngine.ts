@@ -599,6 +599,7 @@ export class SimulationEngine {
         capacityKg: a.capacityKg,
         socReserve: this.scenario.policy.soc_reserve,
         pads: this.pads,
+        sensed: this.sense(a),
       });
       for (const m of cmd.outbox) this.bus.broadcast(a.id, a.body.pos, m);
       for (const e of cmd.events) this.onAgentEvent(a, e);
@@ -687,6 +688,16 @@ export class SimulationEngine {
       b.battery -= 0.03 * dt * a.drainFactor;
     }
     if (b.battery < 0) b.battery = 0;
+  }
+
+  /** Drones within sensing range of `a` (true state, no radio involved). */
+  private sense(a: DroneAgent): { id: string; pos: Vec3; vel: Vec3 }[] {
+    const out: { id: string; pos: Vec3; vel: Vec3 }[] = [];
+    for (const b of this.agents) {
+      if (b === a) continue;
+      if (Math.hypot(a.body.pos.x - b.body.pos.x, a.body.pos.y - b.body.pos.y, a.body.pos.z - b.body.pos.z) <= SIM.senseRange) out.push({ id: b.id, pos: { ...b.body.pos }, vel: { ...b.body.vel } });
+    }
+    return out;
   }
 
   private onAgentEvent(a: DroneAgent, e: AgentEvent): void {

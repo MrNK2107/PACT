@@ -84,6 +84,12 @@ export class LocalAgentController implements AgentController {
     if (!this.homePad) this.homePad = p.world.pads.find((x) => x.id === this.homePadId)!;
     this.coord.ingest(p.inbox, now);
     this.neighbors = this.coord.neighbors(now);
+    // drones I can sense but have not heard from (radio dead zone, packet loss): same priority as mine, so the
+    // id tie-break gives both sides complementary roles without any message
+    if (p.sensed?.length) {
+      const heard = new Set(this.neighbors.map((n) => n.id));
+      for (const s of p.sensed) if (!heard.has(s.id)) this.neighbors.push({ id: s.id, pos: s.pos, vel: s.vel, priority: this.priority });
+    }
     this.neighborCount = this.coord.neighborCount;
     // a drone waiting for a site always yields to one that is departing / flying through;
     // urgent parcels and low batteries outrank
