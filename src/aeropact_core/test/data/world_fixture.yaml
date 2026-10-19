@@ -1,0 +1,16 @@
+world:
+  name: fixture
+  bounds: {min_x: -600, min_y: -600, max_x: 600, max_y: 600}
+  max_altitude_m: 120
+  shard_size_m: 150
+  wind: {mean_mps: 3, dir_deg: 30}
+  depots:
+    - id: D1
+      position: [-300, -200, 0]
+      handoff: [-290, -200, 0]
+      pads:
+        - {id: D1-P1, position: [-300, -180, 0]}
+  drop_points:
+    - {id: DP001, position: [200, 150, 0], cluster: c1, kind: residential}
+  no_fly: []
+  buildings: []

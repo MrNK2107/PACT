@@ -1,0 +1,11 @@
+# AT-08 / I4: the network goes completely dark; a flying drone's battery then reads critically low.
+# The safety supervisor must still land it, and nothing collides or enters a no-fly zone.
+name: at08_safety_isolation
+map: test_field
+seed: 17
+duration_s: 360
+fleet: {n_drones: 4}
+workload: {arrival_rate_per_min: 4.0, start_s: 10, stop_s: 90, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 70, type: loss, value: 1.0, duration_s: 400}
+  - {t: 75, type: set_soc, id: any_carrying, soc: 0.08}

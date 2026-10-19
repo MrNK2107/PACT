@@ -1,0 +1,12 @@
+# S4: repeated partitions, flapping every 60-120 s.
+name: s4_flapping
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 200, type: partition, duration_s: 90, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}
+  - {t: 380, type: partition, duration_s: 60, groups: [[A01, A02, D1], [A03, A04, A05, A06, D2]]}
+  - {t: 520, type: partition, duration_s: 120, groups: [[A01, A04], [A02, A03, D1], [A05, A06, D2]]}
+  - {t: 760, type: partition, duration_s: 90, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}

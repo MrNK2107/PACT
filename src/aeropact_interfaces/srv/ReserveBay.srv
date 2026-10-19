@@ -1,0 +1,10 @@
+# Hand-off bay access at a depot (short-range link). A drone queues at its staging point and
+# descends only to a bay granted to it; the depot frees the bay when the holder has left.
+string drone_id
+string task_id
+---
+bool granted
+string bay_id
+geometry_msgs/Point position
+float64 retry_after_s
+string reason

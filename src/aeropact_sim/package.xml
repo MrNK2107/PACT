@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>aeropact_sim</name>
+  <version>0.1.0</version>
+  <description>
+    Simulation environment for AeroPACT: radio medium (range, loss, latency, partitions), vehicle
+    plant (battery, charging, payload, failures, ground-truth safety checks), on-board proximity
+    sensing, a kinematic physics backend, fault injection, workload generation, and the world
+    generator that produces Gazebo SDF worlds, planning maps and bridge configurations.
+  </description>
+  <maintainer email="venkat@proudindian.ngo">AeroPACT Maintainers</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>aeropact_core</depend>
+  <depend>aeropact_interfaces</depend>
+  <depend>geometry_msgs</depend>
+  <depend>lifecycle_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rosgraph_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>yaml_cpp_vendor</depend>
+
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

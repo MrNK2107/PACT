@@ -1,0 +1,21 @@
+# Mission layer -> flight manager.
+uint8 TERMINAL_HOVER=0
+uint8 TERMINAL_LAND=1
+geometry_msgs/Point[] waypoints
+float32 cruise_speed
+float32 acceptance_radius
+uint8 terminal
+string purpose
+---
+uint8 CODE_REACHED=0
+uint8 CODE_CANCELED=1
+uint8 CODE_TIMEOUT=2
+uint8 CODE_SAFETY_ABORT=3
+uint8 CODE_INVALID=4
+bool success
+uint8 code
+float32 final_error_m
+---
+uint32 waypoint_index
+float32 distance_remaining_m
+float32 eta_s

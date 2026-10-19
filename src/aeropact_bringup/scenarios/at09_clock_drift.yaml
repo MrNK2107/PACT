@@ -1,0 +1,12 @@
+# AT-09: 1 % drift (fast and slow) on two drones plus partitions: still no zombie pickup (I3).
+name: at09_clock_drift
+map: test_field
+seed: 19
+duration_s: 730
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.0, start_s: 10, stop_s: 330, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 5, type: clock_drift, id: A01, ppm: 10000}
+  - {t: 5, type: clock_drift, id: A02, ppm: -10000}
+  - {t: 60, type: partition, duration_s: 120, groups: [[A01, A02, A03, D1], [A04, A05, A06, D2]]}
+  - {t: 240, type: partition, duration_s: 90, groups: [[A01, A04, D1], [A02, A03, A05, A06, D2]]}

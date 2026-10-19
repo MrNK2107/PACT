@@ -1,0 +1,9 @@
+# S7: ten priority-1 hospital jobs inside 60 s (REQ-AUC-003 event-driven re-auction).
+name: s7_urgent_burst
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.0, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 400, type: urgent_job_burst, count: 10, window_s: 60, kind: hospital}

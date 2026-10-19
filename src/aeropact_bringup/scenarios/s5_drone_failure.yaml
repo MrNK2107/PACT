@@ -1,0 +1,10 @@
+# S5: a drone carrying a parcel fails, later a second drone (20 % of the fleet) (AT-06, M4).
+name: s5_drone_failure
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 300, type: kill_drone, id: any_carrying}
+  - {t: 650, type: kill_drone, id: any_carrying}

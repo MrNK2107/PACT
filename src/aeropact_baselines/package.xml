@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>aeropact_baselines</name>
+  <version>0.1.0</version>
+  <description>
+    Centralised baseline (05 section 5.2): a global planner on a hub that assigns jobs to drones
+    over a long-range uplink. With the hub alive it is the efficiency upper bound (central_full);
+    killing the hub (kill_service) gives central_hub_loss. Decentralised baselines (greedy_nearest,
+    cbba_plain) are coordinator modes in aeropact_agent.
+  </description>
+  <maintainer email="venkat@proudindian.ngo">AeroPACT Maintainers</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>aeropact_agent</depend>
+  <depend>aeropact_core</depend>
+  <depend>aeropact_interfaces</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rclcpp_lifecycle</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

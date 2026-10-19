@@ -1,0 +1,9 @@
+# AT-05: the hub dies early; PACT keeps delivering, the central baseline stalls.
+name: at05_hub_kill
+map: test_field
+seed: 11
+duration_s: 700
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.0, start_s: 10, stop_s: 300, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 100, type: kill_service, name: central_hub}

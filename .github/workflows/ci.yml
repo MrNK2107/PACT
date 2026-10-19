@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    container: osrf/ros:jazzy-desktop-full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ros-jazzy-ros-gz python3-matplotlib make
+      - name: Build
+        shell: bash
+        run: source /opt/ros/jazzy/setup.bash && make build JOBS=4 WORKERS=2
+      - name: Unit, property and lint tests
+        shell: bash
+        run: source /opt/ros/jazzy/setup.bash && make test
+      - name: Acceptance scenarios
+        shell: bash
+        env:
+          AEROPACT_TIME_SCALE: "2.0"
+        run: source /opt/ros/jazzy/setup.bash && make scenarios
+      - name: Test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ~/.cache/aeropact/build/*/test_results

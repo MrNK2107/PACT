@@ -1,0 +1,6 @@
+# Generic fault injection endpoint. `args` is a JSON object; see docs/SCENARIOS.md.
+string type
+string args
+---
+bool success
+string message

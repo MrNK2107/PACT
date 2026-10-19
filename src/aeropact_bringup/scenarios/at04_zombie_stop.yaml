@@ -1,0 +1,16 @@
+# AT-04: owners isolated mid-flight to a distant depot. Their leases lapse (zombie-stop), the
+# tasks are re-assigned after the partition heals, and no isolated owner ever picks up (I3).
+name: at04_zombie_stop
+map: test_field
+seed: 9
+duration_s: 560
+fleet: {n_drones: 3, home_depot: D2}
+policy: {partition: QUORUM}
+workload:
+  arrival_rate_per_min: 0.0
+  orders:
+    - {t: 12, drop_id: DP001, priority: 2, origin_depot: D1, deadline_offset_s: 520}
+    - {t: 13, drop_id: DP002, priority: 2, origin_depot: D1, deadline_offset_s: 520}
+    - {t: 14, drop_id: DP003, priority: 2, origin_depot: D1, deadline_offset_s: 520}
+faults:
+  - {t: 32, type: partition, duration_s: 120, groups: [[A01], [A02], [A03], [D1], [D2]]}

@@ -1,0 +1,20 @@
+# 800 m low-rise town with two small depots (two pads each): charging is the scarce resource.
+name: compact_town
+size_m: 800
+seed: 11
+block_m: 110
+road_m: 20
+tall_core: false
+park_fraction: 0.2
+lot_fill: 0.8
+drop_points: 28
+shard_size_m: 120
+wind: {mean_mps: 6.0, dir_deg: 200}
+depots:
+  - {id: D1, position: [-290, -250], pads: 2}
+  - {id: D2, position: [270, 240], pads: 2}
+no_fly:
+  - {id: CLINIC_HELI, kind: circle, center: [60, -60], radius: 40, medical: true,
+     reason: clinic helipad}
+  - {id: MARKET, kind: box, min: [-140, 120], max: [-60, 200], active: false, dynamic: true,
+     reason: market day closure}

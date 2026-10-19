@@ -1,0 +1,19 @@
+# 700 m low-density field used by the automated scenario tests: few obstacles, short legs.
+name: test_field
+size_m: 700
+seed: 3
+block_m: 140
+road_m: 24
+tall_core: false
+park_fraction: 0.35
+lot_fill: 0.6
+drop_points: 20
+shard_size_m: 120
+wind: {mean_mps: 2.0, dir_deg: 90}
+depots:
+  - {id: D1, position: [-230, -220], pads: 3}
+  - {id: D2, position: [220, 210], pads: 3}
+no_fly:
+  - {id: TEST_ZONE, kind: box, min: [-40, -40], max: [40, 40], reason: test restriction}
+  - {id: PARADE, kind: circle, center: [-150, 160], radius: 45, active: false, dynamic: true,
+     reason: parade closure}

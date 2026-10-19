@@ -1,0 +1,14 @@
+{
+  "name": "AeroPACT (ROS 2 Jazzy + Gazebo Harmonic)",
+  "build": {"dockerfile": "../docker/Dockerfile", "context": ".."},
+  "workspaceFolder": "/opt/aeropact",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/opt/aeropact,type=bind",
+  "runArgs": ["--shm-size=1g"],
+  "containerEnv": {"ROS_DOMAIN_ID": "42"},
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.cpptools", "ms-python.python", "charliermarsh.ruff",
+                     "ranch-hand-robotics.rde-pack"]
+    }
+  }
+}

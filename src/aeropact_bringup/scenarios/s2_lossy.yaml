@@ -1,0 +1,9 @@
+# S2: lossy, slow mesh: 40 % loss and up to 3 s latency for the whole run.
+name: s2_lossy
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+network: {loss: 0.4, latency_ms: [200, 3000]}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults: []

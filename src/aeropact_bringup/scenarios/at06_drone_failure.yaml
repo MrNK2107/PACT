@@ -1,0 +1,10 @@
+# AT-06: a drone carrying a parcel fails (motors and computer). The parcel is re-ordered only after
+# DECLARED_FAILED, and the replacement is re-dispatched quickly.
+name: at06_drone_failure
+map: test_field
+seed: 13
+duration_s: 700
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.0, start_s: 10, stop_s: 300, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 90, type: kill_drone, id: any_carrying}

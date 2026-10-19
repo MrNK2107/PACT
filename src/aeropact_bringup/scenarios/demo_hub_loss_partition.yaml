@@ -1,0 +1,11 @@
+# The 5-minute demo (PRD G5): hub loss, then a partition, then a drone failure in flight.
+name: demo_hub_loss_partition
+map: metro_district
+seed: 7
+duration_s: 900
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 3.0, start_s: 10, stop_s: 420, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 90, type: kill_service, name: central_hub}
+  - {t: 180, type: partition, duration_s: 150, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}
+  - {t: 360, type: kill_drone, id: any_carrying}
