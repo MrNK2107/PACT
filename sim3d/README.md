@@ -6,6 +6,7 @@ Interactive Three.js world (React + TypeScript + Vite + React Three Fiber) for
 ```bash
 npm install
 npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
+                   # other URL options: ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
 npm test           # world, scenario, workload, task-board, planner and 10-minute simulation tests
 npm run build
 ```
@@ -27,6 +28,7 @@ filtered by map (`?map=<id>&scenario=<name>`; either alone also works). Switchin
 | `dense_metro_core` | 2.5 km | hard | Downtown towers, rooftop-only drops, ring motorway, crowded low airspace |
 | `industrial_port` | 3 km | standard | Port, warehouses, cranes, tank farms; hub-and-spoke depots |
 | `flatland_rural` | 8 km | standard | Farmland, no water, wind farm, eight single-pad micro depots, long hauls |
+| `river_valley` | 5 km | hard | Rolling hills (30 m), river, one 5-pad hub, valley-floor radio shadow |
 | `coastal_testbed` | 2 km | tutorial | Hidden fixture used by the automated tests |
 
 A map's `geography:` block overrides generator flags (airport, port, rail, ring motorway, landmarks, specials, tall
@@ -84,6 +86,8 @@ Generated deterministically from `(seed, size_m, depots, pads_per_depot)` by `sr
   `public_pads` adds standalone pads outside the depots.
 * **Radio dead zones** (`Radio.ts`, `sim/Radio.ts`): areas where the radio range shrinks and packets are lost, either
   generated from the city (urban canyons around tall buildings, clutter around cranes) or listed in a map or scenario.
+* **Terrain** (`Terrain.ts`): optional hills as a height field. Buildings stand on the high side of their footprint with
+  a foundation; hills close the low cruise layers in the planner. Flat maps are unchanged.
 * **Wind** (`Wind.ts`): a 100 m vector field (mean + gusts) that changes energy use only (assumption T11). Weather
   faults retarget the field at runtime and storm cells add local boosts; a ceiling (`minY` on a no-fly zone) closes only
   the air above it.
