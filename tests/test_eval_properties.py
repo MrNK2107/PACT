@@ -11,14 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Property tests (hypothesis) for the ROS-free evaluation layer: event log, invariants, metrics."""
+"""Property tests (hypothesis) for the ROS-free eval layer: event log, invariants, metrics."""
 
 import json
 import math
 
+from hypothesis import given
+from hypothesis import strategies as st
+
 from aeropact_eval import bench, eventlog, metrics
 from aeropact_eval.invariants import check_invariants
-from hypothesis import given, strategies as st
 
 TASKS = ['T%d' % i for i in range(6)]
 DRONES = ['A01', 'A02', 'A03']
@@ -85,7 +87,7 @@ def test_i1_does_not_depend_on_event_order(events, rnd):
     shuffled = list(events)
     rnd.shuffle(shuffled)
 
-    def flagged(evs):  # "I1: job T0 delivered 2 times by [...]": job and count, not deliverer order
+    def flagged(evs):  # "I1: job T0 delivered 2 times by [...]": compare job + count only
         return sorted(v.split(' by ')[0] for v in check_invariants(evs)['I1'])
 
     assert flagged(events) == flagged(shuffled)

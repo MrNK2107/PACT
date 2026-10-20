@@ -24,12 +24,15 @@ SELECT       := $(if $(PACKAGES),--packages-up-to $(PACKAGES),)
 
 export MAKEFLAGS_CHILD := -j$(JOBS)
 
-.PHONY: help setup build test test-unit scenarios lint format bench demo sim clean
+.PHONY: help setup build test test-unit test-py test-core scenarios lint format bench demo sim clean plots
 
 help:
 	@echo "make setup      - create the Python tool venv (hypothesis, ruff, mypy) in $(VENV)"
 	@echo "make build      - colcon build into $(BUILD_ROOT) (PACKAGES=... to limit)"
 	@echo "make test       - unit + property tests (gtest, pytest) and ament linters"
+	@echo "make test-py    - ROS-free Python tests + hypothesis properties (any OS, plain Python)"
+	@echo "make test-core  - ROS-free C++ core build + gtest + hypothesis on the real CRDT merge"
+	@echo "make plots      - regenerate docs/img/ figures from results/ (needs matplotlib)"
 	@echo "make scenarios  - acceptance scenarios AT-xx on the kinematic SIL backend"
 	@echo "make bench      - policy x baseline x seeds sweep, writes results/"
 	@echo "make demo       - Gazebo demo: hub loss + partition with RViz"
@@ -53,6 +56,22 @@ test-unit: build
 	$(WS_SETUP) && colcon $(COLCON_LOG) test-result --test-result-base $(BUILD_ROOT)/build --verbose
 
 test: test-unit
+
+# ---- ROS-free targets (also what .github/workflows/ci.yml runs) ----
+PYTHON       ?= python3
+CORE_BUILD   ?= $(WS)/build-core
+
+test-py:
+	PYTHONPATH=$(WS)/src/aeropact_eval $(PYTHON) -m pytest -q -p no:cacheprovider --rootdir=$(WS) 	  $(WS)/tests $(WS)/src/aeropact_eval/test/test_metrics.py $(WS)/src/aeropact_sim/test/test_world_generator.py
+
+test-core:
+	cmake -S $(WS)/ci/core -B $(CORE_BUILD) -DCMAKE_BUILD_TYPE=RelWithDebInfo
+	cmake --build $(CORE_BUILD) -j$(JOBS)
+	ctest --test-dir $(CORE_BUILD) --output-on-failure
+	AEROPACT_MERGE_ORACLE=$(CORE_BUILD)/merge_oracle $(PYTHON) -m pytest -q -p no:cacheprovider 	  $(WS)/tests/test_crdt_merge_hypothesis.py
+
+plots:
+	$(PYTHON) $(WS)/tools/plot_results.py --results $(WS)/results --out $(WS)/docs/img
 
 scenarios: build
 	$(WS_SETUP) && colcon $(COLCON_LOG) test $(COLCON_PATHS) --packages-select aeropact_bringup \

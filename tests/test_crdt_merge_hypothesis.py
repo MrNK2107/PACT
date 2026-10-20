@@ -27,7 +27,8 @@ Without the oracle the module is skipped. Complements the seeded gtest property 
 import os
 import subprocess
 
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 import pytest
 
 ORACLE = os.environ.get('AEROPACT_MERGE_ORACLE')

@@ -1,34 +1,65 @@
+# ROS-free CI: everything here runs on a stock Ubuntu runner without ROS 2, colcon or Gazebo.
+# The full ROS 2 build, ament linters and acceptance scenarios still need `make test` /
+# `make scenarios` in the devcontainer or docker/Dockerfile.
 name: ci
 
 on:
   push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-test:
+  python:
+    name: pure-Python tests (eval, world generator, properties)
     runs-on: ubuntu-24.04
-    container: osrf/ros:jazzy-desktop-full
     steps:
       - uses: actions/checkout@v4
-      - name: Dependencies
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends ros-jazzy-ros-gz python3-matplotlib make
-      - name: Build
-        shell: bash
-        run: source /opt/ros/jazzy/setup.bash && make build JOBS=4 WORKERS=2
-      - name: Unit, property and lint tests
-        shell: bash
-        run: source /opt/ros/jazzy/setup.bash && make test
-      - name: Acceptance scenarios
-        shell: bash
-        env:
-          AEROPACT_TIME_SCALE: "2.0"
-        run: source /opt/ros/jazzy/setup.bash && make scenarios
-      - name: Test results
-        if: always()
-        uses: actions/upload-artifact@v4
+      - uses: actions/setup-python@v5
         with:
-          name: test-results
-          path: ~/.cache/aeropact/build/*/test_results
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt ruff==0.6.9
+      - name: ruff (new ROS-free test code)
+        run: ruff check tests
+      - name: pytest
+        env:
+          PYTHONPATH: src/aeropact_eval
+          HYPOTHESIS_PROFILE: ci
+        run: >
+          python -m pytest -q -p no:cacheprovider --rootdir=.
+          tests
+          src/aeropact_eval/test/test_metrics.py
+          src/aeropact_sim/test/test_world_generator.py
+
+  core:
+    name: C++ core (CRDT, leases, auction, planner) without ROS + hypothesis on the real merge
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq g++ cmake libyaml-cpp-dev libgtest-dev
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: Build aeropact_core (standalone CMake)
+        run: |
+          cmake -S ci/core -B build-core -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build-core -j"$(nproc)"
+      - name: gtest suites (merge join laws, ownership, partition policies, ...)
+        run: ctest --test-dir build-core --output-on-failure
+      - name: hypothesis properties of the C++ merge
+        env:
+          AEROPACT_MERGE_ORACLE: build-core/merge_oracle
+          HYPOTHESIS_PROFILE: ci
+        run: python -m pytest -q -p no:cacheprovider tests/test_crdt_merge_hypothesis.py
