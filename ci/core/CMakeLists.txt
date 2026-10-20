@@ -77,3 +77,8 @@ foreach(t ${core_tests})
   add_test(NAME ${t} COMMAND ${t})
   set_tests_properties(${t} PROPERTIES TIMEOUT 120)
 endforeach()
+
+# stdin/stdout oracle over the real merge functions, driven by the hypothesis property tests in
+# tests/test_crdt_merge_hypothesis.py (set AEROPACT_MERGE_ORACLE=<build>/merge_oracle).
+add_executable(merge_oracle "${CMAKE_CURRENT_SOURCE_DIR}/merge_oracle.cpp")
+target_link_libraries(merge_oracle aeropact_core)
