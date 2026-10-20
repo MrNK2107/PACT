@@ -28,6 +28,7 @@ filtered by map (`?map=<id>&scenario=<name>`; either alone also works). Switchin
 | `dense_metro_core` | 2.5 km | hard | Downtown towers, rooftop-only drops, ring motorway, crowded low airspace |
 | `industrial_port` | 3 km | standard | Port, warehouses, cranes, tank farms; hub-and-spoke depots |
 | `flatland_rural` | 8 km | standard | Farmland, no water, wind farm, eight single-pad micro depots, long hauls |
+| `island_archipelago` | 6 km | hard | 3-4 islands, a depot per island, over-water legs, sea fog and gale scenarios |
 | `river_valley` | 5 km | hard | Rolling hills (30 m), river, one 5-pad hub, valley-floor radio shadow |
 | `coastal_testbed` | 2 km | tutorial | Hidden fixture used by the automated tests |
 
