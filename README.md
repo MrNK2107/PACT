@@ -18,6 +18,10 @@ both deliver the same parcel:
 | Failure handling | phi-accrual detector, indirect probing, failure quorum, endurance bound | "dead" vs "unreachable"; re-order only after DECLARED_FAILED |
 | Safety | independent supervisor: geofence, battery floors, separation reflex, watchdog | works with the network off (I4); never imports coordination code |
 
+**Contents:** [Quick start](#quick-start) · [Testing without ROS](#testing-without-ros) ·
+[Workspace](#workspace) · [Verification](#verification) · [Results](#results-benchmark-6-drones-12-km-district-single-seed) ·
+[Documentation](#documentation)
+
 > **Simulation only.** AeroPACT is research and evaluation software for multi-agent coordination. It
 > makes no claim of real-world flight readiness or regulatory compliance.
 
@@ -48,6 +52,28 @@ ros2 run aeropact_eval metrics ~/.aeropact/runs/s1_hub_loss__central__s42
 
 Every run writes `events.jsonl` (structured event log), `metrics.json` and the generated `world/`
 (SDF, planning map, bridge config, roster, resolved scenario) to its run directory.
+
+## Testing without ROS
+
+The coordination algorithms live in `aeropact_core` (C++, no ROS headers) and the evaluation
+layer in `aeropact_eval` (Python, only the recorder and RViz monitor import `rclpy`). Both are
+testable on any machine, and this is what CI (`.github/workflows/ci.yml`) runs:
+
+```bash
+# Python: event log, metrics, invariants I1/I3/M5, world generator + hypothesis properties
+pip install -r requirements-dev.txt
+make test-py          # or: PYTHONPATH=src/aeropact_eval python -m pytest tests                       #       src/aeropact_eval/test/test_metrics.py src/aeropact_sim/test/test_world_generator.py
+
+# C++ core without ROS: apt install g++ cmake libyaml-cpp-dev libgtest-dev
+make test-core        # standalone CMake (ci/core) -> 12 gtest suites, then hypothesis
+                      # properties driven against the real CRDT merge via ci/core/merge_oracle
+```
+
+The hypothesis suite (`tests/test_crdt_merge_hypothesis.py`) checks the fleet-replica join on
+the compiled `merge_task`: idempotence, commutativity, associativity, convergence under any
+delivery order with duplicates, the join as an upper bound, the point-of-no-return states as
+absorbing, and the shard-lease order as a total order. Failures shrink to a minimal pair of
+task versions. Without the oracle binary those tests skip; the rest still run on Windows/macOS.
 
 ## Workspace
 
@@ -96,7 +122,25 @@ delivered a job twice; the baseline without an ownership protocol did. Every run
 safety invariants (no collision, no no-fly entry, no airborne battery depletion) except where the
 greedy baseline violated I1 by design.
 
+![On-time delivery by scenario and system](docs/img/on_time_by_scenario.png)
+
+**What happens when the hub dies.** The central planner stops assigning work the moment its hub
+is killed at 240 s and finishes with 6 on-time jobs; every decentralized variant keeps delivering
+at the same pace as before.
+
+![Cumulative on-time deliveries, hub loss](docs/img/timeline_s1_hub_loss.png)
+
+**During a 5-minute radio partition.** The fleet splits 3/3 (plus one depot each), so neither side
+holds a majority: `pact_quorum` stops claiming new work until the heal (the price of never
+double-delivering) and then catches up, while `pact_strict` (already-held shard leases) and
+`pact_optimistic` (bounded optimistic claims) keep delivering through the partition.
+
+![Cumulative on-time deliveries, split brain](docs/img/timeline_s3_split_brain.png)
+
 ![Availability vs duplicate risk](results/pareto.png)
+
+Figures are regenerated from the logged runs with `make plots` (`tools/plot_results.py`, needs
+only matplotlib; per-run `results/runs/*/events.jsonl` are kept out of git).
 
 ## Documentation
 
