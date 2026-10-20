@@ -1,4 +1,5 @@
 import { featuresForSize, type LayoutFeatures } from './features';
+import type { LandMask } from './LandMask';
 import { Noise2D } from './noise';
 import { Rng } from './rng';
 import type { CoastData, DistrictData, DistrictKind, JunctionData, RailData, RiverData, RoadData, RoadKind, StationData, ZoneType } from './types';
@@ -60,6 +61,8 @@ export interface CityLayout {
   districts: SuperBlock[];
   blocks: LayoutBlock[];
   isWater: (x: number, z: number) => boolean;
+  /** Land margin for archipelago and lake maps (positive on land); null for the straight-coast geographies. */
+  landMask: LandMask | null;
   shoreX: (z: number) => number;
   riverX: (z: number) => number | null;
   riverWidth: (z: number) => number;
@@ -109,7 +112,7 @@ function sampler(points: { x: number; z: number }[], z0: number, dz: number): (z
   };
 }
 
-export function generateLayout(seed: number, size: number, f: LayoutFeatures = featuresForSize(size)): CityLayout {
+export function generateLayout(seed: number, size: number, f: LayoutFeatures = featuresForSize(size), mask?: LandMask): CityLayout {
   const rng = new Rng(seed ^ 0x5bd1e995);
   const noise = new Noise2D(seed);
   const noise2 = new Noise2D(seed + 101);
@@ -178,6 +181,7 @@ export function generateLayout(seed: number, size: number, f: LayoutFeatures = f
   };
   const rivers: RiverData[] = hasRiver ? [{ id: 'RIV-01', name: 'River', points: riverPts, width: 80 * S, waterY: waterLevel }] : [];
   const isWater = (x: number, z: number): boolean => {
+    if (mask && mask(x, z) <= 0) return true;
     if (x > shoreX(z)) return true;
     const r = riverX(z);
     return r !== null && Math.abs(x - r) < riverWidth(z) / 2;
@@ -211,6 +215,7 @@ export function generateLayout(seed: number, size: number, f: LayoutFeatures = f
   /** 0 = land, 1 = water (bridgeable), 2 = hard cut. */
   const classify = (x: number, z: number): 0 | 1 | 2 => {
     if (inRect(airport, x, z)) return 2;
+    if (mask && mask(x, z) <= 0) return 1;
     if (x > shoreX(z)) return 1;
     const r = riverX(z);
     if (r !== null && Math.abs(x - r) < riverWidth(z) / 2 + 6) return 1;
@@ -590,5 +595,5 @@ export function generateLayout(seed: number, size: number, f: LayoutFeatures = f
     }
   }
 
-  return { size, half, centre, centres, coast, rivers, airport, port, roads, junctions, rails, stations, districts, blocks, isWater, shoreX, riverX, riverWidth, waterLevel };
+  return { size, half, centre, centres, coast, rivers, airport, port, roads, junctions, rails, stations, districts, blocks, isWater, landMask: mask ?? null, shoreX, riverX, riverWidth, waterLevel };
 }

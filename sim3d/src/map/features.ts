@@ -9,7 +9,6 @@ import type { MapDef } from './types';
 export function featuresFromMap(map: MapDef, size: number): LayoutFeatures {
   const base = featuresForSize(size);
   const g = map.geography;
-  if (g.water === 'islands' || g.water === 'lake') throw new Error(`map ${map.id}: geography.water "${g.water}" is not supported yet`);
   const water: WorldWater = g.water;
   const lm = g.landmarks;
   return {

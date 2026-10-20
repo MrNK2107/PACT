@@ -4,7 +4,7 @@
  * override a flag generates the same world as before (golden pins in golden.test.ts).
  */
 
-export type WorldWater = 'coast_river' | 'coast' | 'river' | 'none';
+export type WorldWater = 'coast_river' | 'coast' | 'river' | 'none' | 'islands' | 'lake';
 export type DepotLayout = 'distributed' | 'single_hub' | 'hub_and_spoke' | 'micro';
 
 export interface LayoutFeatures {

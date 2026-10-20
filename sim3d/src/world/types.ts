@@ -544,6 +544,8 @@ export interface WorldData {
   bounds: WorldBounds;
   rivers: RiverData[];
   coast: CoastData | null;
+  /** True when the height field defines the water (archipelago, lake): the renderer draws a sea plane over it. */
+  openWater: boolean;
   districts: DistrictData[];
   zones: ZoneData[];
   roads: RoadData[];

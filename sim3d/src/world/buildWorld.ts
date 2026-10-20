@@ -4,6 +4,7 @@ import { generateLayout, type LayoutBlock } from './CityLayout';
 import { assembleDepots, siteDepotBlocks } from './Depots';
 import { generateDropPoints, planClusters } from './DropPoints';
 import { placeLandmarks } from './Landmarks';
+import { labelLandmasses, makeLandMask } from './LandMask';
 import { sitePublicPads } from './PublicPads';
 import { generateTerrain, heightAt } from './Terrain';
 import { generateRadioZones, radioZoneFromSpec } from './Radio';
@@ -50,9 +51,14 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
   const half = cfg.size / 2;
   const bounds = cfg.bounds ?? { minX: -half, maxX: half, minZ: -half, maxZ: half, minY: 0, maxY: 120 };
 
-  const layout = generateLayout(cfg.seed, cfg.size, f);
+  const mask = f.water === 'islands' || f.water === 'lake' ? makeLandMask(f.water, cfg.seed, cfg.size) : undefined;
+  const landmasses = mask ? labelLandmasses(mask, cfg.size) : undefined;
+  const layout = generateLayout(cfg.seed, cfg.size, f, mask);
   // ---- terrain (own noise stream; the flat default leaves everything below untouched) --------------------------------
-  const terrain = generateTerrain(cfg.seed, bounds, cfg.terrain ?? { kind: 'none' }, {
+  // water that comes from a mask needs a height field even on a map without hills (the sea bed is carved into it)
+  const terrainCfg = cfg.terrain ?? (mask ? { kind: 'hills' as const, amplitude_m: 0, wavelength_m: 2000 } : { kind: 'none' as const });
+  const terrain = generateTerrain(cfg.seed, bounds, terrainCfg.kind === 'none' && mask ? { kind: 'hills', amplitude_m: 0, wavelength_m: 2000 } : terrainCfg, {
+    mask,
     coast: !!layout.coast,
     river: layout.rivers.length > 0,
     shoreX: layout.shoreX,
@@ -83,7 +89,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     d.name = `Old Town (${d.name})`;
   }
   const plans = planClusters(layout, noise, rng);
-  const depotBlocks = siteDepotBlocks(layout, plans, depotsWanted, depotLayout);
+  const depotBlocks = siteDepotBlocks(layout, plans, depotsWanted, depotLayout, landmasses);
   // pads per depot block: the hub of a hub-and-spoke network keeps the full count, spokes and micro depots get one
   const depotPads = new Map<string, number>();
   if (depotLayout === 'hub_and_spoke') depotBlocks.forEach((blk, i) => depotPads.set(blk.id, i === 0 ? padsPerDepot : 1));
@@ -238,6 +244,7 @@ export function createWorld(config: Partial<WorldGenConfig> = {}): WorldData {
     bounds,
     rivers: layout.rivers,
     coast: layout.coast,
+    openWater: !!mask,
     districts: layout.districts.map((d) => ({ id: d.id, kind: d.kind, name: d.name, minX: d.minX, maxX: d.maxX, minZ: d.minZ, maxZ: d.maxZ, centrality: d.centrality })),
     zones: layout.districts.map((d) => ({ id: `Z-${d.id}`, type: d.kind === 'cbd' || d.kind === 'commercial' ? 'commercial' : d.kind === 'industrial' || d.kind === 'logistics' || d.kind === 'port' ? 'industrial' : d.kind === 'park' || d.kind === 'cemetery' || d.kind === 'waterfront' ? 'park' : d.kind === 'farmland' ? 'rural' : d.kind === 'campus' || d.kind === 'hospital' || d.kind === 'stadium' ? 'civic' : d.kind === 'airport' ? 'transport' : d.kind === 'water' ? 'water' : 'residential', name: d.name, minX: d.minX, maxX: d.maxX, minZ: d.minZ, maxZ: d.maxZ })),
     roads: layout.roads,

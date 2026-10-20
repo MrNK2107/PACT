@@ -1,3 +1,4 @@
+import type { LandMask } from './LandMask';
 import { Noise2D } from './noise';
 import type { HeightField, WorldBounds } from './types';
 
@@ -26,6 +27,8 @@ export const TERRAIN_PRESETS: Record<string, TerrainConfig> = {
 
 /** The sea bed under the sea plane (waterY = -0.9). */
 const SEABED = -2.9;
+/** Island and lake land stands this high, so the water plane (just above the datum) covers exactly the water. */
+const LAND_FLOOR = 0.4;
 
 export function flatTerrain(bounds: WorldBounds): HeightField {
   return { cell: Math.max(1, bounds.maxX - bounds.minX), nx: 2, nz: 2, originX: bounds.minX, originZ: bounds.minZ, h: new Float32Array(4), minY: 0, maxY: 0, flat: true };
@@ -74,6 +77,8 @@ export interface TerrainLayout {
   riverX: (z: number) => number | null;
   riverWidth: (z: number) => number;
   airport: { minX: number; maxX: number; minZ: number; maxZ: number } | null;
+  /** Archipelago / lake geographies: land where the margin is positive. */
+  mask?: LandMask;
 }
 
 export function generateTerrain(seed: number, bounds: WorldBounds, cfg: TerrainConfig, layout: TerrainLayout): HeightField {
@@ -92,6 +97,14 @@ export function generateTerrain(seed: number, bounds: WorldBounds, cfg: TerrainC
       const x = bounds.minX + i * cell;
       const n = noise.fbm(x, z, cfg.wavelength_m, 4);
       let y = cfg.amplitude_m * smoothstep(0.25, 0.92, n);
+      if (layout.mask) {
+        const m = layout.mask(x, z);
+        y = m <= 0 ? SEABED - Math.min(12, -m * 0.03) : LAND_FLOOR + y * smoothstep(40, 300, m);
+        h[j * nx + i] = y;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        continue;
+      }
       // distance to the nearest water edge (negative = in water)
       let d = Infinity;
       if (layout.coast) d = Math.min(d, layout.shoreX(z) - x);

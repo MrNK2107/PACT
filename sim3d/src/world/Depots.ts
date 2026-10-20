@@ -40,7 +40,12 @@ const CAND_TIERS_HUB: typeof CAND_TIERS = [
   { kinds: [], w: 80, d: 60, maxArea: Infinity },
 ];
 
-export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number, kind: DepotLayout = 'distributed'): LayoutBlock[] {
+export interface Landmasses {
+  of: (x: number, z: number) => number;
+  areaKm2: number[];
+}
+
+export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number, kind: DepotLayout = 'distributed', landmass?: Landmasses): LayoutBlock[] {
   const minSep = kind === 'micro' ? 250 : layout.size < 2500 ? 300 : 600;
   const excluded = new Set(['airport', 'water', 'hospital', 'stadium']);
   let cands: LayoutBlock[] = [];
@@ -51,9 +56,20 @@ export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: num
   if (!cands.length) cands = layout.blocks.filter((b) => !b.kind && !excluded.has(b.district));
   if (!cands.length) throw new Error('no depot candidates');
   const chosen: LayoutBlock[] = [];
-  let best = cands[0];
-  for (const c of cands) if (c.centrality > best.centrality) best = c;
-  chosen.push(best);
+  if (landmass) {
+    // an archipelago: the largest islands get a depot each, on their most central candidate
+    const order = landmass.areaKm2.map((a, id) => ({ a, id })).sort((p, q) => q.a - p.a || p.id - q.id);
+    for (const { id } of order) {
+      if (chosen.length >= n) break;
+      const here = cands.filter((c) => landmass.of(c.cx, c.cz) === id);
+      if (here.length) chosen.push(here.reduce((b, c) => (c.centrality > b.centrality ? c : b)));
+    }
+  }
+  if (!chosen.length) {
+    let best = cands[0];
+    for (const c of cands) if (c.centrality > best.centrality) best = c;
+    chosen.push(best);
+  }
   const minDist = (c: LayoutBlock, list: LayoutBlock[]) => {
     let md = Infinity;
     for (const q of list) if (q !== c) md = Math.min(md, Math.hypot(q.cx - c.cx, q.cz - c.cz));
@@ -110,6 +126,7 @@ export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: num
       let bd = Math.hypot(c.cx - tx, c.cz - tz) * 0.8; // hysteresis
       for (const q of cands) {
         if (chosen.includes(q)) continue;
+        if (landmass && landmass.of(q.cx, q.cz) !== landmass.of(c.cx, c.cz)) continue; // a depot stays on its island
         const d = Math.hypot(q.cx - tx, q.cz - tz);
         if (d >= bd) continue;
         if (minDist(q, chosen.filter((o) => o !== c)) < minSep) continue;
