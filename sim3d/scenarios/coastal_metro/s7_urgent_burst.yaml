@@ -1,6 +1,7 @@
 # S7 — Urgent burst: 10 priority-1 jobs within 60 s (REQ-AUC-003 event-driven re-auction).
 name: s7_urgent_burst
 map: coastal_metro
+tier: hard
 description: Steady workload, then ten urgent hospital/clinic jobs arrive within one minute at t=600 s.
 seed: 42
 duration_s: 2400

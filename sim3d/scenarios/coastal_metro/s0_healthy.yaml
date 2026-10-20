@@ -1,6 +1,7 @@
 # S0 — Healthy baseline (docs/05_evaluation_plan.md section 5.3). Mirrors the PRD 9.1 example.
 name: s0_healthy
 map: coastal_metro
+tier: tutorial
 description: Healthy fleet, no faults. 4 x 4 km city, 3 depots with 2 charging pads each, 12 drones.
 seed: 42
 duration_s: 3600

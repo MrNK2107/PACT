@@ -2,6 +2,7 @@
 # so the 5-minute demo (docs/05 section 5.7) replays identically every run.
 name: s_scripted_demo
 map: coastal_metro
+tier: standard
 description: Scripted task list on top of a slow background workload.
 seed: 7
 duration_s: 1200

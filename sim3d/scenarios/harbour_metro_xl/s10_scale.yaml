@@ -1,6 +1,7 @@
 # S10 — Scale: 12 x 12 km city (144 km2), 8 depots, 30 drones.
 name: s10_scale
 map: harbour_metro_xl
+tags: [heavy]
 description: Large city for scalability runs (AT-11). Heavier to render; expect a few seconds to generate.
 seed: 20240611
 duration_s: 3600
