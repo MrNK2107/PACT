@@ -136,6 +136,11 @@ function Terrain() {
       {groundTiles.map((g, i) => (
         <mesh key={i} geometry={g} material={mats.grass} receiveShadow />
       ))}
+      {world.openWater && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} material={seaMat}>
+          <planeGeometry args={[EXTENT * 2, EXTENT * 2]} />
+        </mesh>
+      )}
       {sea && (
         <>
           <mesh geometry={sea.beach} material={mats.sand} receiveShadow />
