@@ -1,0 +1,16 @@
+# A gale over the open water: strong headwinds on the crossings, with one storm cell drifting over a channel.
+name: ia_gale
+map: island_archipelago
+tier: stress
+description: Wind ramps to 16 m/s from the west over 5 minutes from t=400 s, and a storm cell with extra wind crosses the archipelago from t=800 s.
+duration_s: 2400
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload:
+  arrival_rate_per_min: 1.8
+  priority_mix: [0.1, 0.3, 0.6]
+  deadline_s: { 1: [480, 900], 2: [900, 1800], 3: [1800, 3600] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 2500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 400, type: weather_front, mean_mps: 16, dir_deg: 270, gust_mps: 5, ramp_s: 300, until: 2000 }
+  - { t: 800, type: storm_cell, name: Channel storm, circle: { x: -1500, y: 0, r: 450 }, to: { x: 1500, y: 300 }, duration_s: 1000, wind_mps: 8, until: 1900 }

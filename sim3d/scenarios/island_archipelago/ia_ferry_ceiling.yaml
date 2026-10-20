@@ -1,0 +1,15 @@
+# Fog closes the air above 50 m: over open water nothing blocks the way, but rooftop drops and the hills of the islands do.
+name: ia_ferry_ceiling
+map: island_archipelago
+tier: hard
+description: A 50 m ceiling from t=300 s to t=1500 s. Drones must cross the channels low, into the wind, and rooftop deliveries become hard.
+duration_s: 2400
+fleet: { n_drones: 8, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+workload:
+  arrival_rate_per_min: 1.8
+  priority_mix: [0.1, 0.3, 0.6]
+  deadline_s: { 1: [480, 900], 2: [900, 1800], 3: [1800, 3600] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 2500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 300, type: altitude_cap, name: Sea fog ceiling, cap_m: 50, until: 1500 }
