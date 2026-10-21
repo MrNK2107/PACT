@@ -1,3 +1,4 @@
+import { SYSTEM_IDS } from '../sim/systems';
 import { parse } from 'yaml';
 import { featuresFromMap } from '../map/features';
 import { findMap } from '../map/registry';
@@ -103,6 +104,7 @@ export function loadScenario(
   if (s.tier !== undefined && !TIERS.includes(s.tier)) fail(path, `tier must be one of ${TIERS.join(' | ')}, got ${JSON.stringify(s.tier)}`);
   if (!Array.isArray(s.tags)) fail(path, 'tags must be a list');
   s.name = typeof raw.name === 'string' && raw.name ? raw.name : path.replace(/^.*[\\/]/, '').replace(/\.ya?ml$/, '');
+  if (s.system !== undefined && !SYSTEM_IDS.includes(s.system)) fail(path, `system must be one of ${SYSTEM_IDS.join(' | ')}, got ${JSON.stringify(s.system)}`);
   num(path, s.seed, 'seed', 0, 2 ** 31);
   num(path, s.duration_s, 'duration_s', 1, 1e7);
   const f = s.fleet;

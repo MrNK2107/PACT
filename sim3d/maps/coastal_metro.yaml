@@ -10,4 +10,4 @@ geography: { water: coast_river }
 logistics: { depots: { layout: distributed, count: 3, pads: 2 }, drop_points_per_km2: 35 }
 mechanics: { wind: { mean_mps: 4 } }
 no_fly: [auto]
-scenarios: [s0_healthy, s6_battery_crunch, s7_urgent_burst, s_close_zone, s_scripted_demo]
+scenarios: [s0_healthy, s1_hub_loss, s6_battery_crunch, s7_urgent_burst, s_close_zone, s_scripted_demo]

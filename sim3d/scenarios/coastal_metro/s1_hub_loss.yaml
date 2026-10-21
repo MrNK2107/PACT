@@ -1,0 +1,21 @@
+# S1 — Hub loss (docs/05_evaluation_plan.md section 5.3, acceptance test AT-05). The S0 world and workload; the
+# central hub service dies at 20 % of the 900 s benchmark window. PACT has no hub, so the fault is a no-op for it;
+# the `central_hub_loss` baseline stops dispatching. Compare systems with `make bench`.
+name: s1_hub_loss
+map: coastal_metro
+tier: tutorial
+description: S0 healthy fleet; kill_service(central_hub) at t = 180 s. PACT keeps delivering, the central baseline stalls.
+seed: 42
+duration_s: 3600
+fleet: { n_drones: 12, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world:
+  size_m: [4000, 4000]
+  depots: 3
+  pads_per_depot: 2
+  no_fly: [auto]
+  wind: { mean_mps: 4, dir_deg: 240, gust_mps: 2.5 }
+workload: { arrival_rate_per_min: 2.5, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM, bundle_len: 3, lease_ttl_s: 20, gossip_period_s: 1.0 }
+faults:
+  - { t: 180, type: kill_service, name: central_hub }

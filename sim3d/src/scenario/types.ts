@@ -1,4 +1,5 @@
 import type { Tier } from '../map/types';
+import type { SystemId } from '../sim/systems';
 import type { DropType } from '../world/types';
 
 /**
@@ -75,6 +76,8 @@ export interface Scenario {
   /** Difficulty tier; falls back to the map's tier. */
   tier?: Tier;
   tags: string[];
+  /** System under test (docs/05 section 5.2). Default `pact`; the bench runner overrides it per run. */
+  system?: SystemId;
   seed: number;
   duration_s: number;
   fleet: {

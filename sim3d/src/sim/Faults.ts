@@ -13,13 +13,14 @@ export interface FaultHooks {
   radioBlackout(def: Extract<FaultDef, { type: 'radio_blackout' }>, now: number): boolean;
   batteryDrain(id: string, factor: number, now: number): void;
   killDrone(id: string, now: number): void;
+  killService(name: string, now: number): boolean;
   unsupported(def: FaultDef, now: number): void;
   log(type: string, data: Record<string, unknown>, now: number): void;
 }
 
 /**
  * Scripted fault injector (REQ-SIM-004). Faults fire once, in time order, from the simulation clock —
- * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, weather_front, storm_cell, altitude_cap, pad_outage, depot_outage, battery_drain, kill_drone.
+ * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, weather_front, storm_cell, altitude_cap, pad_outage, depot_outage, battery_drain, kill_drone, kill_service (only the central_hub_loss baseline has a service to lose).
  */
 export class FaultInjector {
   private idx = 0;
@@ -78,6 +79,11 @@ export class FaultInjector {
           this.hooks.killDrone(def.id, now);
           this.hooks.log('fault_kill_drone', { id: def.id }, now);
           break;
+        case 'kill_service': {
+          const ok = this.hooks.killService(def.name, now);
+          this.hooks.log(ok ? 'fault_kill_service' : 'fault_kill_service_failed', { name: def.name }, now);
+          break;
+        }
         default:
           this.hooks.unsupported(def, now);
           this.hooks.log('fault_unsupported', { type: def.type }, now);
