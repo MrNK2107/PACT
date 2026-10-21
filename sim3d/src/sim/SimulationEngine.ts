@@ -7,6 +7,8 @@ import { blendWindParams, boostWind, retargetWind, type WindBoost, type WindPara
 import { Rng } from '../world/rng';
 import type { DropType, NoFlyShape, NoFlyZone, PadData, Vec3, WindField, WorldData } from '../world/types';
 import { MessageBus } from './AgentCoordinator';
+import { CentralHub, type HubDrone } from './CentralHub';
+import { allocationOf, SERVICES, type SystemId } from './systems';
 import { drainPct, makeEnergyModel, type EnergyModel } from './Battery';
 import { applyScenario, SIM } from './config';
 import { DRONE_COLORS, DroneAgent } from './DroneAgent';
@@ -171,12 +173,17 @@ export class SimulationEngine {
   private bridges: { b: ExternalBridge; last: number }[] = [];
   private reorders: { taskId: string; at: number; drone: string }[] = [];
   private initialDrones: number;
+  /** System under test (docs/05 section 5.2); `pact` unless the scenario or the bench runner picks a baseline. */
+  readonly system: SystemId;
+  /** Central hub of the `central_*` baselines (null for decentralised systems). */
+  hub: CentralHub | null = null;
 
   constructor(
     readonly world: WorldData,
     readonly scenario: Scenario,
   ) {
     applyScenario(scenario);
+    this.system = scenario.system ?? 'pact';
     this.energy = makeEnergyModel(scenario);
     this.initialDrones = scenario.fleet.n_drones;
     this.obstacles = new ObstacleManager(world);
@@ -219,6 +226,7 @@ export class SimulationEngine {
     this.conflicts.clear();
     this.collisionPairs.clear();
     this.droneSeq = 0;
+    this.hub = allocationOf(this.system) === 'central' ? new CentralHub(s.policy.auction_period_s) : null;
     this.rng = new Rng(this.world.seed + 7);
     // re-open every closable zone and clear fault-added zones
     for (const z of this.obstacles.allNoFly) if (z.closable && z.active) this.obstacles.setZoneActive(z.id, false);
@@ -382,7 +390,7 @@ export class SimulationEngine {
     const n = ++this.droneSeq;
     const id = `A${String(n).padStart(2, '0')}`;
     const idx = n - 1;
-    const a = DroneAgent.create(id, idx, DRONE_COLORS[idx % DRONE_COLORS.length], fp.pad, SIM.layers[idx % SIM.layers.length], this.scenario.fleet.capacity_kg);
+    const a = DroneAgent.create(id, idx, DRONE_COLORS[idx % DRONE_COLORS.length], fp.pad, SIM.layers[idx % SIM.layers.length], this.scenario.fleet.capacity_kg, allocationOf(this.system));
     this.agents.push(a);
     this.pads.reserve(fp.pad.id, id);
     if (announce) this.note('info', `${id} added at ${fp.pad.id}`, id, 'drone_added', { pad: fp.pad.id });
@@ -550,6 +558,17 @@ export class SimulationEngine {
           this.note('fault', `Fault: ${id} killed`, id, 'fault', { type: 'kill_drone', id, t: now });
         } else this.note('warn', `Fault: kill_drone ${id} — no such drone`, null, 'fault_failed', { type: 'kill_drone', id });
       },
+      killService: (name: string, now: number) => {
+        if (!(SERVICES as readonly string[]).includes(name)) {
+          this.note('warn', `Fault: kill_service ${name} — no such service`, null, 'fault_failed', { type: 'kill_service', name });
+          return false;
+        }
+        // only the central_hub_loss baseline depends on the hub; PACT has no central service, central_full is the ideal
+        const affected = this.system === 'central_hub_loss' && !!this.hub;
+        if (affected) this.hub!.kill(now);
+        this.note('fault', `Fault: ${name} killed${affected ? ' — no new dispatches' : ` (no effect on ${this.system})`}`, null, 'fault', { type: 'kill_service', name, affected, t: now });
+        return true;
+      },
       unsupported: (def: FaultDef, now: number) => {
         this.note('warn', `Fault ${def.type} at ${now.toFixed(0)} s is not supported yet (needs the network model)`, null, 'fault_unsupported', { type: def.type });
       },
@@ -579,6 +598,7 @@ export class SimulationEngine {
       const re = this.board.abortInFlight(r.taskId, this.time, `${r.drone} declared failed`);
       if (re) this.note('task', `${r.drone} declared failed — ${r.taskId} re-ordered as ${re.task_id}`, r.drone, 'task_reordered', { of: r.taskId, task: re.task_id });
     }
+    if (this.hub?.due(this.time)) this.planCentral();
     this.bus.deliver(
       this.agents.map((a) => ({ id: a.id, pos: a.body.pos })),
       this.rng,
@@ -600,6 +620,7 @@ export class SimulationEngine {
         socReserve: this.scenario.policy.soc_reserve,
         pads: this.pads,
         sensed: this.sense(a),
+        hub: this.hub ?? undefined,
       });
       for (const m of cmd.outbox) this.bus.broadcast(a.id, a.body.pos, m);
       for (const e of cmd.events) this.onAgentEvent(a, e);
@@ -620,6 +641,22 @@ export class SimulationEngine {
         br.b.onState(this.exportState());
       }
     }
+  }
+
+  /** One central planning round: every idle drone (global knowledge, no radio) against every open task. */
+  private planCentral(): void {
+    const idle: HubDrone[] = [];
+    for (const a of this.agents) {
+      const c = a.controller;
+      if (c.phase !== 'idle' || c.taskId || a.depleted) continue;
+      const pad = this.world.pads.find((p) => p.id === c.padId) ?? a.pad;
+      idle.push({
+        id: a.id,
+        ctx: { pos: a.body.pos, battery: a.body.battery, capacityKg: a.capacityKg, now: this.time, energy: this.energy, wind: this.world.wind, homePad: pad.pos, socReserve: this.scenario.policy.soc_reserve, obstacles: this.obstacles },
+      });
+    }
+    const out = this.hub!.plan(this.time, idle, this.board.open());
+    if (out.length) this.events.push({ t: this.time, agent: null, type: 'hub_dispatch', data: { n: out.length, idle: idle.length } });
   }
 
   private payloadOf(a: DroneAgent): number {

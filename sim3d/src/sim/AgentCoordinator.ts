@@ -141,31 +141,31 @@ export class AgentCoordinator {
    * charging-contention penalties, under hard payload / energy-reserve constraints. The broadcast CLAIM
    * carries `cost = -score`, so the existing "lower cost wins, ties to the lower id" consensus applies.
    */
-  chooseTask(
-    open: readonly Task[],
-    ctx: { pos: Vec3; battery: number; capacityKg: number; now: number; energy: EnergyModel; wind: WindField; homePad: Vec3; socReserve: number; obstacles: ObstacleManager },
-  ): { task: Task; cost: number; score: number; needPct: number } | null {
+  chooseTask(open: readonly Task[], ctx: ScoreContext): { task: Task; cost: number; score: number; needPct: number } | null {
     const taken = new Set([...this.claims.values()].map((c) => c.taskId));
     const contention = this.returningNeighbours();
     let best: { task: Task; cost: number; score: number; needPct: number } | null = null;
     for (const t of open) {
       if (taken.has(t.task_id)) continue;
-      if (t.weight_kg > ctx.capacityKg + 1e-9) continue;
-      // route must avoid closed airspace: a pickup or drop inside an active zone is not feasible
-      if (ctx.obstacles.inActiveNoFly(t.pickup.x, t.pickup.z, 2) || ctx.obstacles.inActiveNoFly(t.drop.x, t.drop.z, 2)) continue;
-      const leg1 = dist(ctx.pos, t.pickup);
-      const leg2 = dist(t.pickup, t.drop);
-      const needPct = estimatePct(ctx.energy, ctx.wind, [
-        { from: ctx.pos, to: t.pickup, payloadKg: 0 },
-        { from: t.pickup, to: t.drop, payloadKg: t.weight_kg },
-        { from: t.drop, to: ctx.homePad, payloadKg: 0 },
-      ], SIM.loadTime + SIM.unloadTime + 10);
-      if (ctx.battery < needPct + ctx.socReserve * 100) continue; // I5: reserve + reach-a-pad
-      const eta = ctx.now + (leg1 + leg2) / SIM.cruiseSpeed + SIM.loadTime + 20;
-      const late = Math.max(0, eta - t.deadline) / 60;
-      const score = SIM.w.pri * (4 - t.priority) - SIM.w.dist * ((leg1 + leg2) / 1000) - SIM.w.late * late - SIM.w.energy * (needPct / 100) - SIM.w.pad * contention * 0.25;
-      const cost = -score;
-      if (!best || cost < best.cost - 1e-6 || (Math.abs(cost - best.cost) < 1e-6 && t.task_id < best.task.task_id)) best = { task: t, cost, score, needPct };
+      const sc = scoreTask(t, ctx, contention);
+      if (!sc) continue;
+      const cost = -sc.score;
+      if (!best || cost < best.cost - 1e-6 || (Math.abs(cost - best.cost) < 1e-6 && t.task_id < best.task.task_id)) best = { task: t, cost, score: sc.score, needPct: sc.needPct };
+    }
+    return best;
+  }
+
+  /**
+   * `greedy_nearest` baseline (REQ-EVAL-001 c): the closest feasible task (pickup + drop distance), ignoring
+   * priority, deadline and neighbours' bids. Same hard constraints as the PACT bid, so the baseline is not
+   * handicapped on energy safety.
+   */
+  chooseNearest(open: readonly Task[], ctx: ScoreContext): { task: Task; cost: number } | null {
+    let best: { task: Task; cost: number } | null = null;
+    for (const t of open) {
+      if (!scoreTask(t, ctx, 0)) continue;
+      const cost = (dist(ctx.pos, t.pickup) + dist(t.pickup, t.drop)) / 1000;
+      if (!best || cost < best.cost - 1e-6 || (Math.abs(cost - best.cost) < 1e-6 && t.task_id < best.task.task_id)) best = { task: t, cost };
     }
     return best;
   }
@@ -216,6 +216,41 @@ export class AgentCoordinator {
     }
     return false;
   }
+}
+
+/** What a drone (or the central planner, on its behalf) knows when it scores a task. */
+export interface ScoreContext {
+  pos: Vec3;
+  battery: number;
+  capacityKg: number;
+  now: number;
+  energy: EnergyModel;
+  wind: WindField;
+  homePad: Vec3;
+  socReserve: number;
+  obstacles: ObstacleManager;
+}
+
+/**
+ * Bid score of one task for one drone (03 section 3.4, B = 1), or null when a hard constraint rules it out:
+ * payload over capacity, pickup or drop in closed airspace, or pessimistic energy below reserve + reach-a-pad (I5).
+ * Shared by the PACT auction and the central planner baselines so every system ranks tasks the same way.
+ */
+export function scoreTask(t: Task, ctx: ScoreContext, contention: number): { score: number; needPct: number } | null {
+  if (t.weight_kg > ctx.capacityKg + 1e-9) return null;
+  if (ctx.obstacles.inActiveNoFly(t.pickup.x, t.pickup.z, 2) || ctx.obstacles.inActiveNoFly(t.drop.x, t.drop.z, 2)) return null;
+  const leg1 = dist(ctx.pos, t.pickup);
+  const leg2 = dist(t.pickup, t.drop);
+  const needPct = estimatePct(ctx.energy, ctx.wind, [
+    { from: ctx.pos, to: t.pickup, payloadKg: 0 },
+    { from: t.pickup, to: t.drop, payloadKg: t.weight_kg },
+    { from: t.drop, to: ctx.homePad, payloadKg: 0 },
+  ], SIM.loadTime + SIM.unloadTime + 10);
+  if (ctx.battery < needPct + ctx.socReserve * 100) return null;
+  const eta = ctx.now + (leg1 + leg2) / SIM.cruiseSpeed + SIM.loadTime + 20;
+  const late = Math.max(0, eta - t.deadline) / 60;
+  const score = SIM.w.pri * (4 - t.priority) - SIM.w.dist * ((leg1 + leg2) / 1000) - SIM.w.late * late - SIM.w.energy * (needPct / 100) - SIM.w.pad * contention * 0.25;
+  return { score, needPct };
 }
 
 function dist(a: Vec3, b: Vec3): number {

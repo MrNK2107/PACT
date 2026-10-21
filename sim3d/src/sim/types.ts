@@ -1,5 +1,6 @@
 import type { Vec3, WorldData } from '../world/types';
 import type { ObstacleManager } from './ObstacleManager';
+import type { HubView } from './CentralHub';
 import type { PadBook } from './PadBook';
 import type { NeighborInfo, PathPlanner, Waypoint } from './PathPlanner';
 
@@ -80,6 +81,8 @@ export interface Percept {
    * radio (invariant I4: separation must work with the network off, e.g. inside a radio dead zone).
    */
   sensed?: { id: string; pos: Vec3; vel: Vec3 }[];
+  /** Dispatch channel of the central hub (only in the `central_*` baseline systems). */
+  hub?: HubView;
 }
 
 export interface Command {

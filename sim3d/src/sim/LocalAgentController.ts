@@ -3,6 +3,7 @@ import { AgentCoordinator } from './AgentCoordinator';
 import { SIM } from './config';
 import { computeAvoidance, type NeighborInfo, type Waypoint } from './PathPlanner';
 import type { Task } from './Task';
+import type { Allocation } from './systems';
 import type { AgentController, Command, DronePhase, Percept, SiteStage } from './types';
 
 const ZERO: Vec3 = { x: 0, y: 0, z: 0 };
@@ -64,6 +65,8 @@ export class LocalAgentController implements AgentController {
     readonly id: string,
     readonly homePadId: string,
     private layerAlt: number,
+    /** How this drone gets work: PACT auction (default), central hub dispatch, or greedy nearest (baselines). */
+    readonly allocation: Allocation = 'auction',
   ) {
     this.coord = new AgentCoordinator(id);
   }
@@ -182,7 +185,7 @@ export class LocalAgentController implements AgentController {
     }
     if (now >= this.nextChoose && now >= this.backoffUntil) {
       this.nextChoose = now + 0.3;
-      const choice = this.coord.chooseTask(p.tasks.open(), {
+      const ctx = {
         pos: p.body.pos,
         battery: p.body.battery,
         capacityKg: p.capacityKg,
@@ -192,11 +195,31 @@ export class LocalAgentController implements AgentController {
         homePad: this.homePad!.pos,
         socReserve: p.socReserve,
         obstacles: p.obstacles,
-      });
-      if (choice) {
-        out.outbox.push(this.coord.startClaim(choice.task, choice.cost, now));
-        this.phase = 'claiming';
-        return;
+      };
+      if (this.allocation === 'central') {
+        // baselines: the hub dispatches; with the hub down there is nothing to do but hold / go home
+        const a = p.hub?.assignmentFor(this.id) ?? null;
+        if (a) {
+          p.hub!.consume(this.id);
+          const task = p.tasks.open().find((t) => t.task_id === a.taskId);
+          if (task && p.tasks.claim(task.task_id, this.id, -a.score, now)) {
+            this.acceptClaim(p, out, task, -a.score);
+            return;
+          }
+        }
+      } else if (this.allocation === 'greedy') {
+        const choice = this.coord.chooseNearest(p.tasks.open(), ctx);
+        if (choice && p.tasks.claim(choice.task.task_id, this.id, choice.cost, now)) {
+          this.acceptClaim(p, out, choice.task, choice.cost);
+          return;
+        }
+      } else {
+        const choice = this.coord.chooseTask(p.tasks.open(), ctx);
+        if (choice) {
+          out.outbox.push(this.coord.startClaim(choice.task, choice.cost, now));
+          this.phase = 'claiming';
+          return;
+        }
       }
       // nothing feasible: top up while waiting at home
       if (home && p.body.battery < SIM.chargeTarget - 5 && p.tasks.open().length > 0) {
@@ -224,13 +247,19 @@ export class LocalAgentController implements AgentController {
       this.nextChoose = now + 0.2;
       return;
     }
-    this.task = a.task;
-    this.taskId = a.task.task_id;
-    out.events.push({ type: 'claimed', taskId: a.task.task_id, detail: `P${a.task.priority}, score ${(-a.cost).toFixed(2)}, epoch ${a.task.epoch}` });
-    if (this.startRoute(p, out, a.task.pickup, 'to_pickup', a.task.origin_depot)) {
+    this.acceptClaim(p, out, a.task, a.cost);
+  }
+
+  /** The board granted my claim: fly to the pickup (or hand the task back if no route exists). */
+  private acceptClaim(p: Percept, out: Command, task: Task, cost: number): void {
+    const now = p.time;
+    this.task = task;
+    this.taskId = task.task_id;
+    out.events.push({ type: 'claimed', taskId: task.task_id, detail: `P${task.priority}, score ${(-cost).toFixed(2)}, epoch ${task.epoch}` });
+    if (this.startRoute(p, out, task.pickup, 'to_pickup', task.origin_depot)) {
       p.pads?.release(this.id); // leaving the pad: it is free for others while I am away
     } else {
-      p.tasks.release(a.task.task_id, this.id, now);
+      p.tasks.release(task.task_id, this.id, now);
       this.dropTask();
       this.phase = 'idle';
       this.backoffUntil = now + 4;

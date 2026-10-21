@@ -1,5 +1,6 @@
 import type { PadData } from '../world/types';
 import { LocalAgentController } from './LocalAgentController';
+import type { Allocation } from './systems';
 import type { AgentController, DroneBody, DronePhase } from './types';
 
 /** Restrained, mutually distinguishable route/drone colours (no red: reserved for no-fly zones). */
@@ -53,7 +54,7 @@ export class DroneAgent {
     return FLYING_PHASES.includes(this.controller.phase);
   }
 
-  static create(id: string, index: number, color: string, pad: PadData, layerAlt: number, capacityKg: number): DroneAgent {
-    return new DroneAgent(id, index, color, pad, capacityKg, new LocalAgentController(id, pad.id, layerAlt));
+  static create(id: string, index: number, color: string, pad: PadData, layerAlt: number, capacityKg: number, allocation: Allocation = 'auction'): DroneAgent {
+    return new DroneAgent(id, index, color, pad, capacityKg, new LocalAgentController(id, pad.id, layerAlt, allocation));
   }
 }
