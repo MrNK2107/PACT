@@ -7,7 +7,8 @@ Interactive Three.js world (React + TypeScript + Vite + React Three Fiber) for
 npm install
 npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
                    # other URL options: ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
-npm test           # world, scenario, workload, task-board, planner and 10-minute simulation tests
+npm test           # world, map, scenario, mechanics, planner and simulation tests (fast)
+npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate (about 30 s)
 npm run build
 ```
 
@@ -36,6 +37,19 @@ A map's `geography:` block overrides generator flags (airport, port, rail, ring 
 buildings, turbines, district bias) and its `logistics:` block picks the depot layout (`distributed`, `single_hub`,
 `hub_and_spoke`, `micro`). Flags a map omits are derived from its size, exactly as before.
 
+### Scenario suite and tiers
+Every map carries 3 to 6 scenarios, each with a difficulty tier (its own `tier:` or the map's). `npm run scenarios`
+(`make scenarios`) runs all of them headless for up to 900 simulated seconds and checks them against the gate of their tier
+plus the invariants that hold in every tier (no duplicate delivery, no pickup after a lost lease, valid scripted ids and fault
+targets, every due fault fires, same event hash on two runs). `RUN_HEAVY=1` adds the 12 km scenario.
+
+| Tier | Delivered | On time | Collisions | Structure hits | Drained batteries |
+|---|---|---|---|---|---|
+| tutorial | >= 5 | >= 95 % | 0 | 0 | 0 |
+| standard | >= 5 | >= 80 % | 0 | not gated | 0 |
+| hard | >= 3 | >= 50 % | <= 3 | not gated | <= 2 |
+| stress | none | none | <= 10 | not gated | <= 10 |
+
 ## Scenarios drive everything (NFR-6)
 The world, fleet, workload, policy knobs and fault script come from one YAML file under
 `scenarios/<map>/`, mirroring `docs/04_agent_first_PRD.md` section 9.1:
@@ -49,6 +63,16 @@ The world, fleet, workload, policy knobs and fault script come from one YAML fil
 | `s_scripted_demo.yaml` | Slow background workload plus `tasks/demo_tasks.yaml` (hand-written tasks) |
 | `s10_scale.yaml` | 12 × 12 km city (144 km²), 8 depots, 30 drones |
 | `test_small.yaml` | 2 × 2 km world used by the automated tests |
+
+Scenarios added with the maps (names start with the map's prefix):
+
+| Map | Scenarios |
+|---|---|
+| `dense_metro_core` | `dm_healthy`, `dm_canyon_shadow` (radio shadows between towers), `dm_event_closures` (stadium + cordon + medical burst), `dm_low_ceiling` (55 m ceiling) |
+| `industrial_port` | `ip_healthy`, `ip_radio_clutter`, `ip_urgent_burst`, `ip_hub_outage` (hub chargers fail), `ip_storm_front` (gale + drifting storm), `ip_ceiling_60m` |
+| `flatland_rural` | `fr_healthy`, `fr_battery_crunch`, `fr_gale` (headwind on long hauls), `fr_pad_outage`, `fr_public_pads` (three depots lose charging for good) |
+| `river_valley` | `rv_healthy`, `rv_radio_shadow`, `rv_ridge_storm` (storm with a 45 m base), `rv_hub_outage` |
+| `island_archipelago` | `ia_healthy`, `ia_ferry_ceiling` (sea fog), `ia_gale` |
 
 Sample task lists live in `scenarios/tasks/` (`demo_tasks.yaml`, `burst_medical.yaml`). A scripted
 task is `{ t, task_id?, origin_depot?, drop_id | drop {x,y} | cluster_type, priority, deadline_offset_s?, weight_kg? }`;
@@ -128,6 +152,6 @@ Metres. `+X` east, `+Z` south, `+Y` up. Entity ids are stable: `D1..D8` depots, 
   order, so one yields and the other holds course. Moving obstacles always have right of way.
 
 ## Known limits
-Ground vehicles are decorative. The radio is an ideal disc (`network.loss` adds packet loss). Planning
+Ground vehicles are decorative. The radio is a disc (`network.loss` and dead zones degrade it). Planning
 is 2.5D (altitude layers). Partition policies, shard leases, gossip and the failure detector are not
 implemented yet (fields exist in the task schema; see `docs/DECISIONS.md`).
