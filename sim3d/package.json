@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "scenarios": "vitest run --config vitest.scenarios.config.ts"
+    "scenarios": "vitest run --config vitest.scenarios.config.ts",
+    "bench": "vite-node scripts/bench.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.3",
