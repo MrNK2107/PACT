@@ -8,7 +8,8 @@ npm install
 npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
                    # other URL options: ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
 npm test           # world, map, scenario, mechanics, planner and simulation tests (fast)
-npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate (about 30 s)
+npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate (about 1 min)
+npm run bench      # scenario x system x seed benchmark, writes ../results/ (--seeds=N --window=S --scenarios=a,b --systems=x,y)
 npm run build
 ```
 
@@ -56,7 +57,8 @@ The world, fleet, workload, policy knobs and fault script come from one YAML fil
 
 | File (`scenarios/<map>/`) | What it shows |
 |---|---|
-| `s0_healthy.yaml` | PRD example: 4 × 4 km city, 3 depots × 2 pads, 12 drones, 2.5 orders/min, no faults |
+| `s0_healthy.yaml` | PRD example: 4 × 4 km city, 3 depots × 2 pads, 12 drones requested (6 fly: one per pad, `fleet_capped`), 2.5 orders/min, no faults |
+| `s1_hub_loss.yaml` | S0 plus `kill_service(central_hub)` at 180 s (AT-05; a no-op for PACT, stalls the `central_hub_loss` baseline) |
 | `s6_battery_crunch.yaml` | 1 pad per depot, 4 orders/min, `battery_drain ×1.5` |
 | `s7_urgent_burst.yaml` | 10 priority-1 hospital jobs inside 60 s at t = 600 s (event-driven re-auction) |
 | `s_close_zone.yaml` | Stadium zone closes for an event, then an incident polygon closes for 10 min |
@@ -83,8 +85,9 @@ Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/
 dead zone on, or create a temporary circle/box/polygon), `pad_outage` / `depot_outage` (charging out of
 service for a window), `weather_front` (wind ramps to new speed, direction and gusts), `storm_cell` (a closed,
 optionally drifting circle with extra wind) and `altitude_cap` (a ceiling over the whole map or an area), `battery_drain`,
-`kill_drone` (in-flight parcel re-ordered after the endurance timeout). `partition`, `kill_service`,
-`link_loss` and `clock_drift` are parsed and logged as unsupported until the network model exists.
+`kill_drone` (in-flight parcel re-ordered after the endurance timeout), `kill_service` (`central_hub`: only the
+`central_hub_loss` baseline has a hub to lose). `partition`, `link_loss` and `clock_drift` are parsed and logged as
+unsupported until the network model exists.
 
 ## The world
 Generated deterministically from `(seed, size_m, depots, pads_per_depot)` by `src/world/`:
@@ -137,6 +140,8 @@ Metres. `+X` east, `+Z` south, `+Y` up. Entity ids are stable: `D1..D8` depots, 
 | `sim/PathPlanner` | Windowed A* on lazily rasterised 250 m occupancy chunks per altitude layer; `computeAvoidance` = local reactive avoidance. |
 | `sim/AgentCoordinator` | Radio bus, neighbour discovery, bid scoring (priority, distance, lateness, energy, pad contention) and claim consensus. |
 | `sim/LocalAgentController` | Per-drone FSM implementing `AgentController` (lease renewal, zombie-stop, urgent re-auction, depot pickup, abort). |
+| `sim/systems`, `sim/CentralHub` | Systems under test (`pact`, `central_full`, `central_hub_loss`, `greedy_nearest`); the central hub's global greedy assignment. |
+| `eval/metrics`, `eval/bench` | Metrics from the event log, the scenario x system x seed runner, bootstrap CIs, AT-05 / AT-12 checks (`scripts/bench.ts` writes `results/`). |
 | `sim/SimulationEngine` | Fixed 20 Hz step, integration, board / workload / faults, structured JSONL events + hash. |
 | `render/*` | Chunked instanced rendering with distance LOD, depots, typed drop markers with ownership rings, polygon no-fly volumes, wind arrows, shard overlay, detailed drone model. |
 | `ui/*` | Controls (scenario picker), telemetry, order board, inspector, fleet, event log. |
@@ -150,6 +155,14 @@ Metres. `+X` east, `+Z` south, `+Y` up. Entity ids are stable: `D1..D8` depots, 
   to the highest valid epoch's owner (`TASK_TAKEN` otherwise); after pickup ownership is sticky.
 * **Separation:** heartbeats carry position, velocity and intent; both ends evaluate the same priority
   order, so one yields and the other holds course. Moving obstacles always have right of way.
+
+## Systems under test (bench baselines)
+A scenario may set `system:` (default `pact`); `npm run bench` overrides it per run so all systems see identical seeds,
+worlds, workloads and faults. `central_full` / `central_hub_loss`: a hub with global knowledge assigns idle drones every
+`auction_period_s` (greedy over all feasible drone-task pairs, same bid score and hard constraints as PACT); after
+`kill_service(central_hub)` the `central_hub_loss` hub hands out nothing and drones go home once their task is done.
+`greedy_nearest`: each idle drone claims the nearest feasible task at once (no priority, deadline or neighbour bids).
+All systems keep the board's epoch fencing and depot arbitration; `cbba_plain` (without them) is not implemented.
 
 ## Known limits
 Ground vehicles are decorative. The radio is a disc (`network.loss` and dead zones degrade it). Planning
