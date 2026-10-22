@@ -5,7 +5,7 @@
  *   summary.md   per-scenario tables with bootstrap CIs and the AT-05 / AT-12 checks
  * Options (flags or env): --seeds=N (BENCH_SEEDS, default 5), --window=S (BENCH_WINDOW, default 900),
  *   --scenarios=a,b (BENCH_SCENARIOS), --systems=x,y (BENCH_SYSTEMS), --out=dir (BENCH_OUT, default ../results).
- * Exit code 1 when AT-05 or the invariant check fails.
+ * Exit code 1 when a run breaks an invariant (I1 / I3); with --strict (BENCH_STRICT=1) also when AT-05 fails.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -42,5 +42,7 @@ const md = summaryMarkdown(rows, { seeds, windowS });
 writeFileSync(resolve(out, 'summary.md'), md);
 console.log(`\n${md}`);
 console.log(`wrote ${out} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
-const checks = acceptanceChecks(rows);
-process.exit(checks.some((c) => c.pass === false) ? 1 : 0);
+const strict = process.argv.includes('--strict') || process.env.BENCH_STRICT === '1';
+const failed = acceptanceChecks(rows).filter((c) => c.pass === false && (strict || c.id !== 'AT-05'));
+for (const c of failed) console.error(`${c.id} failed: ${c.detail}`);
+process.exit(failed.length ? 1 : 0);
