@@ -3,6 +3,14 @@ import { useSimSnapshot } from '../app/hooks';
 import { useUI, type ToggleKey } from '../app/uiStore';
 import { MAPS } from '../map/registry';
 import { SCENARIOS, VISIBLE_MAP_IDS, scenariosForMap, tierOf } from '../scenario/registry';
+import { SYSTEM_IDS, type SystemId } from '../sim/systems';
+
+const SYSTEM_LABELS: Record<SystemId, string> = {
+  pact: 'PACT',
+  central_full: 'Central hub',
+  central_hub_loss: 'Central, hub can fail',
+  greedy_nearest: 'Greedy nearest',
+};
 
 function navigate(params: Record<string, string>) {
   const u = new URL(location.href);
@@ -55,6 +63,16 @@ export function SimulationControls() {
           {scenariosForMap(map.id).map((s) => (
             <option key={s.name} value={s.name} title={SCENARIOS[s.name].description}>
               {s.name} · {tierOf(s)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="group" title="System under test: PACT or a benchmark baseline">
+        <span className="lbl">System</span>
+        <select className="select" value={engine.system} onChange={(e) => navigate({ map: map.id, scenario: scenario.name, system: e.target.value })}>
+          {SYSTEM_IDS.map((id) => (
+            <option key={id} value={id}>
+              {SYSTEM_LABELS[id]}
             </option>
           ))}
         </select>

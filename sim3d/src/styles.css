@@ -53,6 +53,8 @@ body,
   align-items: baseline;
   gap: 10px;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 .brand b {
   font-size: 15px;
@@ -61,6 +63,14 @@ body,
 .brand span {
   color: var(--muted);
   font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* the toolbar (map, scenario, system, run, speed, drones, camera) needs the room below this width */
+@media (max-width: 1720px) {
+  .brand span {
+    display: none;
+  }
 }
 
 .left,

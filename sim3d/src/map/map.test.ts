@@ -49,7 +49,7 @@ describe('scenario to map binding', () => {
   });
 
   it('orders a map picker by the curated list, then alphabetically', () => {
-    expect(scenariosForMap('coastal_metro').map((s) => s.name)).toEqual(['s0_healthy', 's6_battery_crunch', 's7_urgent_burst', 's_close_zone', 's_scripted_demo']);
+    expect(scenariosForMap('coastal_metro').map((s) => s.name)).toEqual(['s0_healthy', 's1_hub_loss', 's6_battery_crunch', 's7_urgent_burst', 's_close_zone', 's_scripted_demo']);
   });
 
   it('rejects an unknown map and a size that conflicts with the map', () => {
