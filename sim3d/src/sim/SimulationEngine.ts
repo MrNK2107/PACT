@@ -241,6 +241,10 @@ export class SimulationEngine {
     this.storms = [];
     this.windVersion++;
     for (let i = 0; i < this.initialDrones; i++) this.spawnDrone(false);
+    // one drone per pad: a scenario asking for more drones than pads runs a smaller fleet (docs/DECISIONS.md, Decision 5)
+    if (this.agents.length < this.initialDrones) {
+      this.note('warn', `Fleet capped at ${this.agents.length} of ${this.initialDrones} drones: one drone per charging pad`, null, 'fleet_capped', { requested: this.initialDrones, spawned: this.agents.length, pads: this.world.pads.length });
+    }
     // a few orders are waiting when the simulation starts (demo convenience; the Poisson stream takes over)
     for (let i = 0; i < SIM.initialOrders; i++) this.addTask(this.workload.makeTask(0, {}));
     this.fleetVersion++;
