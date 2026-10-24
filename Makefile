@@ -17,6 +17,9 @@ SEEDS        ?= 3
 PACKAGES     ?=
 
 ROS_SETUP    := source /opt/ros/$(ROS_DISTRO)/setup.bash
+PX4_ROOT     ?= $(HOME)/.cache/aeropact/px4
+# The pinned px4_msgs underlay (tools/px4/build_px4.sh msgs), when present, enables aeropact_px4.
+ROS_SETUP    := $(ROS_SETUP) && { [ -f $(PX4_ROOT)/ws/install/setup.bash ] && source $(PX4_ROOT)/ws/install/setup.bash || true; }
 WS_SETUP     := $(ROS_SETUP) && source $(BUILD_ROOT)/install/setup.bash
 COLCON_PATHS := --base-paths $(WS)/src --build-base $(BUILD_ROOT)/build --install-base $(BUILD_ROOT)/install
 COLCON_LOG   := --log-base $(BUILD_ROOT)/log
@@ -24,7 +27,7 @@ SELECT       := $(if $(PACKAGES),--packages-up-to $(PACKAGES),)
 
 export MAKEFLAGS_CHILD := -j$(JOBS)
 
-.PHONY: help setup build test test-unit test-py test-core scenarios lint format bench demo sim clean plots
+.PHONY: help setup build test test-unit test-py test-core scenarios scenarios-px4 rehearsal px4-toolchain lint format bench demo sim clean plots
 
 help:
 	@echo "make setup      - create the Python tool venv (hypothesis, ruff, mypy) in $(VENV)"
@@ -34,6 +37,9 @@ help:
 	@echo "make test-core  - ROS-free C++ core build + gtest + hypothesis on the real CRDT merge"
 	@echo "make plots      - regenerate docs/img/ figures from results/ (needs matplotlib)"
 	@echo "make scenarios  - acceptance scenarios AT-xx on the kinematic SIL backend"
+	@echo "make scenarios-px4 - acceptance with PX4 SITL autopilots in the loop (needs px4-toolchain)"
+	@echo "make rehearsal  - deployment launch files against PX4 SITL over the authenticated mesh"
+	@echo "make px4-toolchain - fetch and build the pinned PX4 SITL toolchain (no root)"
 	@echo "make bench      - policy x baseline x seeds sweep, writes results/"
 	@echo "make demo       - Gazebo demo: hub loss + partition with RViz"
 	@echo "make lint       - ament linters + ruff + mypy"
@@ -75,8 +81,21 @@ plots:
 
 scenarios: build
 	$(WS_SETUP) && colcon $(COLCON_LOG) test $(COLCON_PATHS) --packages-select aeropact_bringup \
-	  --parallel-workers 1 --ctest-args -L scenario --output-on-failure
+	  --parallel-workers 1 --ctest-args -L "^scenario$$" --output-on-failure
 	$(WS_SETUP) && colcon $(COLCON_LOG) test-result --test-result-base $(BUILD_ROOT)/build/aeropact_bringup --verbose
+
+scenarios-px4: build
+	$(WS_SETUP) && colcon $(COLCON_LOG) test $(COLCON_PATHS) --packages-select aeropact_bringup \
+	  --parallel-workers 1 --ctest-args -L "^scenario_px4$$" --output-on-failure
+	$(WS_SETUP) && colcon $(COLCON_LOG) test-result --test-result-base $(BUILD_ROOT)/build/aeropact_bringup --verbose
+
+px4-toolchain:
+	bash $(WS)/tools/px4/fetch_px4.sh
+	bash $(WS)/tools/px4/setup_python.sh
+	JOBS=$(JOBS) bash $(WS)/tools/px4/build_px4.sh all
+
+rehearsal: build
+	bash $(WS)/tools/px4/distributed_sitl.sh
 
 lint:
 	$(WS_SETUP) && colcon $(COLCON_LOG) test $(COLCON_PATHS) --ctest-args -L linter

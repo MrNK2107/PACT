@@ -47,7 +47,7 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq g++ cmake libyaml-cpp-dev libgtest-dev
+          sudo apt-get install -y -qq g++ cmake libyaml-cpp-dev libgtest-dev libssl-dev
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -63,3 +63,27 @@ jobs:
           AEROPACT_MERGE_ORACLE: build-core/merge_oracle
           HYPOTHESIS_PROFILE: ci
         run: python -m pytest -q -p no:cacheprovider tests/test_crdt_merge_hypothesis.py
+
+  ros:
+    name: ROS 2 Jazzy build, unit/property tests and ament linters (no PX4, no scenarios)
+    runs-on: ubuntu-24.04
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies (rosdep)
+        shell: bash
+        run: |
+          apt-get update -qq
+          rosdep update --rosdistro jazzy
+          rosdep install --from-paths src --ignore-src -y -q --rosdistro jazzy --skip-keys px4_msgs
+      - name: Build (aeropact_px4 builds its logic only without the px4_msgs underlay)
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - name: Unit, property and loopback tests; ament linters
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash && source install/setup.bash
+          colcon test --ctest-args -LE scenario
+          colcon test-result --verbose

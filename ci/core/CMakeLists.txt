@@ -82,3 +82,23 @@ endforeach()
 # tests/test_crdt_merge_hypothesis.py (set AEROPACT_MERGE_ORACLE=<build>/merge_oracle).
 add_executable(merge_oracle "${CMAKE_CURRENT_SOURCE_DIR}/merge_oracle.cpp")
 target_link_libraries(merge_oracle aeropact_core)
+
+# Autopilot interface logic (frames, offboard arbitration) and the mesh envelope codec: also
+# middleware-independent. The codec needs OpenSSL (libssl-dev).
+set(PX4_DIR "${SRC_ROOT}/aeropact_px4")
+set(RADIO_DIR "${SRC_ROOT}/aeropact_radio")
+add_library(aeropact_px4_logic STATIC ${PX4_DIR}/src/offboard_arbiter.cpp)
+target_include_directories(aeropact_px4_logic PUBLIC "${PX4_DIR}/include")
+foreach(t test_frames test_offboard_arbiter)
+  add_executable(${t} "${PX4_DIR}/test/${t}.cpp")
+  target_link_libraries(${t} aeropact_px4_logic GTest::gtest_main)
+  add_test(NAME ${t} COMMAND ${t})
+endforeach()
+
+find_package(OpenSSL REQUIRED)
+add_library(aeropact_radio_codec STATIC ${RADIO_DIR}/src/frame_codec.cpp)
+target_include_directories(aeropact_radio_codec PUBLIC "${RADIO_DIR}/include")
+target_link_libraries(aeropact_radio_codec PUBLIC OpenSSL::Crypto)
+add_executable(test_frame_codec "${RADIO_DIR}/test/test_frame_codec.cpp")
+target_link_libraries(test_frame_codec aeropact_radio_codec GTest::gtest_main)
+add_test(NAME test_frame_codec COMMAND test_frame_codec)
