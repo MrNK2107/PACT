@@ -1,5 +1,6 @@
 # Default benchmark matrix for `make bench` (AT-12 runs every system over these scenarios).
-# One run at a time; ~6-7 min wall per run at time_scale 4 on a 16-core laptop.
+# One run at a time; ~4-5 min wall per run at time_scale 6 on a 16-core laptop. For a faster
+# sweep run bench_shard_{1,2,3}.yaml side by side into one --out.
 scenarios: [s0_healthy, s1_hub_loss, s3_split_brain]
 systems: [pact_quorum, pact_strict, pact_optimistic, cbba_plain, greedy_nearest, central]
-time_scale: 4.0
+time_scale: 6.0

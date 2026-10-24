@@ -57,28 +57,47 @@ def read_rows(results):
         return list(csv.DictReader(f))
 
 
+def mean_ci(values):
+    """Mean and 95 % half-width (normal approximation, as in the bench summary)."""
+    values = [v for v in values if v == v]
+    if not values:
+        return float('nan'), 0.0
+    m = sum(values) / len(values)
+    if len(values) < 2:
+        return m, 0.0
+    var = sum((v - m) ** 2 for v in values) / (len(values) - 1)
+    return m, 1.96 * (var / len(values)) ** 0.5
+
+
 def plot_on_time(rows, out):
     scenarios = [s for s in SCENARIO_LABEL if any(r['scenario'] == s for r in rows)]
-    rate = {(r['scenario'], r['system']): float(r['on_time_rate']) for r in rows}
+    per_run = {}
+    for r in rows:
+        if r['on_time_rate'] not in ('', 'None'):
+            per_run.setdefault((r['scenario'], r['system']), []).append(float(r['on_time_rate']))
+    seeds = max((len(v) for v in per_run.values()), default=0)
     fig, ax = plt.subplots(figsize=(8.2, 4.2))
     n = len(SYSTEMS)
     width = 0.8 / n
     for i, sysname in enumerate(SYSTEMS):
         xs = [k + (i - (n - 1) / 2) * width for k in range(len(scenarios))]
-        ys = [100 * rate.get((s, sysname), float('nan')) for s in scenarios]
+        stats = [mean_ci(per_run.get((s, sysname), [])) for s in scenarios]
+        ys = [100 * m for m, _ in stats]
+        errs = [100 * h for _, h in stats]
         ax.bar(xs, ys, width * 0.9, color=COLOUR[sysname], label=sysname, edgecolor='white',
-               linewidth=1)
-        for x, y in zip(xs, ys, strict=True):
+               linewidth=1, yerr=errs, error_kw={'ecolor': MUTED, 'elinewidth': 1, 'capsize': 2})
+        for x, y, e in zip(xs, ys, errs, strict=True):
             if sysname == 'central' or y < 50:  # label the headline bars only
-                ax.text(x, y + 1.5, '%.0f' % y, ha='center', va='bottom', fontsize=8, color=INK)
+                ax.text(x, y + e + 1.5, '%.0f' % y, ha='center', va='bottom', fontsize=8,
+                        color=INK)
     ax.set_xticks(range(len(scenarios)))
     ax.set_xticklabels([SCENARIO_LABEL[s] for s in scenarios], fontsize=9)
     ax.set_ylabel('jobs delivered on time (%)', color=INK, fontsize=9)
     ax.set_ylim(0, 100)
     style(ax)
     ax.legend(ncol=3, fontsize=8, frameon=False, loc='upper center', bbox_to_anchor=(0.5, -0.1))
-    ax.set_title('On-time delivery by scenario (6 drones, 30 jobs, seed 1)', loc='left',
-                 fontsize=11, color=INK)
+    ax.set_title('On-time delivery by scenario (6 drones, mean and 95 %% CI over %d seeds)'
+                 % seeds, loc='left', fontsize=11, color=INK)
     fig.tight_layout()
     path = os.path.join(out, 'on_time_by_scenario.png')
     fig.savefig(path, dpi=140)

@@ -24,6 +24,7 @@ import csv
 import json
 import math
 import os
+import shutil
 import statistics
 import subprocess
 import sys
@@ -48,6 +49,9 @@ def run_one(scenario, system, seed, out_root, time_scale, timeout_s):
     if os.path.exists(os.path.join(run_dir, 'metrics.json')):
         with open(os.path.join(run_dir, 'metrics.json'), encoding='utf-8') as f:
             return json.load(f), 0.0
+    # A directory without metrics is an interrupted run. Start it from scratch: the event recorder
+    # appends, and a rerun on top of a partial log would interleave two simulations.
+    shutil.rmtree(run_dir, ignore_errors=True)
     os.makedirs(run_dir, exist_ok=True)
     cmd = ['ros2', 'launch', 'aeropact_bringup', 'scenario.launch.py',
            'scenario:=%s' % scenario, 'system:=%s' % system, 'seed:=%d' % seed,
