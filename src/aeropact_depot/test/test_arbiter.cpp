@@ -136,3 +136,28 @@ TEST(PadArbiter, UnpoweredPadsAreNotGranted)
   EXPECT_FALSE(p.reserve("A01").has_value());
   EXPECT_EQ(p.free_powered(), 0u);
 }
+
+TEST(PadArbiter, PadSensorBlocksOccupiedPadsAndFreesVacatedOnes)
+{
+  PadArbiter p;
+  p.add_pad("P1", {0, 0, 0});
+  p.add_pad("P2", {12, 0, 0});
+  // Something nobody booked sits on P1 (an unannounced vehicle, a crate): it is never granted.
+  p.sense("P1", true);
+  auto g = p.reserve("A01", 0.0);
+  ASSERT_TRUE(g.has_value());
+  EXPECT_EQ(g->id, "P2");
+  EXPECT_FALSE(p.reserve("A02", 0.0).has_value()) << "only an occupied pad is left";
+  // A01 lands on P2 (sensor: occupied) and later leaves (sensor: empty): P2 is freed.
+  EXPECT_FALSE(p.sense("P2", true));
+  EXPECT_TRUE(p.sense("P2", false));
+  EXPECT_TRUE(p.pads().at("P2").holder.empty());
+  // A pad reported empty before its holder ever arrived stays booked (the grant is not lost).
+  auto g2 = p.reserve("A03", 1.0);
+  ASSERT_TRUE(g2.has_value());
+  EXPECT_FALSE(p.sense(g2->id, false));
+  EXPECT_EQ(p.pads().at(g2->id).holder, "A03");
+  // P1 cleared: grantable again.
+  p.sense("P1", false);
+  EXPECT_TRUE(p.reserve("A02", 2.0).has_value());
+}

@@ -32,6 +32,8 @@ set(msg_files
   "msg/AirspaceRestriction.msg"
   "msg/AirspaceRestrictionArray.msg"
   "msg/PayloadEvent.msg"
+  "msg/AutopilotStatus.msg"
+  "msg/PadOccupancy.msg"
 )
 set(srv_files
   "srv/RequestPickup.srv"

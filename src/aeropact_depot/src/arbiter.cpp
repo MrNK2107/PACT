@@ -64,7 +64,7 @@ std::optional<PadState> PadArbiter::reserve(const std::string & drone_id, double
     }
   }
   for (auto & [id, p] : pads_) {
-    if (p.holder.empty() && p.powered) {
+    if (p.holder.empty() && p.powered && !p.sensed_occupied) {
       p.holder = drone_id;
       p.granted_at = now;
       p.visited = false;
@@ -107,6 +107,27 @@ bool PadArbiter::release(const std::string & drone_id, const std::string & pad_i
   it->second.holder.clear();
   it->second.tag.clear();
   return true;
+}
+
+bool PadArbiter::sense(const std::string & pad_id, bool occupied)
+{
+  auto it = pads_.find(pad_id);
+  if (it == pads_.end()) {
+    return false;
+  }
+  PadState & p = it->second;
+  p.sensed_occupied = occupied;
+  if (occupied && !p.holder.empty()) {
+    p.visited = true;  // the holder (or something) is on its pad
+    return false;
+  }
+  if (!occupied && !p.holder.empty() && p.visited) {
+    p.holder.clear();  // the holder used the pad and has left it
+    p.tag.clear();
+    p.visited = false;
+    return true;
+  }
+  return false;
 }
 
 void PadArbiter::assign(const std::string & drone_id, const std::string & pad_id)

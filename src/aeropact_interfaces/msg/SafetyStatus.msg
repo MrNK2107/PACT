@@ -5,6 +5,7 @@ uint8 ACTION_RTL=3
 uint8 ACTION_LAND_NEAREST=4
 uint8 ACTION_LAND_NOW=5
 uint8 ACTION_DISARMED=6
+uint8 ACTION_AUTOPILOT=7          # the autopilot took over (failsafe, pilot, GCS); the fleet stands down
 
 std_msgs/Header header
 string drone_id

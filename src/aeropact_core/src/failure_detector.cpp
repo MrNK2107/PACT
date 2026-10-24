@@ -193,6 +193,11 @@ std::vector<PeerTransition> FailureDetector::update(
       if (beyond_endurance) {
         next = PeerState::kDeclaredFailed;
         reason = "endurance_bound";
+      } else if (!config_.partition_aware) {
+        if (age >= config_.naive_timeout_s && !p.last.is_depot) {
+          next = PeerState::kDeclaredFailed;
+          reason = "timeout";
+        }
       } else if (quorum && !p.last.is_depot) {
         next = PeerState::kDeclaredFailed;
         reason = p.evidence ? "quorum_with_evidence" : "quorum_timeout";

@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 namespace aeropact::safety
@@ -33,6 +34,7 @@ const char * to_string(Action a)
     case Action::kLandNearest: return "LAND_NEAREST";
     case Action::kLandNow: return "LAND_NOW";
     case Action::kDisarmed: return "DISARMED";
+    case Action::kAutopilot: return "AUTOPILOT";
   }
   return "UNKNOWN";
 }
@@ -84,6 +86,7 @@ SafetyPolicy parse_policy(const YAML::Node & root)
   get(s, "vertical_m", p.sep_vertical_m);
   get(s, "horizon_s", p.sep_horizon_s);
   get(s, "consider_range_m", p.sep_range_m);
+  get(s, "landing_clearance_m", p.landing_clearance_m);
   const auto w = root["watchdog"];
   get(w, "command_timeout_s", p.command_timeout_s);
   get(w, "hold_escalation_s", p.hold_escalation_s);
@@ -123,8 +126,11 @@ Vec3 SafetySupervisor::goto_velocity(
   const double d = geom::dist_xy(in.position, target);
   Vec3 v{0, 0, 0};
   if (d > 2.0) {
-    // Climb or descend to the transit altitude first, then fly level.
-    const double transit = std::max(policy_.rtl_altitude_m, target.z + 10.0);
+    // Far from the site: climb or descend to the transit altitude first, then fly level. On the
+    // final approach (within 40 m) reposition level, at least 12 m above the site: climbing back
+    // to the transit altitude after every side-step made the approach oscillate (D-28).
+    const double transit = d > 40.0 ? std::max(policy_.rtl_altitude_m, target.z + 10.0) :
+      std::max(in.position.z, target.z + 12.0);
     const double dz = transit - in.position.z;
     if (std::abs(dz) > 3.0 && agl < transit - 3.0) {
       v.z = std::clamp(dz * 0.8, -policy_.max_descent, policy_.max_climb);
@@ -146,7 +152,8 @@ Vec3 SafetySupervisor::goto_velocity(
 
 Vec3 SafetySupervisor::land_velocity(const SafetyInput & in, const Vec3 & horizontal) const
 {
-  // Never descend onto an aircraft parked below: side-step until 7 m clear, then descend.
+  // Never descend onto an aircraft below, parked or hovering / landing there: side-step until
+  // 7 m clear, then descend.
   const double agl = in.position.z - in.ground_z;
   Vec3 v = horizontal;
   Vec3 away{0, 0, 0};
@@ -154,7 +161,10 @@ Vec3 SafetySupervisor::land_velocity(const SafetyInput & in, const Vec3 & horizo
   for (const auto & c : in.contacts) {
     const double c_agl = in.position.z + c.rel_pos.z - in.ground_z;
     const double h = geom::norm_xy(c.rel_pos);
-    if (c_agl < 1.0 && geom::norm(c.rel_vel + in.velocity) < 0.5 && h < 7.0) {
+    const double other_speed = geom::norm(c.rel_vel + in.velocity);
+    const bool parked = c_agl < 1.0 && other_speed < 0.5;
+    const bool below = c.rel_pos.z < -0.5 && other_speed < 1.5;
+    if ((parked || below) && h < 7.0) {
       blocked = true;
       const double n = std::max(h, 0.1);
       away = away - Vec3{c.rel_pos.x / n, c.rel_pos.y / n, 0.0};
@@ -172,6 +182,35 @@ Vec3 SafetySupervisor::land_velocity(const SafetyInput & in, const Vec3 & horizo
   }
   v.z = agl > 4.0 ? -policy_.max_descent : -0.6;
   return v;
+}
+
+bool SafetySupervisor::site_occupied(const Vec3 & site, const SafetyInput & in) const
+{
+  // Another aircraft on or low over the site (sensed): parked there, landing or holding.
+  for (const auto & c : in.contacts) {
+    const Vec3 p = in.position + c.rel_pos;
+    if (geom::dist_xy(p, site) < 2.0 * policy_.landing_clearance_m && p.z < site.z + 15.0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Vec3 SafetySupervisor::clear_safe_site(const SafetyInput & in) const
+{
+  const Vec3 * best = nullptr;
+  double best_d = std::numeric_limits<double>::infinity();
+  for (const auto & s : fence_.safe_sites) {
+    const double d = geom::dist_xy(in.position, s);
+    if (d < best_d && !site_occupied(s, in)) {
+      best_d = d;
+      best = &s;
+    }
+  }
+  if (best == nullptr) {
+    best = fence_.nearest_safe_site(in.position);  // all occupied: land_velocity side-steps
+  }
+  return best != nullptr ? *best : in.position;
 }
 
 bool SafetySupervisor::conflict(const Vec3 & v, const SafetyInput & in, double & miss) const
@@ -303,7 +342,10 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
 {
   SafetyOutput out;
   const double agl = in.position.z - in.ground_z;
-  const bool on_ground = agl < 0.35 && std::abs(in.velocity.z) < 0.35;
+  // With an autopilot, its land detector is authoritative: the estimated height above a pad can
+  // be off by a few decimetres (baro / GNSS), which a fixed height threshold cannot absorb.
+  const bool on_ground = std::abs(in.velocity.z) < 0.35 &&
+    (agl < 0.35 || (in.autopilot_present && in.autopilot_landed));
   out.command_fresh = in.mission_velocity.has_value() &&
     in.now - in.mission_stamp <= policy_.command_timeout_s;
 
@@ -339,6 +381,10 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
         out.reason = why;
       }
     };
+  // The autopilot's own failsafes (or a remote pilot) outrank everything here: never contest them.
+  if (in.autopilot_present && in.autopilot_override) {
+    escalate(Action::kAutopilot, "autopilot_override");
+  }
   // Endurance: measured discharge rate -> time to empty, compared with the time needed to land
   // here and to reach the nearest safe site. Fixed SOC floors remain as a backstop.
   update_discharge(in, on_ground);
@@ -380,22 +426,35 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
   // ---- velocity selection ----
   Vec3 v{0, 0, 0};
   switch (latched_) {
+    case Action::kAutopilot:
+      v = {0, 0, 0};  // not forwarded: the autopilot flies the vehicle
+      out.veto = true;
+      break;
     case Action::kLandNow:
       v = land_velocity(in, {0, 0, 0});
       out.veto = true;
       break;
     case Action::kLandNearest: {
-        if (!latched_target_) {
-          const Vec3 * site = fence_.nearest_safe_site(in.position);
-          latched_target_ = site != nullptr ? *site : in.position;
+        // The nearest safe site no sensed aircraft occupies; re-selected (at most every 5 s) when
+        // another aircraft takes it first, rather than queueing above it (D-28).
+        if (!latched_target_ ||
+          (site_occupied(*latched_target_, in) && in.now - last_reselect_ >= 5.0))
+        {
+          latched_target_ = clear_safe_site(in);
+          last_reselect_ = in.now;
         }
         v = goto_velocity(in, *latched_target_, policy_.rtl_speed, true);
         out.veto = true;
         break;
       }
     case Action::kRtl:
-      latched_target_ = home_;
-      v = goto_velocity(in, home_, policy_.rtl_speed, true);
+      if (!latched_target_ ||
+        (site_occupied(*latched_target_, in) && in.now - last_reselect_ >= 5.0))
+      {
+        latched_target_ = site_occupied(home_, in) ? clear_safe_site(in) : home_;
+        last_reselect_ = in.now;
+      }
+      v = goto_velocity(in, *latched_target_, policy_.rtl_speed, true);
       out.veto = true;
       break;
     default:
@@ -420,8 +479,27 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
     v.z = 0.0;
   }
 
+  // ---- occupied landing spot (every mode we fly) ----
+  // The separation filter treats aircraft parked on the ground as obstacles, not traffic, and
+  // contingency landings side-step them (land_velocity); a mission descent must not land on one
+  // either, whatever the mission layer believes about the pad. Hold height above it instead.
+  if (!on_ground && latched_ != Action::kAutopilot && v.z < 0.0 && agl < 12.0) {
+    for (const auto & c : in.contacts) {
+      const double c_agl = in.position.z + c.rel_pos.z - in.ground_z;
+      if (c_agl < 1.0 && geom::norm(c.rel_vel + in.velocity) < 0.5 &&
+        geom::norm_xy(c.rel_pos) < policy_.landing_clearance_m)
+      {
+        v.z = 0.0;
+        out.veto = true;
+        avoid_until_ = in.now + 1.0;
+        out.reason = "occupied_landing_spot";
+        break;
+      }
+    }
+  }
+
   // ---- separation reflex (always on while airborne) ----
-  if (!on_ground) {
+  if (!on_ground && latched_ != Action::kAutopilot) {
     bool modified = false;
     double min_sep = 1e9;
     const Vec3 filtered = separation_filter(v, in, modified, min_sep);
@@ -433,7 +511,9 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
     }
     if (in.now < avoid_until_ && out.action == Action::kNominal) {
       out.action = Action::kAvoid;  // reported with 1 s hysteresis; filtering is per step
-      out.reason = "separation";
+      if (out.reason.empty()) {
+        out.reason = "separation";
+      }
     }
   } else {
     for (const auto & c : in.contacts) {
@@ -443,7 +523,7 @@ SafetyOutput SafetySupervisor::step(const SafetyInput & in)
 
   // ---- touchdown handling: a contingency landing ends disarmed ----
   const bool landing_latched = latched_ == Action::kLandNow || latched_ == Action::kLandNearest ||
-    latched_ == Action::kRtl;
+    latched_ == Action::kRtl || latched_ == Action::kAutopilot;
   if (on_ground && (landing_latched || !in.arm_request)) {
     if (touchdown_since_ < 0.0) {
       touchdown_since_ = in.now;

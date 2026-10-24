@@ -185,3 +185,23 @@ TEST(FailureDetector, MembershipSets)
   EXPECT_EQ(fd.reachable().size(), 1u);
   EXPECT_EQ(fd.known().size(), 2u);
 }
+
+TEST(FailureDetector, PartitionUnawareAblationDeclaresOnTimeoutEvenInMinority)
+{
+  FailureDetectorConfig naive;
+  naive.partition_aware = false;
+  naive.naive_timeout_s = 30.0;
+  FailureDetector fd("A01", naive);
+  FailureDetector aware("A01");
+  beat(fd, "A02", 0, 30, 1.0);
+  beat(aware, "A02", 0, 30, 1.0);
+  std::vector<ProbeRequest> probes;
+  for (double t = 30.1; t <= 75.0; t += 0.1) {
+    fd.update(t, probes, false);
+    aware.update(t, probes, false);
+  }
+  // The baseline cannot tell a partition from a crash and takes over after the timeout;
+  // PACT's detector, in a minority view, never declares on silence alone.
+  EXPECT_EQ(fd.state("A02"), PeerState::kDeclaredFailed);
+  EXPECT_EQ(aware.state("A02"), PeerState::kUnreachable);
+}

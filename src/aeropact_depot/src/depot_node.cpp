@@ -30,6 +30,7 @@
 #include "aeropact_core/world_model.hpp"
 #include "aeropact_depot/arbiter.hpp"
 #include "aeropact_interfaces/msg/fleet_event.hpp"
+#include "aeropact_interfaces/msg/pad_occupancy.hpp"
 #include "aeropact_interfaces/msg/payload_event.hpp"
 #include "aeropact_interfaces/msg/radio_frame.hpp"
 #include "aeropact_interfaces/srv/inject_fault.hpp"
@@ -72,6 +73,12 @@ public:
     declare_parameter("full_sync_period_s", 10.0);
     declare_parameter("heartbeat_period_s", 1.0);
     declare_parameter("forward_to_hub", false);
+    // Where vehicle positions come from: "odom" (the vehicles' odometry topics, as a depot's own
+    // sensing in simulation) or "radio" (the authenticated heartbeats on the mesh; deployment).
+    declare_parameter("position_source", "odom");
+    // Pad occupancy sensors (D-31), empty disables: an occupied pad is never granted, a vacated
+    // one is freed.
+    declare_parameter("pad_sensor_topic", "");
   }
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State &) override
@@ -119,27 +126,24 @@ public:
         "/hub/orders", rclcpp::QoS(100).reliable());
     }
     const std::vector<std::string> roster = get_parameter("fleet_roster").as_string_array();
-    for (const auto & d : roster) {
-      odom_subs_.push_back(create_subscription<nav_msgs::msg::Odometry>(
-          "/" + d + "/odom", rclcpp::SensorDataQoS(),
-          [this, d](nav_msgs::msg::Odometry::ConstSharedPtr m) {
-            positions_[d] = {m->pose.pose.position.x, m->pose.pose.position.y,
-              m->pose.pose.position.z};
-            for (const auto & pad : pads_.observe(d, positions_[d], now().seconds())) {
-              for (const auto & r : replica_.pad_reservations()) {
-                if (r.pad_id == pad && r.drone_id == d) {
-                  replica_.remove_pad_reservation(r.tag);
-                }
-              }
-              emit("PAD_RELEASED", core::Json().add("pad", pad).add("drone", d)
-              .add("reason", "holder_left"));
-            }
-            for (const auto & bay : bays_.observe(d, positions_[d], now().seconds(),
-            get_parameter("handoff_radius_m").as_double(), 20.0, 120.0))
-            {
-              emit("BAY_RELEASED", core::Json().add("bay", bay).add("drone", d));
-            }
-          }));
+    roster_.clear();
+    roster_.insert(roster.begin(), roster.end());
+    position_from_radio_ = get_parameter("position_source").as_string() == "radio";
+    if (!position_from_radio_) {
+      for (const auto & d : roster) {
+        odom_subs_.push_back(create_subscription<nav_msgs::msg::Odometry>(
+            "/" + d + "/odom", rclcpp::SensorDataQoS(),
+            [this, d](nav_msgs::msg::Odometry::ConstSharedPtr m) {
+              observe_vehicle(d, {m->pose.pose.position.x, m->pose.pose.position.y,
+                m->pose.pose.position.z});
+            }));
+      }
+    }
+    const auto pad_topic = get_parameter("pad_sensor_topic").as_string();
+    if (!pad_topic.empty()) {
+      pad_sensor_sub_ = create_subscription<aeropact_interfaces::msg::PadOccupancy>(
+        pad_topic, rclcpp::QoS(50),
+        [this](aeropact_interfaces::msg::PadOccupancy::ConstSharedPtr m) {on_pad_sensor(*m);});
     }
     submit_srv_ = create_service<aeropact_interfaces::srv::SubmitOrder>("submit_order",
         [this](const std::shared_ptr<aeropact_interfaces::srv::SubmitOrder::Request> rq,
@@ -218,6 +222,7 @@ public:
   {
     timer_.reset();
     odom_subs_.clear();
+    pad_sensor_sub_.reset();
     return CallbackReturn::SUCCESS;
   }
 
@@ -229,6 +234,54 @@ public:
 
 private:
   double local_now() {return now().seconds();}  // depots have a stable, GPS-disciplined clock
+
+  /// A pad occupancy sensor report for one of this depot's pads (D-31).
+  void on_pad_sensor(const aeropact_interfaces::msg::PadOccupancy & m)
+  {
+    if (m.depot_id != id_ || pads_.pads().count(m.pad_id) == 0U) {
+      return;
+    }
+    const std::string holder = pads_.pads().at(m.pad_id).holder;
+    const bool was = sensed_occupied_.count(m.pad_id) != 0U;
+    if (m.occupied != was) {
+      if (m.occupied) {
+        sensed_occupied_.insert(m.pad_id);
+      } else {
+        sensed_occupied_.erase(m.pad_id);
+      }
+      emit("PAD_SENSOR", core::Json().add("pad", m.pad_id).add("occupied", m.occupied)
+        .add("holder", holder));
+    }
+    if (pads_.sense(m.pad_id, m.occupied)) {
+      for (const auto & r : replica_.pad_reservations()) {
+        if (r.pad_id == m.pad_id && r.drone_id == holder) {
+          replica_.remove_pad_reservation(r.tag);
+        }
+      }
+      emit("PAD_RELEASED", core::Json().add("pad", m.pad_id).add("drone", holder)
+        .add("reason", "pad_sensor_vacated"));
+    }
+  }
+
+  /// A vehicle position update: frees pads and bays their holders have left (D-13, D-18).
+  void observe_vehicle(const std::string & d, const Vec3 & p)
+  {
+    positions_[d] = p;
+    for (const auto & pad : pads_.observe(d, p, now().seconds())) {
+      for (const auto & r : replica_.pad_reservations()) {
+        if (r.pad_id == pad && r.drone_id == d) {
+          replica_.remove_pad_reservation(r.tag);
+        }
+      }
+      emit("PAD_RELEASED", core::Json().add("pad", pad).add("drone", d)
+        .add("reason", "holder_left"));
+    }
+    for (const auto & bay : bays_.observe(d, p, now().seconds(),
+      get_parameter("handoff_radius_m").as_double(), 20.0, 120.0))
+    {
+      emit("BAY_RELEASED", core::Json().add("bay", bay).add("drone", d));
+    }
+  }
 
   void tick()
   {
@@ -266,7 +319,11 @@ private:
         send(std::move(a));
       }
       if (f->type == RadioFrame::TYPE_HEARTBEAT && !f->heartbeat.empty()) {
-        last_heard_[f->heartbeat.front().node_id] = t;
+        const auto & hb = f->heartbeat.front();
+        last_heard_[hb.node_id] = t;
+        if (position_from_radio_ && !hb.is_depot && roster_.count(hb.node_id) != 0U) {
+          observe_vehicle(hb.node_id, {hb.position.x, hb.position.y, hb.position.z});
+        }
       }
     }
     if (offline_) {
@@ -604,6 +661,10 @@ private:
   BayArbiter bays_;
   std::set<std::string> reordered_;
   std::map<std::string, Vec3> positions_;
+  std::set<std::string> roster_;
+  rclcpp::Subscription<aeropact_interfaces::msg::PadOccupancy>::SharedPtr pad_sensor_sub_;
+  std::set<std::string> sensed_occupied_;
+  bool position_from_radio_{false};
   std::map<std::string, double> last_heard_;
   std::map<std::string, std::pair<std::uint32_t, std::uint32_t>> ack_tasks_;
   std::map<std::string, std::pair<std::uint32_t, std::uint32_t>> ack_shards_;

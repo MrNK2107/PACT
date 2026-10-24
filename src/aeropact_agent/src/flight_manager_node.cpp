@@ -20,6 +20,7 @@
 
 #include "aeropact_geometry/geometry.hpp"
 #include "aeropact_interfaces/action/fly_route.hpp"
+#include "aeropact_interfaces/msg/autopilot_status.hpp"
 #include "aeropact_interfaces/msg/safety_status.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -83,6 +84,12 @@ public:
         });
     safety_sub_ = create_subscription<SafetyStatus>("safety/status", rclcpp::QoS(10),
         [this](SafetyStatus::ConstSharedPtr m) {safety_ = *m;});
+    autopilot_sub_ = create_subscription<aeropact_interfaces::msg::AutopilotStatus>(
+      "autopilot/status", rclcpp::QoS(5),
+      [this](aeropact_interfaces::msg::AutopilotStatus::ConstSharedPtr m) {
+        autopilot_landed_ = m->landed;
+        autopilot_stamp_ = now().seconds();
+      });
     cmd_pub_ = create_publisher<geometry_msgs::msg::TwistStamped>(
       "flight/cmd_vel_request", rclcpp::QoS(5));
     arm_pub_ = create_publisher<std_msgs::msg::Bool>(
@@ -130,6 +137,7 @@ public:
     server_.reset();
     odom_sub_.reset();
     safety_sub_.reset();
+    autopilot_sub_.reset();
     return CallbackReturn::SUCCESS;
   }
 
@@ -227,7 +235,8 @@ private:
     const double t = now().seconds();
     const uint8_t a = safety_.action;
     const bool contingency = a == SafetyStatus::ACTION_RTL ||
-      a == SafetyStatus::ACTION_LAND_NEAREST || a == SafetyStatus::ACTION_LAND_NOW;
+      a == SafetyStatus::ACTION_LAND_NEAREST || a == SafetyStatus::ACTION_LAND_NOW ||
+      a == SafetyStatus::ACTION_AUTOPILOT;
     if (contingency) {
       // The supervisor flies the vehicle now; withdraw the arm request so it stays down after
       // the contingency landing until the mission layer sends a new route.
@@ -282,7 +291,11 @@ private:
         v.z = pos_.z - target.z >
           6.0 ? -max_descent : -get_parameter("final_descent_mps").as_double();
         publish(geom::clamp_xy(v, 1.0));
-        const bool settled = pos_.z - target.z < 0.35 && std::abs(vel_.z) < 0.2;
+        // With an autopilot, its land detector decides touchdown: the height estimate over the
+        // pad carries baro / GNSS error of a few decimetres.
+        const bool autopilot_landed = autopilot_landed_ && t - autopilot_stamp_ < 1.0;
+        const bool settled = std::abs(vel_.z) < 0.2 &&
+          (pos_.z - target.z < 0.35 || autopilot_landed);
         if (settled) {
           if (touchdown_since_ < 0.0) {
             touchdown_since_ = t;
@@ -362,6 +375,8 @@ private:
   Vec3 vel_;
   Vec3 hold_;
   SafetyStatus safety_;
+  bool autopilot_landed_{false};
+  double autopilot_stamp_{-1e9};
   std::shared_ptr<ServerGoalHandle> goal_;
   std::vector<Vec3> wps_;
   std::size_t idx_{0};
@@ -376,6 +391,7 @@ private:
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<SafetyStatus>::SharedPtr safety_sub_;
+  rclcpp::Subscription<aeropact_interfaces::msg::AutopilotStatus>::SharedPtr autopilot_sub_;
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_pub_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Bool>::SharedPtr arm_pub_;
   rclcpp_action::Server<FlyRoute>::SharedPtr server_;

@@ -38,6 +38,7 @@ enum class Action : std::uint8_t
   kLandNearest = 4,
   kLandNow = 5,
   kDisarmed = 6,
+  kAutopilot = 7,  ///< the autopilot took over (its failsafe, a pilot, a GCS); stand down
 };
 const char * to_string(Action a);
 Action action_from_string(const std::string & s);
@@ -61,6 +62,7 @@ struct SafetyPolicy
   double sep_vertical_m{5.0};
   double sep_horizon_s{6.0};
   double sep_range_m{70.0};
+  double landing_clearance_m{3.0};  ///< no descent within this radius above a parked aircraft
   double command_timeout_s{1.0};
   double hold_escalation_s{20.0};
   double rtl_altitude_m{60.0};
@@ -89,6 +91,10 @@ struct SafetyInput
   double mission_stamp{-1e9};            ///< time it was received
   bool arm_request{false};
   double ground_z{0.0};                  ///< local ground height below the vehicle
+  // Autopilot link (absent on backends where the supervisor drives the vehicle directly).
+  bool autopilot_present{false};
+  bool autopilot_override{false};        ///< the autopilot flies the vehicle, not the fleet
+  bool autopilot_landed{false};          ///< the autopilot's land detector
 };
 
 struct SafetyOutput
@@ -111,6 +117,8 @@ struct SafetyOutput
  *   command watchdog (hold, then escalate to RTL) > mission command;
  * the separation reflex filters whatever velocity results, in every mode except disarmed.
  * Latched contingencies (RTL, landing) persist until touchdown; touchdown disarms.
+ * Above all of them, an autopilot takeover (AUTOPILOT) latches: the supervisor never contests
+ * the flight controller's own failsafes and stands down until the autopilot reports landed.
  */
 class SafetySupervisor
 {
@@ -135,6 +143,8 @@ private:
   bool conflict(const Vec3 & v, const SafetyInput & in, double & miss) const;
   void update_discharge(const SafetyInput & in, bool on_ground);
   Vec3 land_velocity(const SafetyInput & in, const Vec3 & horizontal) const;
+  bool site_occupied(const Vec3 & site, const SafetyInput & in) const;
+  Vec3 clear_safe_site(const SafetyInput & in) const;
 
   SafetyPolicy policy_;
   Geofence fence_;
@@ -146,6 +156,7 @@ private:
   double hold_since_{-1.0};
   double touchdown_since_{-1.0};
   double avoid_until_{-1.0};
+  double last_reselect_{-1e9};
   bool need_fresh_arm_{false};
   double last_soc_{1.0};
   double last_soc_t_{-1.0};

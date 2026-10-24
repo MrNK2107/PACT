@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 
+#include "aeropact_interfaces/msg/autopilot_status.hpp"
 #include "aeropact_interfaces/msg/fleet_event.hpp"
 #include "aeropact_interfaces/msg/proximity_array.hpp"
 #include "aeropact_interfaces/msg/safety_status.hpp"
@@ -115,6 +116,15 @@ public:
     arm_sub_ = create_subscription<std_msgs::msg::Bool>(
       "flight/arm_request", rclcpp::QoS(5).transient_local(),
       [this](std_msgs::msg::Bool::ConstSharedPtr m) {input_.arm_request = m->data;});
+    // Vehicle interface to a real autopilot (PX4 backend / hardware); a local link, not the radio.
+    autopilot_sub_ = create_subscription<aeropact_interfaces::msg::AutopilotStatus>(
+      "autopilot/status", rclcpp::QoS(5),
+      [this](aeropact_interfaces::msg::AutopilotStatus::ConstSharedPtr m) {
+        autopilot_stamp_ = now().seconds();
+        input_.autopilot_override =
+        m->link_state == aeropact_interfaces::msg::AutopilotStatus::LINK_AUTOPILOT_OVERRIDE;
+        input_.autopilot_landed = m->landed;
+      });
 
     cmd_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", rclcpp::QoS(5));
     enable_pub_ = create_publisher<std_msgs::msg::Bool>("enable", rclcpp::QoS(5));
@@ -160,6 +170,7 @@ public:
     contacts_sub_.reset();
     cmd_sub_.reset();
     arm_sub_.reset();
+    autopilot_sub_.reset();
     return CallbackReturn::SUCCESS;
   }
 
@@ -177,6 +188,7 @@ private:
     }
     input_.now = now().seconds();
     input_.ground_z = ground_z_;
+    input_.autopilot_present = input_.now - autopilot_stamp_ < 2.0;
     const SafetyOutput out = supervisor_->step(input_);
 
     // World -> body (yaw only) for the multicopter velocity controller.
@@ -238,12 +250,14 @@ private:
   bool last_armed_{false};
   Action last_action_{Action::kDisarmed};
   unsigned enable_counter_{0};
+  double autopilot_stamp_{-1e9};
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_sub_;
   rclcpp::Subscription<aeropact_interfaces::msg::ProximityArray>::SharedPtr contacts_sub_;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_sub_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr arm_sub_;
+  rclcpp::Subscription<aeropact_interfaces::msg::AutopilotStatus>::SharedPtr autopilot_sub_;
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Bool>::SharedPtr enable_pub_;
   rclcpp_lifecycle::LifecyclePublisher<aeropact_interfaces::msg::SafetyStatus>::SharedPtr

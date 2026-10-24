@@ -22,6 +22,7 @@ separation:
   vertical_m: 5.0
   horizon_s: 6.0
   consider_range_m: 70.0
+  landing_clearance_m: 3.0        # never descend within this radius above a parked aircraft
 watchdog:
   command_timeout_s: 1.0
   hold_escalation_s: 20.0

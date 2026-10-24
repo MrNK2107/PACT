@@ -17,6 +17,7 @@
 #include <cctype>
 #include <cmath>
 #include <deque>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -140,6 +141,7 @@ public:
     declare_parameter("phi_suspect", 5.0);
     declare_parameter("phi_unreachable", 9.0);
     declare_parameter("failure_quorum", 2);
+    declare_parameter("naive_failure_timeout_s", 30.0);
     declare_parameter("seed", 1);
   }
 
@@ -198,6 +200,10 @@ public:
     fc.phi_unreachable = get_parameter("phi_unreachable").as_double();
     fc.failure_quorum = static_cast<std::size_t>(get_parameter("failure_quorum").as_int());
     fc.use_indirect_probing = get_parameter("use_indirect_probing").as_bool();
+    // The decentralised baselines are partition-unaware: they take over a silent peer's work
+    // after a plain timeout, as a system without PACT's failure quorum would (D-22).
+    fc.partition_aware = mode_ == AllocationMode::kPact || mode_ == AllocationMode::kCentral;
+    fc.naive_timeout_s = get_parameter("naive_failure_timeout_s").as_double();
     fd_ = std::make_unique<core::FailureDetector>(id_, fc);
 
     clock_ = core::LocalClock(get_parameter("clock_drift_ppm").as_double(), 0.0);
@@ -1179,6 +1185,28 @@ private:
 
   /// Mission-level energy contingency: divert to the nearest pad while that is still feasible,
   /// so the safety supervisor's battery failsafe is a last resort, not the plan.
+  /// Pad for an energy divert: the nearest one no other vehicle holds a reservation on (a divert
+  /// lands without asking the depot first); the nearest pad only when every pad is reserved.
+  const core::Pad * divert_pad() const
+  {
+    std::set<std::string> reserved;
+    for (const auto & r : replica_.pad_reservations()) {
+      if (r.drone_id != id_) {
+        reserved.insert(r.pad_id);
+      }
+    }
+    const core::Pad * best = nullptr;
+    double best_d = std::numeric_limits<double>::infinity();
+    for (const auto & p : world_->pads) {
+      const double d = geom::dist_xy(pos_, p.position);
+      if (reserved.count(p.id) == 0U && d < best_d) {
+        best_d = d;
+        best = &p;
+      }
+    }
+    return best != nullptr ? best : world_->nearest_pad(pos_);
+  }
+
   bool energy_divert_needed() const
   {
     if (!have_battery_ || pos_.z < 1.0 || activity_ == Activity::kToPad ||
@@ -1186,7 +1214,7 @@ private:
     {
       return false;
     }
-    const core::Pad * pad = world_->nearest_pad(pos_);
+    const core::Pad * pad = divert_pad();
     if (pad == nullptr) {
       return false;
     }
@@ -1198,7 +1226,7 @@ private:
   void divert_for_energy()
   {
     energy_divert_ = true;
-    const core::Pad * pad = world_->nearest_pad(pos_);
+    const core::Pad * pad = divert_pad();
     emit("ENERGY_DIVERT", core::Json().add("soc", soc_).add("pad", pad->id)
       .add("factor", energy_->params().consumption_factor).add("carrying", carrying_));
     const std::vector<std::string> held = bundle_;
@@ -1299,7 +1327,8 @@ private:
     }
     const uint8_t a = safety_.action;
     const bool contingency = a == SafetyStatus::ACTION_RTL ||
-      a == SafetyStatus::ACTION_LAND_NEAREST || a == SafetyStatus::ACTION_LAND_NOW;
+      a == SafetyStatus::ACTION_LAND_NEAREST || a == SafetyStatus::ACTION_LAND_NOW ||
+      a == SafetyStatus::ACTION_AUTOPILOT;
     if (contingency && activity_ != Activity::kSafetyOverride &&
       activity_ != Activity::kLanded)
     {

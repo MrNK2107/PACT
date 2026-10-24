@@ -14,7 +14,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cmath>
+#include <optional>
+#include <string>
 
 #include "aeropact_safety/supervisor.hpp"
 
@@ -248,4 +251,175 @@ TEST(Supervisor, ContingencyLandingDisarmsAfterTouchdown)
   const auto out = s.step(in);
   EXPECT_FALSE(out.armed);
   EXPECT_EQ(out.action, Action::kDisarmed);
+}
+
+TEST(Supervisor, AutopilotTakeoverLatchesAboveEverythingAndDisarmsOnlyAfterLanding)
+{
+  auto s = armed_supervisor();
+  SafetyInput in = flying(1.0, {0, 0, 40}, {5, 0, 0});
+  in.autopilot_present = true;
+  EXPECT_EQ(s.step(in).action, Action::kNominal);
+  // The flight controller's failsafe (or a remote pilot) takes over in flight.
+  in = flying(2.0, {5, 0, 40}, {5, 0, 0});
+  in.autopilot_present = true;
+  in.autopilot_override = true;
+  in.soc = 0.02;  // even a critical battery does not make the supervisor contest it
+  auto out = s.step(in);
+  EXPECT_EQ(out.action, Action::kAutopilot);
+  EXPECT_TRUE(out.veto);
+  EXPECT_TRUE(out.armed);
+  EXPECT_DOUBLE_EQ(out.velocity.x, 0.0);
+  // The autopilot lands the vehicle; its land detector ends the latch, a few decimetres of
+  // height estimate error notwithstanding.
+  for (double t = 3.0; t < 5.0; t += 0.1) {
+    in = flying(t, {5, 0, 0.6}, {0, 0, 0});
+    in.velocity = {0, 0, 0};
+    in.autopilot_present = true;
+    in.autopilot_override = true;
+    in.autopilot_landed = true;
+    out = s.step(in);
+  }
+  EXPECT_FALSE(out.armed);
+  EXPECT_EQ(out.action, Action::kDisarmed);
+  // A stale arm request does not relaunch it; a fresh one does.
+  in.autopilot_override = false;
+  EXPECT_FALSE(s.step(in).armed);
+  in.arm_request = false;
+  s.step(in);
+  in.arm_request = true;
+  EXPECT_TRUE(s.step(in).armed);
+}
+
+TEST(Supervisor, NeverDescendsOntoAParkedAircraftInAMissionLanding)
+{
+  // A mission landing (nominal mode) straight down onto a pad that another vehicle occupies.
+  auto s = armed_supervisor();
+  SafetyInput in = flying(1.0, {412, 330, 6.0}, {0, 0, -1.5});
+  in.contacts.push_back({"A03", {0.1, 0.0, -6.0}, {0.0, 0.0, 1.5}});  // parked: world vel 0
+  auto out = s.step(in);
+  EXPECT_DOUBLE_EQ(out.velocity.z, 0.0);
+  EXPECT_TRUE(out.veto);
+  EXPECT_EQ(out.action, Action::kAvoid);
+  EXPECT_EQ(out.reason, "occupied_landing_spot");
+  // The neighbouring pad 12 m away does not block the descent.
+  SafetySupervisor s2 = armed_supervisor();
+  in.contacts = {{"A03", {12.0, 0.0, -6.0}, {0.0, 0.0, 1.5}}};
+  EXPECT_LT(s2.step(in).velocity.z, 0.0);
+  // Once the pad is clear the descent proceeds.
+  SafetySupervisor s3 = armed_supervisor();
+  in.contacts.clear();
+  EXPECT_LT(s3.step(in).velocity.z, 0.0);
+}
+
+namespace
+{
+
+// Closed loop: two point-mass vehicles, each with its own supervisor, sensing each other.
+struct SimVehicle
+{
+  std::string id;
+  Vec3 pos;
+  Vec3 vel;
+  double soc{0.8};
+  std::optional<Vec3> mission_target;  // mission landing target (nominal mode)
+};
+
+SafetyInput sense(const SimVehicle & self, const SimVehicle & other, double t)
+{
+  SafetyInput in;
+  in.now = t;
+  in.position = self.pos;
+  in.velocity = self.vel;
+  in.soc = self.soc;
+  in.battery_valid = true;
+  in.arm_request = true;
+  in.contacts.push_back({other.id, other.pos - self.pos, other.vel - self.vel});
+  if (self.mission_target) {
+    Vec3 v = (*self.mission_target - self.pos) * 0.5;
+    v = aeropact::geom::clamp_xy(v, 3.0);
+    v.z = aeropact::geom::dist_xy(self.pos, *self.mission_target) < 1.5 ? -1.0 : 0.0;
+    in.mission_velocity = v;
+    in.mission_stamp = t;
+  }
+  return in;
+}
+
+void integrate(SimVehicle & v, const Vec3 & cmd, double dt)
+{
+  v.vel = cmd;
+  v.pos = v.pos + cmd * dt;
+  if (v.pos.z < 0.0) {
+    v.pos.z = 0.0;
+    v.vel.z = 0.0;
+  }
+}
+
+Geofence two_pad_fence()
+{
+  return Geofence::from_yaml_string(
+      R"(
+world:
+  bounds: {min_x: -500, min_y: -500, max_x: 500, max_y: 500}
+  depots:
+    - id: D1
+      position: [0, -30, 0]
+      pads:
+        - {id: D1-P1, position: [0, 0, 0]}
+        - {id: D1-P2, position: [12, 0, 0]}
+  safe_sites:
+    - {id: S1, position: [60, 0, 0]}
+)");
+}
+
+}  // namespace
+
+// D-28 regression: an emergency landing above a pad another vehicle is landing on picks a clear
+// site instead of queueing above it, never climbs away in lockstep, and both vehicles land with
+// separation kept throughout.
+TEST(Supervisor, EmergencyLandingAvoidsAPadAnotherVehicleIsLandingOn)
+{
+  SafetySupervisor sa(SafetyPolicy{}, two_pad_fence(), "A06", {0, 0, 0});
+  SafetySupervisor sb(SafetyPolicy{}, two_pad_fence(), "A03", {0, 0, 0});
+  SimVehicle a{"A06", {2, 1, 10}, {0, 0, 0}, 0.08, std::nullopt};      // below the SOC floor
+  SimVehicle b{"A03", {0, 0, 6}, {0, 0, 0}, 0.8, Vec3{0, 0, 0}};       // landing on D1-P1
+  double min_sep = 1e9;
+  double max_alt_a = 0.0;
+  const double dt = 0.05;
+  for (double t = 0.0; t < 150.0; t += dt) {
+    a.soc = t < 0.1 ? 0.5 : 0.08;  // armed in flight, then below the SOC floor
+    const auto oa = sa.step(sense(a, b, t));
+    const auto ob = sb.step(sense(b, a, t));
+    integrate(a, oa.armed ? oa.velocity : Vec3{0, 0, 0}, dt);
+    integrate(b, ob.armed ? ob.velocity : Vec3{0, 0, 0}, dt);
+    min_sep = std::min(min_sep, aeropact::geom::dist(a.pos, b.pos));
+    max_alt_a = std::max(max_alt_a, a.pos.z);
+  }
+  EXPECT_LT(a.pos.z, 0.1) << "the low-battery vehicle must be on the ground";
+  EXPECT_LT(b.pos.z, 0.1);
+  EXPECT_GT(min_sep, 2.0);
+  EXPECT_LT(max_alt_a, 25.0) << "no climb-away on the final approach";
+  EXPECT_GT(aeropact::geom::dist_xy(a.pos, b.pos), 3.0) << "landed beside, not on top";
+}
+
+// A pad already occupied by a parked aircraft is not chosen while a clear site exists.
+TEST(Supervisor, EmergencyLandingSkipsAnOccupiedPad)
+{
+  SafetySupervisor sa(SafetyPolicy{}, two_pad_fence(), "A06", {0, 0, 0});
+  SafetySupervisor sb(SafetyPolicy{}, two_pad_fence(), "A01", {0, 0, 0});
+  SimVehicle a{"A06", {1, 0, 12}, {0, 0, 0}, 0.08, std::nullopt};
+  SimVehicle b{"A01", {0, 0, 0}, {0, 0, 0}, 0.8, std::nullopt};  // parked on D1-P1
+  const double dt = 0.05;
+  double min_sep = 1e9;
+  for (double t = 0.0; t < 120.0; t += dt) {
+    a.soc = t < 0.1 ? 0.5 : 0.08;
+    const auto oa = sa.step(sense(a, b, t));
+    SafetyInput ib = sense(b, a, t);
+    ib.arm_request = false;  // parked and disarmed
+    sb.step(ib);
+    integrate(a, oa.armed ? oa.velocity : Vec3{0, 0, 0}, dt);
+    min_sep = std::min(min_sep, aeropact::geom::dist(a.pos, b.pos));
+  }
+  EXPECT_LT(a.pos.z, 0.1);
+  EXPECT_NEAR(a.pos.x, 12.0, 1.5) << "landed on the clear neighbouring pad";
+  EXPECT_GT(min_sep, 3.0);
 }

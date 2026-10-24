@@ -53,6 +53,10 @@ struct FailureDetectorConfig
   double indirect_alive_s{6.0};    ///< an indirect "heard recently" keeps a peer from UNREACHABLE
   double endurance_margin_s{30.0};
   bool use_indirect_probing{true};
+  /// Ablation for partition-unaware baselines: false declares any peer silent for
+  /// naive_timeout_s failed on this node's own evidence (no quorum, no majority view).
+  bool partition_aware{true};
+  double naive_timeout_s{30.0};
 };
 
 struct PeerObservation

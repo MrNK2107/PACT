@@ -74,6 +74,7 @@ struct PadState
   std::string tag;
   double granted_at{-1.0};
   bool visited{false};  ///< the holder has been on the pad since the grant
+  bool sensed_occupied{false};  ///< the pad sensor reports something on the pad (D-31)
 };
 
 /**
@@ -92,6 +93,10 @@ public:
     const std::string & drone, const core::Vec3 & pos, double now,
     double unused_timeout = 300.0);
   bool release(const std::string & drone_id, const std::string & pad_id);
+  /// Physical pad sensor (D-31): an occupied pad is never granted, whatever is on it; a held pad
+  /// that its holder has visited and the sensor reports empty is freed. Returns true when this
+  /// report freed the pad.
+  bool sense(const std::string & pad_id, bool occupied);
   void assign(const std::string & drone_id, const std::string & pad_id);
   void set_powered(const std::string & pad_id, bool powered);
   void set_all_powered(bool powered);
