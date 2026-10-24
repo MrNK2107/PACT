@@ -18,6 +18,8 @@
   <exec_depend>aeropact_baselines</exec_depend>
   <exec_depend>aeropact_depot</exec_depend>
   <exec_depend>aeropact_eval</exec_depend>
+  <exec_depend>aeropact_px4</exec_depend>
+  <exec_depend>aeropact_radio</exec_depend>
   <exec_depend>aeropact_safety</exec_depend>
   <exec_depend>aeropact_sim</exec_depend>
   <exec_depend>launch</exec_depend>

@@ -19,6 +19,7 @@ Bring up one complete AeroPACT run from a scenario file.
 
 Process layout (memory-conscious, one process per physical computer):
   physics      gz sim server + one ros_gz_bridge, or the kinematic world
+  autopilots   (px4 backend) one PX4 SITL process per vehicle + one Micro XRCE-DDS Agent
   sim          one container: radio medium, vehicle plant, proximity sensing, workload, faults
   depots       one container for all depot nodes
   /<drone>     one container per vehicle: coordinator, flight manager, safety supervisor
@@ -45,7 +46,7 @@ ARGS = {
     'scenario': ('s0_healthy', 'scenario name (in share/aeropact_bringup/scenarios) or path'),
     'system': ('', 'system preset from config/systems.yaml (empty: scenario policy)'),
     'seed': ('', 'override the scenario seed'),
-    'backend': ('gazebo', 'physics backend: gazebo | kinematic'),
+    'backend': ('gazebo', 'physics backend: gazebo | kinematic | px4 (PX4 SITL autopilots)'),
     'time_scale': ('1.0', 'kinematic backend speed-up over real time'),
     'gui': ('false', 'start the Gazebo GUI client'),
     'rviz': ('false', 'start RViz with the fleet monitor'),
@@ -54,6 +55,9 @@ ARGS = {
     'drones': ('', 'override the fleet size'),
     'drone_isolation': ('process', 'process: one container per drone | shared: one for all'),
     'record_bag': ('false', 'also record an MCAP bag of key topics'),
+    'radio': ('sim', 'inter-agent transport: sim (simulated radio medium) | mesh (authenticated '
+              'UDP bridges, the deployed transport; radio faults unavailable)'),
+    'fleet_key': ('', 'fleet key file for radio:=mesh (default: the repository TEST key)'),
     'log_level': ('info', 'ROS log level'),
 }
 
@@ -79,6 +83,23 @@ def _resolve_scenario(name):
 
 def _truthy(value):
     return str(value).lower() in ('1', 'true', 'yes', 'on')
+
+
+def _px4_toolchain():
+    """Locate the pinned PX4 SITL toolchain (tools/px4/build_px4.sh) and the vehicle interface."""
+    root = os.environ.get('AEROPACT_PX4_ROOT',
+                          os.path.join(os.path.expanduser('~'), '.cache', 'aeropact', 'px4'))
+    px4 = os.path.join(root, 'PX4-Autopilot', 'build', 'px4_sitl_default', 'bin', 'px4')
+    agent = os.path.join(root, 'agent', 'bin', 'MicroXRCEAgent')
+    component = os.path.join(get_package_prefix('aeropact_px4'), 'lib',
+                             'libpx4_vehicle_interface_component.so')
+    missing = [p for p in (px4, agent, component) if not os.path.exists(p)]
+    if missing:
+        raise RuntimeError('backend px4 needs the PX4 SITL toolchain and the vehicle interface; '
+                           'missing: %s (see docs/PX4_SITL.md)' % ', '.join(missing))
+    return {'root': root, 'agent': agent,
+            'models': os.path.join(root, 'PX4-Autopilot', 'Tools', 'simulation', 'gz', 'models'),
+            'agent_lib': os.path.join(root, 'agent', 'lib')}
 
 
 def _setup(context):
@@ -122,8 +143,10 @@ def _setup(context):
     sim_cfg = scenario.get('sim', {})
     central = policy['allocation'] == 'central'
     with open(world_file, encoding='utf-8') as f:
-        pads = {p['id']: p['position'] for d in yaml.safe_load(f)['world']['depots']
-                for p in d['pads']}
+        world_doc = yaml.safe_load(f)['world']
+    pads = {p['id']: p['position'] for d in world_doc['depots'] for p in d['pads']}
+    origin = world_doc['geodetic_origin']
+    px4 = cfg['backend'] == 'px4'
     common = {'use_sim_time': True}
     summary = 'AeroPACT run: scenario=%s system=%s seed=%d drones=%d backend=%s ' \
         'duration=%.0fs -> %s' % (scenario['name'], system or policy['allocation'], seed,
@@ -135,13 +158,16 @@ def _setup(context):
     # Simulation time is held until every lifecycle node is active: the kinematic world waits for
     # /system/ready, Gazebo starts paused and is un-paused by the lifecycle manager.
     on_ready = ''
-    if cfg['backend'] == 'gazebo':
+    gz_world = info['map'].get('name', 'map')
+    if cfg['backend'] in ('gazebo', 'px4'):
         on_ready = ('gz service -s /world/%s/control --reqtype gz.msgs.WorldControl '
-                    '--reptype gz.msgs.Boolean --timeout 5000 --req "pause: false"'
-                    % info['map'].get('name', 'map'))
-    if cfg['backend'] == 'gazebo':
-        actions.append(SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', os.path.join(
-            get_package_share_directory('aeropact_sim'), 'models')))
+                    '--reptype gz.msgs.Boolean --timeout 5000 --req "pause: false"' % gz_world)
+    if cfg['backend'] in ('gazebo', 'px4'):
+        resource_path = [os.path.join(get_package_share_directory('aeropact_sim'), 'models')]
+        if px4:
+            toolchain = _px4_toolchain()
+            resource_path.append(toolchain['models'])
+        actions.append(SetEnvironmentVariable('GZ_SIM_RESOURCE_PATH', ':'.join(resource_path)))
         actions.append(ExecuteProcess(
             cmd=['gz', 'sim', '-s', '-v', '2', os.path.join(world_dir, 'world.sdf')],
             name='gz_server', output='log'))
@@ -152,6 +178,23 @@ def _setup(context):
                             name='gz_bridge', output='log',
                             parameters=[{'config_file': os.path.join(world_dir, 'bridge.yaml'),
                                          'use_sim_time': True}]))
+        if px4:
+            # One agent bridges every autopilot's uXRCE-DDS client into ROS 2 (UDP 8888).
+            agent_env = {'LD_LIBRARY_PATH': toolchain['agent_lib'] + ':' +
+                         os.environ.get('LD_LIBRARY_PATH', '')}
+            actions.append(ExecuteProcess(cmd=[toolchain['agent'], 'udp4', '-p', '8888'],
+                                          name='xrce_agent', output='log',
+                                          additional_env=agent_env))
+            launcher = os.path.join(get_package_prefix('aeropact_px4'), 'lib', 'aeropact_px4',
+                                    'px4_sitl_instance.sh')
+            params = os.path.join(get_package_share_directory('aeropact_px4'), 'config',
+                                  'px4_sitl.params')
+            for k, d in enumerate(fleet['drones']):
+                actions.append(ExecuteProcess(
+                    cmd=['bash', launcher, str(k), d['id'], gz_world,
+                         os.path.join(run_dir, 'px4', d['id']), params],
+                    name='px4_%s' % d['id'], output='log',
+                    additional_env={'AEROPACT_PX4_ROOT': toolchain['root']}))
     else:
         spawn = [float(v) for d in fleet['drones'] for v in d['spawn']]
         actions.append(Node(package='aeropact_sim', executable='kinematic_world',
@@ -161,24 +204,47 @@ def _setup(context):
 
     # ---- simulated environment -------------------------------------------------------------
     latency = net.get('latency_ms', [50, 250])
+    # The simulated environment works from ground truth; with PX4 the vehicles' odometry is the
+    # autopilot's estimate, so truth comes from Gazebo directly.
+    truth_odom = 'ground_truth/odom' if px4 else 'odom'
     soc0 = fleet_cfg.get('initial_soc', 0.95)
     soc0 = [float(v) for v in soc0] if isinstance(soc0, list) else [float(soc0)]
-    sim_nodes = [
+    mesh = cfg['radio'] == 'mesh'
+    if cfg['radio'] not in ('sim', 'mesh'):
+        raise RuntimeError('radio must be sim or mesh')
+    fleet_key = cfg['fleet_key'] or os.path.join(
+        get_package_share_directory('aeropact_radio'), 'config', 'test_fleet.key')
+    mesh_port = 47000 + int(os.environ.get('ROS_DOMAIN_ID', '0'))
+
+    def mesh_bridge(node_id, namespace):
+        # Each computer's own bridge onto the shared multicast group (loopback on one host).
+        return ComposableNode(
+            package='aeropact_radio', plugin='aeropact::radio::MeshRadioBridgeNode',
+            name='mesh_radio_bridge', namespace=namespace, parameters=[dict(common, **{
+                'node_id': node_id, 'key_file': fleet_key, 'mode': 'multicast',
+                'port': mesh_port, 'interface_address': '127.0.0.1',
+                'multicast_loopback': True})])
+
+    sim_nodes = [] if mesh else [
         ComposableNode(package='aeropact_sim', plugin='aeropact::sim::RadioMediumNode',
                        name='radio_medium', parameters=[dict(common, **{
                            'drone_ids': drone_ids, 'depot_ids': depot_ids,
                            'world_file': world_file, 'range_m': float(net['range_m']),
                            'base_loss': float(net['loss']),
                            'latency_min_s': latency[0] / 1000.0,
-                           'latency_max_s': latency[1] / 1000.0, 'seed': seed})]),
+                           'latency_max_s': latency[1] / 1000.0, 'seed': seed})])]
+    sim_nodes += [
         ComposableNode(package='aeropact_sim', plugin='aeropact::sim::VehiclePlantNode',
                        name='vehicle_plant', parameters=[dict(common, **{
                            'drone_ids': drone_ids, 'world_file': world_file,
                            'initial_soc': soc0, 'battery_wh': float(fleet_cfg['battery_wh']),
-                           'charge_time_s': float(sim_cfg.get('charge_time_s', 240.0))})]),
+                           'charge_time_s': float(sim_cfg.get('charge_time_s', 240.0)),
+                           'odom_topic': truth_odom,
+                           'motor_cut_topic': 'sim/motor_cut' if px4 else ''})]),
         ComposableNode(package='aeropact_sim', plugin='aeropact::sim::ProximitySensorNode',
                        name='proximity_sensor', parameters=[dict(common, **{
-                           'drone_ids': drone_ids, 'seed': seed + 1})]),
+                           'drone_ids': drone_ids, 'seed': seed + 1,
+                           'odom_topic': truth_odom})]),
         ComposableNode(package='aeropact_sim', plugin='aeropact::sim::WorkloadGeneratorNode',
                        name='workload_generator', parameters=[dict(common, **{
                            'world_file': world_file, 'scenario_file': scenario_file,
@@ -206,12 +272,18 @@ def _setup(context):
             'depot_id': d, 'world_file': world_file, 'fleet_roster': drone_ids,
             'initial_assignments': fleet['initial_assignments'],
             'arbitration': bool(policy.get('depot_arbitration', True)),
-            'forward_to_hub': central})]) for d in depot_ids]
+            'forward_to_hub': central,
+            # Pad occupancy sensors (simulated by the plant) with real autopilots (D-31).
+            'pad_sensor_topic': '/sim/pad_occupancy' if px4 else ''})]) for d in depot_ids]
+    if mesh:
+        depot_nodes += [mesh_bridge(d, '/depots/%s' % d) for d in depot_ids]
     actions.append(ComposableNodeContainer(
         name='depot_container', namespace='/depots', package='rclcpp_components',
         executable='component_container', composable_node_descriptions=depot_nodes,
         output='log', arguments=ros_args))
     managed = ['/depots/%s/depot' % d for d in depot_ids]
+    if mesh:
+        managed += ['/depots/%s/mesh_radio_bridge' % d for d in depot_ids]
 
     # ---- central hub (baseline) -------------------------------------------------------------
     if central:
@@ -253,7 +325,17 @@ def _setup(context):
             'seed': seed,
         }
         pad = pads[d['pad']]
-        nodes = [
+        nodes = []
+        if px4:
+            # The companion computer's link to its autopilot: same component on real hardware.
+            nodes.append(ComposableNode(
+                package='aeropact_px4', plugin='aeropact::px4::Px4VehicleInterfaceNode',
+                name='vehicle_interface', namespace=ns, parameters=[dict(common, **{
+                    'drone_id': did,
+                    'geodetic_origin': [float(origin['lat_deg']), float(origin['lon_deg']),
+                                        float(origin['alt_m'])]})]))
+            managed.append(ns + '/vehicle_interface')
+        nodes += [
             ComposableNode(package='aeropact_safety',
                            plugin='aeropact::safety::SafetySupervisorNode',
                            name='safety_supervisor', namespace=ns, parameters=[dict(common, **{
@@ -267,6 +349,9 @@ def _setup(context):
                            parameters=[dict(common, **coordinator)]),
         ]
         managed += [ns + '/safety_supervisor', ns + '/flight_manager', ns + '/coordinator']
+        if mesh:
+            nodes.append(mesh_bridge(did, ns))
+            managed.append(ns + '/mesh_radio_bridge')
         if shared:
             shared_nodes += nodes
         else:
