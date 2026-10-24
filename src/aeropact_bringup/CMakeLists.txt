@@ -25,6 +25,17 @@ if(BUILD_TESTING)
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
     set_tests_properties(${t} PROPERTIES LABELS "scenario")
   endforeach()
+  # Autopilot-in-the-loop acceptance: PX4 SITL (needs tools/px4), real time, `make scenarios-px4`.
+  set(acceptance_px4
+    test_px4_s0_healthy
+    test_px4_s5_drone_failure
+    test_px4_mesh
+    test_px4_s3_split_brain)
+  foreach(t ${acceptance_px4})
+    ament_add_pytest_test(${t} test/${t}.py TIMEOUT 1500
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+    set_tests_properties(${t} PROPERTIES LABELS "scenario_px4")
+  endforeach()
 endif()
 
 ament_package()

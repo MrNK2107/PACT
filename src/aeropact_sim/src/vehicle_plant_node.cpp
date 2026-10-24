@@ -24,6 +24,7 @@
 #include "aeropact_core/world_model.hpp"
 #include "aeropact_interfaces/msg/airspace_restriction_array.hpp"
 #include "aeropact_interfaces/msg/fleet_event.hpp"
+#include "aeropact_interfaces/msg/pad_occupancy.hpp"
 #include "aeropact_interfaces/msg/payload_event.hpp"
 #include "aeropact_interfaces/srv/inject_fault.hpp"
 #include "aeropact_sim/battery_model.hpp"
@@ -57,6 +58,14 @@ public:
     declare_parameter("charge_time_s", 240.0);
     declare_parameter("collision_radius_m", 1.0);
     declare_parameter("ground_z", 0.0);
+    // Ground truth for the plant: "odom" on backends whose odometry is truth; "ground_truth/odom"
+    // when the vehicle odometry is an autopilot estimate (px4 backend).
+    declare_parameter("odom_topic", "odom");
+    // How a hard failure cuts the motors: empty publishes enable=false to the flight controller
+    // model; a topic name (px4: "sim/motor_cut") requests flight termination from the autopilot.
+    declare_parameter("motor_cut_topic", "");
+    // Simulated depot pad sensors (D-31), from ground truth; empty disables.
+    declare_parameter("pad_sensor_topic", "/sim/pad_occupancy");
     world_ = std::make_unique<core::WorldModel>(
       core::WorldModel::load(get_parameter("world_file").as_string()));
     for (const auto & p : world_->pads) {
@@ -67,16 +76,20 @@ public:
     BatteryParams bp;
     bp.capacity_wh = get_parameter("battery_wh").as_double();
     bp.charge_time_s = get_parameter("charge_time_s").as_double();
+    const std::string odom_topic = get_parameter("odom_topic").as_string();
+    motor_cut_topic_ = get_parameter("motor_cut_topic").as_string();
     for (std::size_t i = 0; i < ids.size(); ++i) {
       Vehicle v;
       v.id = ids[i];
       v.battery = BatteryModel(bp, i < soc0.size() ? soc0[i] : (soc0.empty() ? 1.0 : soc0.back()));
       v.battery_pub = create_publisher<sensor_msgs::msg::BatteryState>("/" + v.id + "/battery", 5);
-      v.enable_pub = create_publisher<std_msgs::msg::Bool>("/" + v.id + "/enable", 5);
+      v.enable_pub = create_publisher<std_msgs::msg::Bool>(
+        "/" + v.id + "/" + (motor_cut_topic_.empty() ? std::string("enable") : motor_cut_topic_),
+        5);
       vehicles_[v.id] = std::move(v);
       const std::string id = ids[i];
       odom_subs_.push_back(create_subscription<nav_msgs::msg::Odometry>(
-          "/" + id + "/odom", rclcpp::SensorDataQoS(),
+          "/" + id + "/" + odom_topic, rclcpp::SensorDataQoS(),
           [this, id](nav_msgs::msg::Odometry::ConstSharedPtr m) {
             Vehicle & veh = vehicles_[id];
             veh.pos = {m->pose.pose.position.x, m->pose.pose.position.y, m->pose.pose.position.z};
@@ -119,6 +132,10 @@ public:
       });
     events_ = create_publisher<aeropact_interfaces::msg::FleetEvent>(
       "/fleet/events", rclcpp::QoS(500).reliable());
+    if (!get_parameter("pad_sensor_topic").as_string().empty()) {
+      pad_pub_ = create_publisher<aeropact_interfaces::msg::PadOccupancy>(
+        get_parameter("pad_sensor_topic").as_string(), rclcpp::QoS(50));
+    }
     fault_srv_ = create_service<aeropact_interfaces::srv::InjectFault>("/sim/plant/inject_fault",
         [this](const std::shared_ptr<aeropact_interfaces::srv::InjectFault::Request> rq,
         std::shared_ptr<aeropact_interfaces::srv::InjectFault::Response> rs) {on_fault(*rq, *rs);});
@@ -183,7 +200,7 @@ private:
       }
       if (v.dead) {
         std_msgs::msg::Bool off;
-        off.data = false;
+        off.data = !motor_cut_topic_.empty();  // enable=false, or motor_cut=true
         v.enable_pub->publish(off);  // motors stay off
         if (v.was_airborne && !airborne && geom::norm(v.vel) < 0.5) {
           emit("CRASH", id, core::Json().add("x", v.pos.x).add("y", v.pos.y)
@@ -205,6 +222,33 @@ private:
       v.was_airborne = airborne;
     }
     check_separation(ground);
+    if (pad_pub_ && ++pad_counter_ % 10 == 0) {
+      publish_pad_sensors(ground);
+    }
+  }
+
+  /// Depot pad sensors from ground truth: a pad is occupied when a vehicle rests on it.
+  void publish_pad_sensors(double ground)
+  {
+    for (const auto & p : world_->pads) {
+      if (p.depot_id.empty()) {
+        continue;  // public pads have no depot sensor
+      }
+      bool occupied = false;
+      for (const auto & [id, v] : vehicles_) {
+        if (v.have_odom && geom::dist_xy(v.pos, p.position) < 1.8 &&
+          v.pos.z < p.position.z + ground + 1.0)
+        {
+          occupied = true;
+        }
+      }
+      aeropact_interfaces::msg::PadOccupancy m;
+      m.header.stamp = now();
+      m.depot_id = p.depot_id;
+      m.pad_id = p.id;
+      m.occupied = occupied;
+      pad_pub_->publish(m);
+    }
   }
 
   void check_airspace(Vehicle & v, bool airborne)
@@ -308,6 +352,7 @@ private:
   }
 
   std::unique_ptr<core::WorldModel> world_;
+  std::string motor_cut_topic_;
   std::map<std::string, Vehicle> vehicles_;
   std::map<std::string, bool> powered_;
   std::map<std::pair<std::string, std::string>, double> last_collision_;
@@ -319,6 +364,8 @@ private:
   rclcpp::Subscription<aeropact_interfaces::msg::AirspaceRestrictionArray>::SharedPtr
     airspace_sub_;
   rclcpp::Publisher<aeropact_interfaces::msg::FleetEvent>::SharedPtr events_;
+  rclcpp::Publisher<aeropact_interfaces::msg::PadOccupancy>::SharedPtr pad_pub_;
+  unsigned pad_counter_{0};
   rclcpp::Service<aeropact_interfaces::srv::InjectFault>::SharedPtr fault_srv_;
   rclcpp::TimerBase::SharedPtr timer_;
 };

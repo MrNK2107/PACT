@@ -1,0 +1,9 @@
+# PX4 SITL: 4-minute radio partition into two halves, each with one depot (AT-03 with autopilots).
+name: px4_s3_split_brain
+map: test_field
+seed: 5
+duration_s: 720
+fleet: {n_drones: 4}
+workload: {arrival_rate_per_min: 2.5, start_s: 40, stop_s: 400, deadline_s: [240, 340, 440]}
+faults:
+  - {t: 120, type: partition, duration_s: 240, groups: [[A01, A03, D1], [A02, A04, D2]]}

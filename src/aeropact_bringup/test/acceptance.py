@@ -23,12 +23,19 @@ from aeropact_eval import eventlog
 TIME_SCALE = float(os.environ.get('AEROPACT_TIME_SCALE', '3.0'))
 
 
-def run_scenario(scenario, system=None, timeout=1200):
-    """Launch the full stack on the kinematic backend; returns (metrics, events, run_dir)."""
+def run_scenario(scenario, system=None, timeout=1200, backend='kinematic', extra=()):
+    """
+    Launch the full stack headless; returns (metrics, events, run_dir).
+
+    The kinematic backend runs faster than real time with all vehicles in one container; the px4
+    backend (PX4 SITL autopilots) runs at real time with one companion container per vehicle.
+    """
     run_dir = tempfile.mkdtemp(prefix='aeropact_%s_%s_' % (scenario, system or 'default'))
     cmd = ['ros2', 'launch', 'aeropact_bringup', 'scenario.launch.py',
-           'scenario:=%s' % scenario, 'backend:=kinematic', 'time_scale:=%s' % TIME_SCALE,
-           'run_dir:=%s' % run_dir, 'drone_isolation:=shared']
+           'scenario:=%s' % scenario, 'backend:=%s' % backend, 'run_dir:=%s' % run_dir]
+    if backend == 'kinematic':
+        cmd += ['time_scale:=%s' % TIME_SCALE, 'drone_isolation:=shared']
+    cmd += list(extra)
     if system:
         cmd.append('system:=%s' % system)
     env = dict(os.environ)

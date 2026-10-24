@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PX4 x500 quadrotor (Holybro X500 class, 2 kg) as flown by PX4 SITL, plus a ground-truth
+  odometry publisher for the simulated environment (vehicle plant, proximity sensing, audit).
+  The fleet stack itself never sees ground truth: it uses PX4's EKF2 estimate.
+  Needs PX4's Tools/simulation/gz/models on GZ_SIM_RESOURCE_PATH.
+-->
+<sdf version="1.9">
+  <model name="aeropact_x500">
+    <include merge="true">
+      <uri>model://x500</uri>
+    </include>
+    <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+      <dimensions>3</dimensions>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+  </model>
+</sdf>

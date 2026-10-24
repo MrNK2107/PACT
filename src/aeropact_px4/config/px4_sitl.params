@@ -1,0 +1,31 @@
+# PX4 parameters for AeroPACT fleet vehicles in SITL, applied on every boot (PX4_PARAM_*).
+# Format: NAME VALUE  # why. Hardware vehicles take the same set through a QGroundControl
+# parameter file; the site-specific lines are marked SITE and must be reviewed per deployment.
+
+# Command and control: the companion computer flies the vehicle; there is no RC transmitter
+# and no ground station in SITL. SITE: on hardware keep an RC link for the safety pilot (mode 0)
+# and choose the data-link-loss action with the operator.
+COM_RC_IN_MODE 4
+NAV_DLL_ACT 0
+# Companion computer lost (offboard stream silent for 1 s): the autopilot returns home on its own.
+COM_OF_LOSS_T 1.0
+COM_OBL_RC_ACT 3
+# Return-to-launch: climb above the tallest buildings before returning. The launcher adds a
+# per-vehicle offset so simultaneous returns are vertically separated. SITE: survey heights.
+RTL_RETURN_ALT 60
+RTL_DESCEND_ALT 20
+# Envelope matching the fleet stack's limits (safety_policy.yaml).
+MPC_XY_VEL_MAX 12.0
+MPC_Z_VEL_MAX_UP 3.0
+MPC_Z_VEL_MAX_DN 3.0
+# Flight termination may be commanded (fault injection: kill_drone). SITE: decide with the
+# operator whether a companion computer may terminate; a parachute changes the answer.
+CBRK_FLIGHTTERM 0
+# The pack is modelled by the AeroPACT vehicle plant (payload, charging pads, drain faults);
+# PX4's simulated battery stays above its failsafe thresholds so it never acts on a fake pack.
+SIM_BAT_MIN_PCT 50
+# Realistic simulated discharge (full pack in ~30 min instead of PX4's 60 s default). Where the
+# autopilot's battery is the source of truth (vehicle.launch.py, the distributed rehearsal) the
+# safety supervisor's endurance check measures this rate; at the default it grounds the vehicle
+# seconds after take-off.
+SIM_BAT_DRAIN 1800

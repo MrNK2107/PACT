@@ -45,6 +45,9 @@ public:
     declare_parameter("position_noise_m", 0.3);
     declare_parameter("velocity_noise_mps", 0.2);
     declare_parameter("seed", 3);
+    // Truth source for the simulated sensor: "odom", or "ground_truth/odom" when the vehicle
+    // odometry is an autopilot estimate (px4 backend).
+    declare_parameter("odom_topic", "odom");
     rng_.seed(static_cast<std::uint64_t>(get_parameter("seed").as_int()));
     const std::vector<std::string> ids = get_parameter("drone_ids").as_string_array();
     for (const auto & id : ids) {
@@ -53,7 +56,7 @@ public:
         "/" + id + "/sensing/contacts", rclcpp::SensorDataQoS());
       tracks_[id] = tr;
       subs_.push_back(create_subscription<nav_msgs::msg::Odometry>(
-          "/" + id + "/odom", rclcpp::SensorDataQoS(),
+          "/" + id + "/" + get_parameter("odom_topic").as_string(), rclcpp::SensorDataQoS(),
           [this, id](nav_msgs::msg::Odometry::ConstSharedPtr m) {
             Track & t = tracks_[id];
             t.pos = {m->pose.pose.position.x, m->pose.pose.position.y, m->pose.pose.position.z};
