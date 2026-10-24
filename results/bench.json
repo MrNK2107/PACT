@@ -34,9 +34,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "c262356e",
-      "events": 278,
-      "tickP95Ms": 0.14
+      "eventHash": "6284944f",
+      "events": 279,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s0_healthy",
@@ -58,8 +58,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "8690aad9",
-      "events": 302,
+      "eventHash": "e0f67434",
+      "events": 303,
       "tickP95Ms": 0.13
     },
     {
@@ -82,9 +82,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "8690aad9",
-      "events": 302,
-      "tickP95Ms": 0.13
+      "eventHash": "e0f67434",
+      "events": 303,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -106,9 +106,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "765ece9d",
-      "events": 285,
-      "tickP95Ms": 0.15
+      "eventHash": "25066eb0",
+      "events": 286,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s0_healthy",
@@ -130,8 +130,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "ad674af0",
-      "events": 264,
+      "eventHash": "304bd041",
+      "events": 265,
       "tickP95Ms": 0.14
     },
     {
@@ -154,9 +154,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "ebfeefe8",
-      "events": 288,
-      "tickP95Ms": 0.14
+      "eventHash": "a2d48967",
+      "events": 289,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -178,9 +178,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "ebfeefe8",
-      "events": 288,
-      "tickP95Ms": 0.11
+      "eventHash": "a2d48967",
+      "events": 289,
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s0_healthy",
@@ -202,9 +202,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "545b9eb5",
-      "events": 261,
-      "tickP95Ms": 0.19
+      "eventHash": "2cbabf6e",
+      "events": 262,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -226,9 +226,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "22200b64",
-      "events": 301,
-      "tickP95Ms": 0.14
+      "eventHash": "c5550375",
+      "events": 302,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -250,9 +250,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "9b5fcf83",
-      "events": 317,
-      "tickP95Ms": 0.13
+      "eventHash": "5133f1f4",
+      "events": 318,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -274,9 +274,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "9b5fcf83",
-      "events": 317,
-      "tickP95Ms": 0.13
+      "eventHash": "5133f1f4",
+      "events": 318,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s0_healthy",
@@ -298,9 +298,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "b444984f",
-      "events": 311,
-      "tickP95Ms": 0.14
+      "eventHash": "c94eb552",
+      "events": 312,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s0_healthy",
@@ -322,9 +322,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "2131741f",
-      "events": 307,
-      "tickP95Ms": 0.12
+      "eventHash": "023fd86c",
+      "events": 308,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s0_healthy",
@@ -346,9 +346,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "29e571f4",
-      "events": 315,
-      "tickP95Ms": 0.13
+      "eventHash": "adf87f9f",
+      "events": 316,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s0_healthy",
@@ -370,9 +370,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "29e571f4",
-      "events": 315,
-      "tickP95Ms": 0.12
+      "eventHash": "adf87f9f",
+      "events": 316,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s0_healthy",
@@ -394,8 +394,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "9131cb88",
-      "events": 307,
+      "eventHash": "ad07ab79",
+      "events": 308,
       "tickP95Ms": 0.11
     },
     {
@@ -418,9 +418,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "44e86bde",
-      "events": 286,
-      "tickP95Ms": 0.11
+      "eventHash": "8a3491fd",
+      "events": 287,
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s0_healthy",
@@ -442,9 +442,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "0a1acaf2",
-      "events": 301,
-      "tickP95Ms": 0.1
+      "eventHash": "106dc655",
+      "events": 302,
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s0_healthy",
@@ -466,9 +466,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "0a1acaf2",
-      "events": 301,
-      "tickP95Ms": 0.11
+      "eventHash": "106dc655",
+      "events": 302,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s0_healthy",
@@ -490,9 +490,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 0,
-      "eventHash": "ebe0b0a0",
-      "events": 301,
-      "tickP95Ms": 0.1
+      "eventHash": "a6607571",
+      "events": 302,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -514,9 +514,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "de51838c",
-      "events": 280,
-      "tickP95Ms": 0.15
+      "eventHash": "5acd2689",
+      "events": 281,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -538,8 +538,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 16,
-      "eventHash": "a7613dab",
-      "events": 304,
+      "eventHash": "c4449cfe",
+      "events": 305,
       "tickP95Ms": 0.11
     },
     {
@@ -562,9 +562,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 4,
-      "eventHash": "2f5c7c3d",
-      "events": 188,
-      "tickP95Ms": 0.08
+      "eventHash": "9182296c",
+      "events": 189,
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s1_hub_loss",
@@ -586,8 +586,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "3bec1f77",
-      "events": 287,
+      "eventHash": "90d19d72",
+      "events": 288,
       "tickP95Ms": 0.12
     },
     {
@@ -610,9 +610,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 16,
-      "eventHash": "898ff148",
-      "events": 266,
-      "tickP95Ms": 0.13
+      "eventHash": "2ac71b61",
+      "events": 267,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s1_hub_loss",
@@ -634,9 +634,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 16,
-      "eventHash": "d04355c8",
-      "events": 290,
-      "tickP95Ms": 0.09
+      "eventHash": "8ab1cb97",
+      "events": 291,
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s1_hub_loss",
@@ -658,9 +658,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 4,
-      "eventHash": "685f0d8a",
-      "events": 179,
-      "tickP95Ms": 0.07
+      "eventHash": "b4235c21",
+      "events": 180,
+      "tickP95Ms": 0.06
     },
     {
       "scenario": "s1_hub_loss",
@@ -682,9 +682,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 15,
-      "eventHash": "d8196d01",
-      "events": 263,
-      "tickP95Ms": 0.13
+      "eventHash": "d93af6be",
+      "events": 264,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -706,9 +706,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "caa4a31c",
-      "events": 303,
-      "tickP95Ms": 0.12
+      "eventHash": "0a8a7cf9",
+      "events": 304,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -730,9 +730,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "0a2ac763",
-      "events": 319,
-      "tickP95Ms": 0.1
+      "eventHash": "46df8ee8",
+      "events": 320,
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s1_hub_loss",
@@ -754,9 +754,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 4,
-      "eventHash": "11bc97a4",
-      "events": 204,
-      "tickP95Ms": 0.06
+      "eventHash": "2c46d49b",
+      "events": 205,
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s1_hub_loss",
@@ -778,9 +778,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 20,
-      "eventHash": "ce99cde7",
-      "events": 313,
-      "tickP95Ms": 0.12
+      "eventHash": "74252c82",
+      "events": 314,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -802,9 +802,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "6f4e4963",
-      "events": 309,
-      "tickP95Ms": 0.12
+      "eventHash": "56177864",
+      "events": 310,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s1_hub_loss",
@@ -826,9 +826,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 16,
-      "eventHash": "5bc83a6c",
-      "events": 317,
-      "tickP95Ms": 0.11
+      "eventHash": "0ff8fe53",
+      "events": 318,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s1_hub_loss",
@@ -850,9 +850,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 5,
-      "eventHash": "1b22cbad",
-      "events": 219,
-      "tickP95Ms": 0.09
+      "eventHash": "87202b14",
+      "events": 220,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -874,9 +874,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 19,
-      "eventHash": "071f6102",
-      "events": 309,
-      "tickP95Ms": 0.1
+      "eventHash": "53206c13",
+      "events": 310,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -898,9 +898,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 17,
-      "eventHash": "b02488d6",
-      "events": 288,
-      "tickP95Ms": 0.09
+      "eventHash": "dacde551",
+      "events": 289,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s1_hub_loss",
@@ -922,9 +922,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 17,
-      "eventHash": "abcfa4ae",
-      "events": 303,
-      "tickP95Ms": 0.09
+      "eventHash": "917e2795",
+      "events": 304,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -946,9 +946,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 3,
-      "eventHash": "7daf29bb",
-      "events": 193,
-      "tickP95Ms": 0.04
+      "eventHash": "f93ff3c8",
+      "events": 194,
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s1_hub_loss",
@@ -970,9 +970,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 18,
-      "eventHash": "5b9b6c48",
-      "events": 303,
-      "tickP95Ms": 0.1
+      "eventHash": "22719269",
+      "events": 304,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s6_battery_crunch",
@@ -994,9 +994,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "36e71cd4",
-      "events": 245,
-      "tickP95Ms": 0.05
+      "eventHash": "245ec517",
+      "events": 246,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1018,8 +1018,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "a87d596d",
-      "events": 258,
+      "eventHash": "b62a52da",
+      "events": 259,
       "tickP95Ms": 0.04
     },
     {
@@ -1042,9 +1042,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "a87d596d",
-      "events": 258,
-      "tickP95Ms": 0.03
+      "eventHash": "b62a52da",
+      "events": 259,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1066,9 +1066,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 13,
-      "eventHash": "dd48c925",
-      "events": 256,
-      "tickP95Ms": 0.04
+      "eventHash": "95fd8a18",
+      "events": 257,
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1090,8 +1090,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 10,
-      "eventHash": "d3b9f238",
-      "events": 221,
+      "eventHash": "aadacccd",
+      "events": 222,
       "tickP95Ms": 0.04
     },
     {
@@ -1114,9 +1114,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 9,
-      "eventHash": "5920d6c5",
-      "events": 232,
-      "tickP95Ms": 0.05
+      "eventHash": "95ec2a46",
+      "events": 233,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1138,9 +1138,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 9,
-      "eventHash": "5920d6c5",
-      "events": 232,
-      "tickP95Ms": 0.05
+      "eventHash": "95ec2a46",
+      "events": 233,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1162,8 +1162,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "934202e1",
-      "events": 230,
+      "eventHash": "aaa42f80",
+      "events": 231,
       "tickP95Ms": 0.04
     },
     {
@@ -1186,9 +1186,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "dc748521",
-      "events": 271,
-      "tickP95Ms": 0.05
+      "eventHash": "78990cb6",
+      "events": 272,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1210,8 +1210,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "92cce1ff",
-      "events": 279,
+      "eventHash": "b267489c",
+      "events": 280,
       "tickP95Ms": 0.04
     },
     {
@@ -1234,8 +1234,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "92cce1ff",
-      "events": 279,
+      "eventHash": "b267489c",
+      "events": 280,
       "tickP95Ms": 0.05
     },
     {
@@ -1258,9 +1258,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 14,
-      "eventHash": "77541ec3",
-      "events": 286,
-      "tickP95Ms": 0.04
+      "eventHash": "ec2f6dd8",
+      "events": 287,
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1282,9 +1282,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 10,
-      "eventHash": "ddc5543a",
-      "events": 290,
-      "tickP95Ms": 0.04
+      "eventHash": "e7e284e5",
+      "events": 291,
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1306,9 +1306,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 10,
-      "eventHash": "e998712d",
-      "events": 304,
-      "tickP95Ms": 0.05
+      "eventHash": "7448fb18",
+      "events": 305,
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1330,8 +1330,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 10,
-      "eventHash": "e998712d",
-      "events": 304,
+      "eventHash": "7448fb18",
+      "events": 305,
       "tickP95Ms": 0.06
     },
     {
@@ -1354,9 +1354,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 13,
-      "eventHash": "7e0757af",
-      "events": 271,
-      "tickP95Ms": 0.05
+      "eventHash": "0217cce0",
+      "events": 272,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1378,9 +1378,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "255d1a35",
-      "events": 260,
-      "tickP95Ms": 0.04
+      "eventHash": "071d8e84",
+      "events": 261,
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1402,9 +1402,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "44e8e99a",
-      "events": 279,
-      "tickP95Ms": 0.04
+      "eventHash": "283a635f",
+      "events": 280,
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1426,9 +1426,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "44e8e99a",
-      "events": 279,
-      "tickP95Ms": 0.03
+      "eventHash": "283a635f",
+      "events": 280,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1450,9 +1450,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 13,
-      "eventHash": "b1f83478",
-      "events": 271,
-      "tickP95Ms": 0.03
+      "eventHash": "192ffcc7",
+      "events": 272,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1474,9 +1474,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "38af376b",
-      "events": 262,
-      "tickP95Ms": 0.1
+      "eventHash": "8cf40d82",
+      "events": 263,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1498,8 +1498,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "fc738a23",
-      "events": 279,
+      "eventHash": "db707ce0",
+      "events": 280,
       "tickP95Ms": 0.09
     },
     {
@@ -1522,9 +1522,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "fc738a23",
-      "events": 279,
-      "tickP95Ms": 0.09
+      "eventHash": "db707ce0",
+      "events": 280,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1546,9 +1546,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "fa027de6",
-      "events": 271,
-      "tickP95Ms": 0.1
+      "eventHash": "4d10dde9",
+      "events": 272,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1570,9 +1570,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 4,
-      "eventHash": "86f62dee",
-      "events": 257,
-      "tickP95Ms": 0.14
+      "eventHash": "cfa27193",
+      "events": 258,
+      "tickP95Ms": 0.18
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1594,8 +1594,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 5,
-      "eventHash": "0569894d",
-      "events": 281,
+      "eventHash": "2d3b6fa4",
+      "events": 282,
       "tickP95Ms": 0.09
     },
     {
@@ -1618,8 +1618,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 5,
-      "eventHash": "0569894d",
-      "events": 281,
+      "eventHash": "2d3b6fa4",
+      "events": 282,
       "tickP95Ms": 0.09
     },
     {
@@ -1642,9 +1642,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 5,
-      "eventHash": "40a75265",
-      "events": 268,
-      "tickP95Ms": 0.16
+      "eventHash": "dd2eb142",
+      "events": 269,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1666,9 +1666,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 6,
-      "eventHash": "0b32aec5",
-      "events": 350,
-      "tickP95Ms": 0.12
+      "eventHash": "635d80a4",
+      "events": 351,
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1690,9 +1690,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 7,
-      "eventHash": "87984360",
-      "events": 365,
-      "tickP95Ms": 0.11
+      "eventHash": "62c15add",
+      "events": 366,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1714,9 +1714,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 7,
-      "eventHash": "87984360",
-      "events": 365,
-      "tickP95Ms": 0.11
+      "eventHash": "62c15add",
+      "events": 366,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1738,9 +1738,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "7fc1e50c",
-      "events": 312,
-      "tickP95Ms": 0.14
+      "eventHash": "1209460d",
+      "events": 313,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1762,9 +1762,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "54b78f9a",
-      "events": 309,
-      "tickP95Ms": 0.14
+      "eventHash": "2f7fffa7",
+      "events": 310,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1786,9 +1786,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "032cee6d",
-      "events": 333,
-      "tickP95Ms": 0.11
+      "eventHash": "46991934",
+      "events": 334,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1810,8 +1810,8 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "032cee6d",
-      "events": 333,
+      "eventHash": "46991934",
+      "events": 334,
       "tickP95Ms": 0.13
     },
     {
@@ -1834,9 +1834,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "d57a0137",
-      "events": 304,
-      "tickP95Ms": 0.13
+      "eventHash": "79c9f63a",
+      "events": 305,
+      "tickP95Ms": 0.15
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1858,9 +1858,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "0018c305",
-      "events": 288,
-      "tickP95Ms": 0.09
+      "eventHash": "14ac0754",
+      "events": 289,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1882,9 +1882,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "bca214c1",
-      "events": 305,
-      "tickP95Ms": 0.11
+      "eventHash": "f89e056c",
+      "events": 306,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1906,9 +1906,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 8,
-      "eventHash": "bca214c1",
-      "events": 305,
-      "tickP95Ms": 0.11
+      "eventHash": "f89e056c",
+      "events": 306,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1930,9 +1930,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 9,
-      "eventHash": "644968f6",
-      "events": 306,
-      "tickP95Ms": 0.12
+      "eventHash": "797091c3",
+      "events": 307,
+      "tickP95Ms": 0.15
     }
   ]
 }

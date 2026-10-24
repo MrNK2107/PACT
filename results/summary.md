@@ -12,7 +12,7 @@ Metrics come from the event log only. Values are means with a 95 % bootstrap CI 
 | `pact` | 90.3 [83.4, 97.1] | 20.6 [19.6, 21.4] | 0.0 | 0.5 [0.0, 1.4] | 0 | 0 | 0 | 0.1 |
 | `central_full` | 86.3 [76.6, 96.0] | 20.2 [19.2, 21.2] | 0.0 | 1.0 [0.0, 3.1] | 0 | 0 | 0 | 0.1 |
 | `central_hub_loss` | 86.3 [76.6, 96.0] | 20.2 [19.2, 21.2] | 0.0 | 1.0 [0.0, 3.1] | 0 | 0 | 0 | 0.1 |
-| `greedy_nearest` | 80.6 [73.1, 90.3] | 21.2 [20.0, 22.2] | 0.0 | 0.7 [0.0, 2.1] | 0 | 0 | 0 | 0.2 |
+| `greedy_nearest` | 80.6 [73.1, 90.3] | 21.2 [20.0, 22.2] | 0.0 | 0.7 [0.0, 2.1] | 0 | 0 | 0 | 0.1 |
 
 ## s1_hub_loss
 
@@ -36,10 +36,10 @@ Metrics come from the event log only. Values are means with a 95 % bootstrap CI 
 
 | System | On-time rate % | Delivered | Delivered after first fault | Mean lateness s | Dup. deliveries | Zombie pickups | Loss of sep. | Tick p95 ms |
 |---|---|---|---|---|---|---|---|---|
-| `pact` | 73.3 [60.0, 88.3] | 19.2 [17.4, 20.8] | 6.8 [5.2, 8.0] | 0.0 | 0 | 0 | 0 | 0.1 |
+| `pact` | 73.3 [60.0, 88.3] | 19.2 [17.4, 20.8] | 6.8 [5.2, 8.0] | 0.0 | 0 | 0 | 0 | 0.2 |
 | `central_full` | 75.3 [65.4, 88.3] | 19.2 [17.8, 20.4] | 7.2 [6.2, 8.0] | 0.0 | 0 | 0 | 0 | 0.1 |
 | `central_hub_loss` | 75.3 [65.4, 88.3] | 19.2 [17.8, 20.4] | 7.2 [6.2, 8.0] | 0.0 | 0 | 0 | 0 | 0.1 |
-| `greedy_nearest` | 68.7 [57.0, 78.3] | 19.8 [18.2, 21.6] | 7.6 [6.2, 8.6] | 0.3 [0.0, 0.8] | 0 | 0 | 0 | 0.2 |
+| `greedy_nearest` | 68.7 [57.0, 78.3] | 19.8 [18.2, 21.6] | 7.6 [6.2, 8.6] | 0.3 [0.0, 0.8] | 0 | 0 | 0 | 0.1 |
 
 ## Acceptance checks
 
