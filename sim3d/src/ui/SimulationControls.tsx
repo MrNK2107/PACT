@@ -10,6 +10,7 @@ const SYSTEM_LABELS: Record<SystemId, string> = {
   central_full: 'Central hub',
   central_hub_loss: 'Central, hub can fail',
   greedy_nearest: 'Greedy nearest',
+  cbba_plain: 'Plain CBBA (unfenced)',
 };
 
 function navigate(params: Record<string, string>) {
