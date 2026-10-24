@@ -32,7 +32,7 @@ function hubDrones(eng: SimulationEngine, over: Partial<ScoreContext> = {}): Hub
 
 describe('systems', () => {
   it('maps every system to an allocation mode', () => {
-    expect(SYSTEM_IDS.map(allocationOf)).toEqual(['auction', 'central', 'central', 'greedy']);
+    expect(SYSTEM_IDS.map(allocationOf)).toEqual(['auction', 'central', 'central', 'greedy', 'cbba']);
   });
 
   it('scenario files may pick a system and unknown systems are rejected', () => {
