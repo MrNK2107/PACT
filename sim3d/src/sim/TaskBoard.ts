@@ -42,7 +42,17 @@ export class TaskBoard implements TaskBoardView {
   events: BoardEvent[] = [];
   private seqByDepot = new Map<string, number>();
 
-  constructor(private cfg: { leaseTtlS: number; tCommitS: number }) {}
+  /**
+   * Extra claimants of a task on an unfenced board (`cbba_plain`): drones that claimed a task some other drone
+   * already held because they had not heard of that claim over the radio. Always empty on a fenced board.
+   */
+  private coClaims = new Map<string, Set<string>>();
+  /** Fenced (default): atomic claims, leases with expiry, depot arbitration. Unfenced: none of these (`cbba_plain`). */
+  readonly fenced: boolean;
+
+  constructor(private cfg: { leaseTtlS: number; tCommitS: number; fenced?: boolean }) {
+    this.fenced = cfg.fenced ?? true;
+  }
 
   private emit(e: BoardEvent): void {
     this.events.push(e);
@@ -71,10 +81,45 @@ export class TaskBoard implements TaskBoardView {
     return this.tasks.filter((t) => t.state === 'UNASSIGNED');
   }
 
-  /** UNASSIGNED → CLAIMED with a fresh epoch and lease. One claim wins; later claims fail. */
+  /** Does `droneId` currently hold `taskId` (as owner, or as a co-claimant on an unfenced board)? */
+  holds(taskId: string, droneId: string): boolean {
+    const t = this.byId.get(taskId);
+    if (!t || t.state === 'UNASSIGNED' || t.state === 'ABORTED') return false;
+    return t.owner === droneId || (this.coClaims.get(taskId)?.has(droneId) ?? false);
+  }
+
+  /**
+   * Tasks a `cbba_plain` drone believes are free: open ones, plus pre-pickup ones whose holder it cannot hear
+   * (`heard` = drones in its radio neighbour table). Plain CBBA learns of other drones' wins only through
+   * consensus messages, so a claim made out of radio range is invisible to it.
+   */
+  believedOpen(heard: ReadonlySet<string>, droneId: string): readonly Task[] {
+    return this.tasks.filter((t) => {
+      if (t.state === 'UNASSIGNED') return true;
+      if (t.state !== 'CLAIMED' && t.state !== 'COMMITTED') return false;
+      if (this.holds(t.task_id, droneId)) return false;
+      if (t.owner && heard.has(t.owner)) return false;
+      for (const c of this.coClaims.get(t.task_id) ?? []) if (heard.has(c)) return false;
+      return true;
+    });
+  }
+
+  /**
+   * UNASSIGNED → CLAIMED with a fresh epoch and lease. One claim wins; later claims fail. On an unfenced board a
+   * claim on a task someone else holds pre-pickup also succeeds: the drone becomes a co-claimant (a duplicate
+   * dispatch that nothing arbitrates).
+   */
   claim(taskId: string, droneId: string, bid: number, now: number): boolean {
     const t = this.byId.get(taskId);
-    if (!t || t.state !== 'UNASSIGNED') return false;
+    if (!t) return false;
+    if (!this.fenced && (t.state === 'CLAIMED' || t.state === 'COMMITTED') && t.owner !== droneId) {
+      let set = this.coClaims.get(taskId);
+      if (!set) this.coClaims.set(taskId, (set = new Set()));
+      set.add(droneId);
+      this.emit({ t: now, type: 'CLAIMED', taskId, agent: droneId, data: { epoch: t.epoch, bid, coClaim: true } });
+      return true;
+    }
+    if (t.state !== 'UNASSIGNED') return false;
     t.state = 'CLAIMED';
     t.owner = droneId;
     t.bid = bid;
@@ -88,7 +133,7 @@ export class TaskBoard implements TaskBoardView {
   /** Owner heartbeat renews its lease (pre-pickup only; post-pickup leases are sticky). */
   renew(taskId: string, droneId: string, now: number): void {
     const t = this.byId.get(taskId);
-    if (!t || t.owner !== droneId) return;
+    if (!t || t.owner !== droneId || !this.fenced) return;
     if (t.state === 'CLAIMED' || t.state === 'COMMITTED') t.lease_ttl = now + this.cfg.leaseTtlS;
   }
 
@@ -101,7 +146,7 @@ export class TaskBoard implements TaskBoardView {
         t.committedAt = now;
         this.emit({ t: now, type: 'COMMITTED', taskId: t.task_id, agent: t.owner, data: { epoch: t.epoch } });
       }
-      if ((t.state === 'CLAIMED' || t.state === 'COMMITTED') && t.lease_ttl !== null && now > t.lease_ttl) {
+      if (this.fenced && (t.state === 'CLAIMED' || t.state === 'COMMITTED') && t.lease_ttl !== null && now > t.lease_ttl) {
         const old = t.owner;
         this.reopen(t, now);
         this.emit({ t: now, type: 'LEASE_EXPIRED', taskId: t.task_id, agent: old, data: { epoch: t.epoch } });
@@ -126,6 +171,16 @@ export class TaskBoard implements TaskBoardView {
   pickup(taskId: string, droneId: string, epoch: number, now: number): 'PICKUP_GRANT' | 'TASK_TAKEN' {
     const t = this.byId.get(taskId);
     if (!t) return 'TASK_TAKEN';
+    if (!this.fenced && t.state !== 'ABORTED' && t.state !== 'UNASSIGNED' && this.holds(taskId, droneId)) {
+      // no depot arbitration: every drone that believes it owns the order is handed a parcel
+      if (t.state === 'CLAIMED' || t.state === 'COMMITTED') {
+        t.state = 'PICKED_UP';
+        t.pickedAt = now;
+        t.lease_ttl = null;
+      }
+      this.emit({ t: now, type: 'PICKUP_GRANT', taskId, agent: droneId, data: { epoch: t.epoch, unfenced: true } });
+      return 'PICKUP_GRANT';
+    }
     if (t.state === 'PICKED_UP' || t.state === 'DELIVERED' || t.state === 'ABORTED') {
       this.emit({ t: now, type: 'TASK_TAKEN', taskId, agent: droneId, data: { reason: `state ${t.state}` } });
       return 'TASK_TAKEN';
@@ -143,7 +198,17 @@ export class TaskBoard implements TaskBoardView {
 
   complete(taskId: string, droneId: string, time: number): void {
     const t = this.byId.get(taskId);
-    if (!t || t.owner !== droneId || t.state !== 'PICKED_UP') return;
+    if (!t) return;
+    if (!this.fenced && this.coClaims.get(taskId)?.has(droneId)) {
+      // a co-claimant's parcel: the order may already be delivered (a duplicate delivery)
+      this.coClaims.get(taskId)!.delete(droneId);
+      if (t.state === 'DELIVERED' || t.state === 'ABORTED') {
+        this.emit({ t: time, type: 'DELIVERED', taskId, agent: droneId, data: { duplicate: true } });
+        return;
+      }
+      t.owner = droneId;
+    }
+    if (t.owner !== droneId || t.state !== 'PICKED_UP') return;
     t.state = 'DELIVERED';
     t.deliveredAt = time;
     this.emit({ t: time, type: 'DELIVERED', taskId, agent: droneId, data: { late: Math.max(0, time - t.deadline) } });
@@ -152,7 +217,21 @@ export class TaskBoard implements TaskBoardView {
   /** Owner gives a pre-pickup task back: it re-opens with a higher epoch (03 section 3.3). */
   release(taskId: string, droneId: string, now: number): void {
     const t = this.byId.get(taskId);
-    if (!t || t.owner !== droneId || isTerminal(t)) return;
+    if (!t) return;
+    const co = this.coClaims.get(taskId);
+    if (co?.has(droneId)) {
+      co.delete(droneId);
+      return;
+    }
+    if (t.owner !== droneId || isTerminal(t)) return;
+    if (co && co.size && t.state !== 'PICKED_UP') {
+      // unfenced: another claimant still believes it owns the task; it simply becomes the owner
+      const next = [...co].sort()[0];
+      co.delete(next);
+      t.owner = next;
+      this.emit({ t: now, type: 'RELEASED', taskId, agent: droneId, data: { epoch: t.epoch, handedTo: next } });
+      return;
+    }
     if (t.state === 'PICKED_UP') {
       this.abortInFlight(taskId, now, 'returned to depot');
       return;

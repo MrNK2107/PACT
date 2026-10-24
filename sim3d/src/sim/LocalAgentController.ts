@@ -104,7 +104,7 @@ export class LocalAgentController implements AgentController {
     this.intent = ZERO;
 
     // zombie-stop (I3): if my pre-pickup lease lapsed (the board re-opened or re-assigned the task), stop.
-    if (this.task && !this.carrying && (this.task.owner !== this.id || this.task.state === 'UNASSIGNED' || this.task.state === 'ABORTED')) {
+    if (this.task && !this.carrying && !p.tasks.holds(this.task.task_id, this.id)) {
       out.events.push({ type: 'zombie_stop', taskId: this.task.task_id, detail: `epoch ${this.task.epoch}` });
       this.dropTask();
       this.backoffUntil = now + 2;
@@ -214,7 +214,9 @@ export class LocalAgentController implements AgentController {
           return;
         }
       } else {
-        const choice = this.coord.chooseTask(p.tasks.open(), ctx);
+        // cbba_plain: the same auction, but over the tasks this drone believes are free (no board fencing)
+        const pool = this.allocation === 'cbba' ? p.tasks.believedOpen(this.coord.heardIds(), this.id) : p.tasks.open();
+        const choice = this.coord.chooseTask(pool, ctx);
         if (choice) {
           out.outbox.push(this.coord.startClaim(choice.task, choice.cost, now));
           this.phase = 'claiming';

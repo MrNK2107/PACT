@@ -42,6 +42,10 @@ export interface TaskBoardView {
   pickup(taskId: string, droneId: string, epoch: number, now: number): 'PICKUP_GRANT' | 'TASK_TAKEN';
   complete(taskId: string, droneId: string, time: number): void;
   release(taskId: string, droneId: string, now: number): void;
+  /** Does the drone currently hold the task (owner, or co-claimant on an unfenced board)? */
+  holds(taskId: string, droneId: string): boolean;
+  /** `cbba_plain`: tasks the drone believes are free given which drones it can hear. */
+  believedOpen(heard: ReadonlySet<string>, droneId: string): readonly Task[];
 }
 
 export interface AgentEvent {

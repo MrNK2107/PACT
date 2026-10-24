@@ -104,6 +104,11 @@ export class AgentCoordinator {
     for (const [id, c] of this.claims) if (now - c.t > 1.5) this.claims.delete(id);
   }
 
+  /** Ids of the drones I can currently hear (radio neighbour table). */
+  heardIds(): Set<string> {
+    return new Set(this.table.keys());
+  }
+
   get neighborCount(): number {
     return this.table.size;
   }

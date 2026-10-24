@@ -8,7 +8,7 @@ import { Rng } from '../world/rng';
 import type { DropType, NoFlyShape, NoFlyZone, PadData, Vec3, WindField, WorldData } from '../world/types';
 import { MessageBus } from './AgentCoordinator';
 import { CentralHub, type HubDrone } from './CentralHub';
-import { allocationOf, SERVICES, type SystemId } from './systems';
+import { allocationOf, isFenced, SERVICES, type SystemId } from './systems';
 import { drainPct, makeEnergyModel, type EnergyModel } from './Battery';
 import { applyScenario, SIM } from './config';
 import { DRONE_COLORS, DroneAgent } from './DroneAgent';
@@ -194,7 +194,7 @@ export class SimulationEngine {
     this.baseWindParams = { mean_mps: world.wind.mean, dir_deg: world.wind.dirDeg, gust_mps: world.wind.gust };
     this.windParams = { ...this.baseWindParams };
     this.rng = new Rng(world.seed + 7);
-    this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s });
+    this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s, fenced: isFenced(scenario.system ?? 'pact') });
     this.workload = new WorkloadGenerator(world, scenario, new Rng(world.seed + 11));
     this.faults = new FaultInjector(scenario.faults, this.faultHooks());
     this.init();
@@ -204,7 +204,7 @@ export class SimulationEngine {
 
   private init(): void {
     const s = this.scenario;
-    this.board = new TaskBoard({ leaseTtlS: s.policy.lease_ttl_s, tCommitS: s.policy.t_commit_s });
+    this.board = new TaskBoard({ leaseTtlS: s.policy.lease_ttl_s, tCommitS: s.policy.t_commit_s, fenced: isFenced(this.system) });
     this.workload = new WorkloadGenerator(this.world, s, new Rng(this.world.seed + 11));
     this.faults = new FaultInjector(s.faults, this.faultHooks());
     this.bus = new MessageBus();
