@@ -6,7 +6,7 @@ Interactive Three.js world (React + TypeScript + Vite + React Three Fiber) for
 ```bash
 npm install
 npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
-                   # other URL options: ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
+                   # other URL options: ?system=<pact|central_full|central_hub_loss|greedy_nearest>, ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
 npm test           # world, map, scenario, mechanics, planner and simulation tests (fast)
 npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate (about 1 min)
 npm run bench      # scenario x system x seed benchmark, writes ../results/ (--seeds=N --window=S --scenarios=a,b --systems=x,y)

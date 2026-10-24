@@ -28,7 +28,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-URL options: `?map=<id>&scenario=<name>` picks a world and scenario, `?autostart` starts the run, `?view=overview` and `?cam=px,py,pz,tx,ty,tz` set the camera. For example, `http://localhost:5173/?scenario=s1_hub_loss&autostart`.
+URL options: `?map=<id>&scenario=<name>` picks a world and scenario, `?system=<id>` runs a baseline instead of PACT (also in the toolbar's System picker), `?autostart` starts the run, `?view=overview` and `?cam=px,py,pz,tx,ty,tz` set the camera. For example, to watch the central hub fail at t = 180 s while PACT carries on, open `/?scenario=s1_hub_loss&system=central_hub_loss&autostart` next to `/?scenario=s1_hub_loss&autostart`.
 
 The toolbar has map and scenario pickers, pause/reset, sim speed (0.5x to 8x) and add/remove drone. The side panels show telemetry, the order board, the fleet and an inspector (click any drone, building, depot or drop point).
 
