@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "scenarios": "vitest run --config vitest.scenarios.config.ts",
-    "bench": "vite-node scripts/bench.ts"
+    "bench": "vite-node scripts/bench.ts",
+    "sweep": "vite-node scripts/sweep.ts",
+    "plots": "vite-node scripts/plots.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.3",

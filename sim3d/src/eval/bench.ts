@@ -1,5 +1,5 @@
 import { SimulationEngine } from '../sim/SimulationEngine';
-import { SYSTEM_IDS, type SystemId } from '../sim/systems';
+import { isFenced, SYSTEM_IDS, type SystemId } from '../sim/systems';
 import type { Scenario } from '../scenario/types';
 import { worldConfigFrom } from '../scenario/load';
 import { createWorld } from '../world/buildWorld';
@@ -115,7 +115,7 @@ function cellMean(rows: readonly BenchRow[], scenario: string, system: SystemId)
 /**
  * AT-05 (hub kill): PACT's on-time rate on the hub-loss scenario degrades by <= 15 % vs healthy, the
  * `central_hub_loss` baseline by > 40 % (relative to its own healthy run, where the hub never dies).
- * AT-12-lite: every run finished and kept invariants I1 / I3.
+ * Invariants: every run finished and fenced systems kept I1 / I3 (`cbba_plain` is reported, not gated).
  */
 export function acceptanceChecks(rows: readonly BenchRow[], healthy = 's0_healthy', hubLoss = 's1_hub_loss'): Check[] {
   const out: Check[] = [];
@@ -132,9 +132,13 @@ export function acceptanceChecks(rows: readonly BenchRow[], healthy = 's0_health
       detail: `on-time rate, healthy -> hub loss: pact ${ph.toFixed(1)} -> ${pl.toFixed(1)} % (drop ${pDrop.toFixed(1)} %, gate <= 15 %); central_hub_loss ${ch.toFixed(1)} -> ${cl.toFixed(1)} % (drop ${cDrop.toFixed(1)} %, gate > 40 %)`,
     });
   } else out.push({ id: 'AT-05', pass: null, detail: `needs ${healthy} and ${hubLoss} with pact and central_hub_loss in the matrix` });
-  const dup = rows.reduce((a, r) => a + r.duplicateDeliveries, 0);
-  const zom = rows.reduce((a, r) => a + r.zombiePickups, 0);
-  out.push({ id: 'AT-12 (partial)', pass: dup === 0 && zom === 0, detail: `${rows.length} runs completed; duplicate deliveries ${dup}, zombie pickups ${zom} (partition policies are not implemented, so systems stand in for policies)` });
+  // invariants I1 / I3 are gated for fenced systems only: `cbba_plain` has no fencing by design and is reported
+  const fenced = rows.filter((r) => isFenced(r.system));
+  const dup = fenced.reduce((a, r) => a + r.duplicateDeliveries, 0);
+  const zom = fenced.reduce((a, r) => a + r.zombiePickups, 0);
+  const unf = rows.filter((r) => !isFenced(r.system));
+  const unfNote = unf.length ? `; unfenced (cbba_plain, not gated): duplicate deliveries ${unf.reduce((a, r) => a + r.duplicateDeliveries, 0)} in ${unf.length} runs` : '';
+  out.push({ id: 'Invariants I1 / I3', pass: dup === 0 && zom === 0, detail: `${rows.length} runs completed; fenced systems: duplicate deliveries ${dup}, zombie pickups ${zom}${unfNote} (the AT-12 policy sweep is \`make sweep\`)` });
   return out;
 }
 
@@ -175,6 +179,7 @@ export function summaryMarkdown(rows: readonly BenchRow[], o: { seeds: number; w
   L.push('- `central_full`: central hub, global greedy assignment every auction period, no radio limits, never fails (upper bound).');
   L.push('- `central_hub_loss`: the same hub; `kill_service(central_hub)` stops all new dispatches.');
   L.push('- `greedy_nearest`: decentralised, nearest feasible task first, no priorities, deadlines or bids.');
+  L.push('- `cbba_plain`: the PACT radio auction on an unfenced board: no atomic claim, no leases, no depot arbitration (duplicates are expected and not gated).');
   L.push('');
   return L.join('\n');
 }

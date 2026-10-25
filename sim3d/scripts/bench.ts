@@ -2,7 +2,7 @@
  * `npm run bench` / `make bench`: scenario x system x seed benchmark (TC-11 / TC-12). Writes ../results/:
  *   bench.json   every run (metrics + event hash)
  *   results.csv  the same, flat (stands in for results.parquet; docs/DECISIONS.md)
- *   summary.md   per-scenario tables with bootstrap CIs and the AT-05 / AT-12 checks
+ *   summary.md   per-scenario tables with bootstrap CIs, the AT-05 check and the I1 / I3 invariant check
  * Options (flags or env): --seeds=N (BENCH_SEEDS, default 5), --window=S (BENCH_WINDOW, default 900),
  *   --scenarios=a,b (BENCH_SCENARIOS), --systems=x,y (BENCH_SYSTEMS), --out=dir (BENCH_OUT, default ../results).
  * Exit code 1 when a run breaks an invariant (I1 / I3); with --strict (BENCH_STRICT=1) also when AT-05 fails.
