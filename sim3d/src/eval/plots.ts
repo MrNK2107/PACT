@@ -16,9 +16,9 @@ function style(): string {
   const cls = (m: Record<SystemId, string>) => SYSTEM_IDS.map((s) => `.s-${s}{fill:${m[s]};stroke:${m[s]}}`).join('');
   return `<style>
 svg{background:#fcfcfb;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-.t1{fill:#0b0b0b}.t2{fill:#52514e}.grid{stroke:#e4e3df;stroke-width:1}.axis{stroke:#9a9993;stroke-width:1}.pf{fill:none;stroke:#52514e;stroke-width:1.5}.ring{stroke:#fcfcfb}
+.t1{fill:#0b0b0b}.t2{fill:#52514e}.grid{stroke:#e4e3df;stroke-width:1}.axis{stroke:#9a9993;stroke-width:1}.pf{fill:none;stroke:#52514e;stroke-width:1.5}.ring{stroke:#fcfcfb}.legend-mark{fill:#52514e;stroke:none}
 .ci{stroke-width:2;fill:none;stroke:#0b0b0b}${cls(LIGHT)}
-@media (prefers-color-scheme: dark){svg{background:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.grid{stroke:#33332f}.axis{stroke:#6b6a64}.pf{stroke:#c3c2b7}.ring{stroke:#1a1a19}.ci{stroke:#f0efec}${cls(DARK)}}
+@media (prefers-color-scheme: dark){svg{background:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.grid{stroke:#33332f}.axis{stroke:#6b6a64}.pf{stroke:#c3c2b7}.ring{stroke:#1a1a19}.legend-mark{fill:#c3c2b7}.ci{stroke:#f0efec}${cls(DARK)}}
 </style>`;
 }
 
@@ -98,6 +98,11 @@ export function sweepParetoSvg(cells: readonly SweepCell[], meta: { seeds: numbe
     const lx = 16 + i * 170;
     o.push(`<circle cx="${lx + 5}" cy="66" r="5" class="s-${s}"/><text x="${lx + 16}" y="70" class="t2" font-size="12">${s}</text>`);
   });
+  const policies = [...new Set(cells.map((c) => c.policy))].sort();
+  policies.forEach((p, k) => {
+    const lx = 16 + (systems.length + k) * 170;
+    o.push(`${marker(k, lx + 5, 66, 'legend-mark')}<text x="${lx + 16}" y="${70}" class="t2" font-size="12">${esc(p)}</text>`);
+  });
   const vMax = Math.max(1, ...cells.map((c) => c.violations?.hi ?? 0));
   scenarios.forEach((scn, i) => {
     const x0 = 16 + i * panelW + 44;
@@ -119,45 +124,31 @@ export function sweepParetoSvg(cells: readonly SweepCell[], meta: { seeds: numbe
     o.push(`<line x1="${x0}" y1="${y0 + ph}" x2="${x0 + pw}" y2="${y0 + ph}" class="axis"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 + ph}" class="axis"/>`);
     o.push(`<text x="${x0 + pw / 2}" y="${y0 + ph + 32}" class="t2" font-size="11" text-anchor="middle">violations per run (lower is better)</text>`);
     o.push(`<text x="${x0 - 34}" y="${y0 + ph / 2}" class="t2" font-size="11" text-anchor="middle" transform="rotate(-90 ${x0 - 34} ${y0 + ph / 2})">on-time rate % (higher is better)</text>`);
-    // stagger labels of dots that sit on top of each other
-    const placed: { x: number; y: number }[] = [];
     for (const c of cs) {
       const e: Estimate | null = c.onTimeRate;
       const v = c.violations?.mean ?? 0;
       const cx = sx(v);
       const cy = sy(e?.mean ?? 0);
       const tip = `${scn} / ${c.system} / ${c.policy}: on-time ${e ? e.mean.toFixed(1) : 'n/a'} %, violations/run ${v.toFixed(2)}, delivered ${c.delivered?.mean.toFixed(1) ?? 'n/a'}, n=${c.runs}`;
-      o.push(`<g><title>${esc(tip)}</title>${c.pareto ? `<circle cx="${cx}" cy="${cy}" r="9" fill="none" class="pf"/>` : ''}<circle cx="${cx}" cy="${cy}" r="5" class="s-${c.system} ring" style="stroke-width:2"/></g>`);
-    }
-    // one label per position: dots that coincide share it ("pact r10, r20")
-    const groups = new Map<string, { x: number; y: number; names: string[] }>();
-    for (const c of cs) {
-      const cx = sx(c.violations?.mean ?? 0);
-      const cy = sy(c.onTimeRate?.mean ?? 0);
-      const k = `${Math.round(cx / 3)}|${Math.round(cy / 3)}`;
-      const g = groups.get(k) ?? { x: cx, y: cy, names: [] };
-      g.names.push(`${c.system} ${c.policy.replace('reserve_', 'r')}`);
-      groups.set(k, g);
-    }
-    for (const g of groups.values()) {
-      let ly = g.y - 9;
-      while (placed.some((p) => Math.abs(p.x - g.x) < 120 && Math.abs(p.y - ly) < 12)) ly -= 13;
-      placed.push({ x: g.x, y: ly });
-      const anchorEnd = g.x > x0 + pw * 0.6;
-      o.push(`<text x="${anchorEnd ? g.x - 10 : g.x + 10}" y="${ly + 4}" class="t2" font-size="10"${anchorEnd ? ' text-anchor="end"' : ''}>${esc(compact(g.names))}</text>`);
+      o.push(`<g><title>${esc(tip)}</title>${c.pareto ? `<circle cx="${cx}" cy="${cy}" r="9" fill="none" class="pf"/>` : ''}${marker(policies.indexOf(c.policy), cx, cy, `s-${c.system} ring`)}</g>`);
     }
   });
-  o.push(`<text x="16" y="${H - 10}" class="t2" font-size="11">Labels: r10 / r20 / r30 = energy reserve 10 / 20 / 30 %. Exact values and CIs: results/sweep/sweep.md.</text>`);
+  o.push(`<text x="16" y="${H - 10}" class="t2" font-size="11">Colour = system, shape = policy (reserve_10 / 20 / 30 = energy reserve 10 / 20 / 30 %). Hover a mark for its values; exact values and CIs: results/sweep/sweep.md.</text>`);
   o.push('</svg>');
   return o.join('\n') + '\n';
 }
 
-/** "pact r10", "pact r20" -> "pact r10, r20". */
-function compact(names: string[]): string {
-  const by = new Map<string, string[]>();
-  for (const n of names) {
-    const [sys, pol] = n.split(' ');
-    by.set(sys, [...(by.get(sys) ?? []), pol]);
+/** Policy k as a marker shape (circle, square, triangle, diamond), about 10 px across. */
+function marker(k: number, x: number, y: number, cls: string): string {
+  const a = 'style="stroke-width:1.5"';
+  switch (k % 4) {
+    case 0:
+      return `<circle cx="${x}" cy="${y}" r="5.5" class="${cls}" ${a}/>`;
+    case 1:
+      return `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" rx="1.5" class="${cls}" ${a}/>`;
+    case 2:
+      return `<path d="M${x},${y - 6.5} L${x + 6.5},${y + 5} L${x - 6.5},${y + 5} Z" class="${cls}" ${a}/>`;
+    default:
+      return `<path d="M${x},${y - 6.5} L${x + 6.5},${y} L${x},${y + 6.5} L${x - 6.5},${y} Z" class="${cls}" ${a}/>`;
   }
-  return [...by].map(([sys, ps]) => `${sys} ${ps.join(', ')}`).join('; ');
 }
