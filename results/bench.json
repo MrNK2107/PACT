@@ -11,7 +11,8 @@
     "pact",
     "central_full",
     "central_hub_loss",
-    "greedy_nearest"
+    "greedy_nearest",
+    "cbba_plain"
   ],
   "rows": [
     {
@@ -36,7 +37,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6284944f",
       "events": 279,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.06
     },
     {
       "scenario": "s0_healthy",
@@ -60,7 +61,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e0f67434",
       "events": 303,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s0_healthy",
@@ -84,7 +85,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e0f67434",
       "events": 303,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s0_healthy",
@@ -108,7 +109,31 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "25066eb0",
       "events": 286,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.04
+    },
+    {
+      "scenario": "s0_healthy",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 42,
+      "windowS": 900,
+      "released": 42,
+      "delivered": 18,
+      "onTime": 18,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 100,
+      "due": 4,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 2,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 0,
+      "eventHash": "a34799eb",
+      "events": 281,
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s0_healthy",
@@ -132,7 +157,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "304bd041",
       "events": 265,
-      "tickP95Ms": 0.14
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s0_healthy",
@@ -156,7 +181,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a2d48967",
       "events": 289,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s0_healthy",
@@ -180,7 +205,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a2d48967",
       "events": 289,
-      "tickP95Ms": 0.08
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s0_healthy",
@@ -204,7 +229,31 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "2cbabf6e",
       "events": 262,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.07
+    },
+    {
+      "scenario": "s0_healthy",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 43,
+      "windowS": 900,
+      "released": 35,
+      "delivered": 18,
+      "onTime": 17,
+      "onTimePctOfDelivered": 94.4,
+      "onTimeRate": 80,
+      "due": 5,
+      "meanLatenessS": 6.7,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 0,
+      "eventHash": "3eb801ed",
+      "events": 255,
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s0_healthy",
@@ -228,7 +277,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c5550375",
       "events": 302,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s0_healthy",
@@ -252,7 +301,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "5133f1f4",
       "events": 318,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s0_healthy",
@@ -276,7 +325,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "5133f1f4",
       "events": 318,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s0_healthy",
@@ -300,7 +349,31 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c94eb552",
       "events": 312,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.05
+    },
+    {
+      "scenario": "s0_healthy",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 44,
+      "windowS": 900,
+      "released": 45,
+      "delivered": 22,
+      "onTime": 21,
+      "onTimePctOfDelivered": 95.5,
+      "onTimeRate": 85.7,
+      "due": 7,
+      "meanLatenessS": 2.3,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 0,
+      "eventHash": "0df219b3",
+      "events": 302,
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s0_healthy",
@@ -324,7 +397,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "023fd86c",
       "events": 308,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s0_healthy",
@@ -348,7 +421,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "adf87f9f",
       "events": 316,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s0_healthy",
@@ -372,7 +445,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "adf87f9f",
       "events": 316,
-      "tickP95Ms": 0.14
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s0_healthy",
@@ -396,7 +469,31 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ad07ab79",
       "events": 308,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.29
+    },
+    {
+      "scenario": "s0_healthy",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 45,
+      "windowS": 900,
+      "released": 48,
+      "delivered": 17,
+      "onTime": 17,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 85.7,
+      "due": 7,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 0,
+      "eventHash": "f869cb31",
+      "events": 291,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s0_healthy",
@@ -420,7 +517,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "8a3491fd",
       "events": 287,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s0_healthy",
@@ -444,7 +541,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "106dc655",
       "events": 302,
-      "tickP95Ms": 0.08
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s0_healthy",
@@ -468,7 +565,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "106dc655",
       "events": 302,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s0_healthy",
@@ -492,7 +589,31 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a6607571",
       "events": 302,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.12
+    },
+    {
+      "scenario": "s0_healthy",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 46,
+      "windowS": 900,
+      "released": 44,
+      "delivered": 21,
+      "onTime": 21,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 80,
+      "due": 5,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 0,
+      "eventHash": "6da7a123",
+      "events": 287,
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -516,7 +637,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "5acd2689",
       "events": 281,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s1_hub_loss",
@@ -588,6 +709,30 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "90d19d72",
       "events": 288,
+      "tickP95Ms": 0.13
+    },
+    {
+      "scenario": "s1_hub_loss",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 42,
+      "windowS": 900,
+      "released": 42,
+      "delivered": 18,
+      "onTime": 18,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 100,
+      "due": 4,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 2,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 15,
+      "eventHash": "053c22db",
+      "events": 283,
       "tickP95Ms": 0.12
     },
     {
@@ -612,7 +757,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "2ac71b61",
       "events": 267,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -636,7 +781,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "8ab1cb97",
       "events": 291,
-      "tickP95Ms": 0.08
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s1_hub_loss",
@@ -660,7 +805,7 @@
       "deliveredAfterFirstFault": 4,
       "eventHash": "b4235c21",
       "events": 180,
-      "tickP95Ms": 0.06
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s1_hub_loss",
@@ -684,7 +829,31 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "d93af6be",
       "events": 264,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.08
+    },
+    {
+      "scenario": "s1_hub_loss",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 43,
+      "windowS": 900,
+      "released": 35,
+      "delivered": 18,
+      "onTime": 17,
+      "onTimePctOfDelivered": 94.4,
+      "onTimeRate": 80,
+      "due": 5,
+      "meanLatenessS": 6.7,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 16,
+      "eventHash": "fb75e093",
+      "events": 257,
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s1_hub_loss",
@@ -708,7 +877,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "0a8a7cf9",
       "events": 304,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s1_hub_loss",
@@ -732,7 +901,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "46df8ee8",
       "events": 320,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.24
     },
     {
       "scenario": "s1_hub_loss",
@@ -756,7 +925,7 @@
       "deliveredAfterFirstFault": 4,
       "eventHash": "2c46d49b",
       "events": 205,
-      "tickP95Ms": 0.08
+      "tickP95Ms": 0.06
     },
     {
       "scenario": "s1_hub_loss",
@@ -781,6 +950,30 @@
       "eventHash": "74252c82",
       "events": 314,
       "tickP95Ms": 0.11
+    },
+    {
+      "scenario": "s1_hub_loss",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 44,
+      "windowS": 900,
+      "released": 45,
+      "delivered": 22,
+      "onTime": 21,
+      "onTimePctOfDelivered": 95.5,
+      "onTimeRate": 85.7,
+      "due": 7,
+      "meanLatenessS": 2.3,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 18,
+      "eventHash": "2ffdc4f3",
+      "events": 304,
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s1_hub_loss",
@@ -828,7 +1021,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "0ff8fe53",
       "events": 318,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.15
     },
     {
       "scenario": "s1_hub_loss",
@@ -852,7 +1045,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "87202b14",
       "events": 220,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s1_hub_loss",
@@ -876,7 +1069,31 @@
       "deliveredAfterFirstFault": 19,
       "eventHash": "53206c13",
       "events": 310,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.14
+    },
+    {
+      "scenario": "s1_hub_loss",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 45,
+      "windowS": 900,
+      "released": 48,
+      "delivered": 17,
+      "onTime": 17,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 85.7,
+      "due": 7,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 15,
+      "eventHash": "310e99dd",
+      "events": 293,
+      "tickP95Ms": 0.14
     },
     {
       "scenario": "s1_hub_loss",
@@ -900,7 +1117,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "dacde551",
       "events": 289,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.12
     },
     {
       "scenario": "s1_hub_loss",
@@ -948,7 +1165,7 @@
       "deliveredAfterFirstFault": 3,
       "eventHash": "f93ff3c8",
       "events": 194,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s1_hub_loss",
@@ -972,7 +1189,31 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "22719269",
       "events": 304,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.08
+    },
+    {
+      "scenario": "s1_hub_loss",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 46,
+      "windowS": 900,
+      "released": 44,
+      "delivered": 21,
+      "onTime": 21,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 80,
+      "due": 5,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 17,
+      "eventHash": "6119301f",
+      "events": 289,
+      "tickP95Ms": 0.1
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1020,7 +1261,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "b62a52da",
       "events": 259,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1044,7 +1285,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "b62a52da",
       "events": 259,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1068,7 +1309,31 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "95fd8a18",
       "events": 257,
-      "tickP95Ms": 0.05
+      "tickP95Ms": 0.03
+    },
+    {
+      "scenario": "s6_battery_crunch",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 42,
+      "windowS": 900,
+      "released": 67,
+      "delivered": 11,
+      "onTime": 11,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 57.1,
+      "due": 7,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 10,
+      "eventHash": "2d469e9e",
+      "events": 247,
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1092,7 +1357,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "aadacccd",
       "events": 222,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1116,7 +1381,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "95ec2a46",
       "events": 233,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1140,7 +1405,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "95ec2a46",
       "events": 233,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1164,7 +1429,31 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "aaa42f80",
       "events": 231,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.02
+    },
+    {
+      "scenario": "s6_battery_crunch",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 43,
+      "windowS": 900,
+      "released": 50,
+      "delivered": 12,
+      "onTime": 12,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 83.3,
+      "due": 6,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 10,
+      "eventHash": "91d852f9",
+      "events": 222,
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1188,7 +1477,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "78990cb6",
       "events": 272,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1212,7 +1501,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "b267489c",
       "events": 280,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1260,7 +1549,31 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "ec2f6dd8",
       "events": 287,
-      "tickP95Ms": 0.05
+      "tickP95Ms": 0.04
+    },
+    {
+      "scenario": "s6_battery_crunch",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 44,
+      "windowS": 900,
+      "released": 76,
+      "delivered": 12,
+      "onTime": 11,
+      "onTimePctOfDelivered": 91.7,
+      "onTimeRate": 55.6,
+      "due": 9,
+      "meanLatenessS": 1.5,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 11,
+      "eventHash": "ad3a478a",
+      "events": 272,
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1284,7 +1597,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "e7e284e5",
       "events": 291,
-      "tickP95Ms": 0.07
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1308,7 +1621,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "7448fb18",
       "events": 305,
-      "tickP95Ms": 0.07
+      "tickP95Ms": 0.03
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1332,7 +1645,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "7448fb18",
       "events": 305,
-      "tickP95Ms": 0.06
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1356,7 +1669,31 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "0217cce0",
       "events": 272,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.03
+    },
+    {
+      "scenario": "s6_battery_crunch",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 45,
+      "windowS": 900,
+      "released": 70,
+      "delivered": 11,
+      "onTime": 10,
+      "onTimePctOfDelivered": 90.9,
+      "onTimeRate": 45.5,
+      "due": 11,
+      "meanLatenessS": 2.2,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 10,
+      "eventHash": "68f4b85e",
+      "events": 297,
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1380,7 +1717,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "071d8e84",
       "events": 261,
-      "tickP95Ms": 0.05
+      "tickP95Ms": 0.01
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1404,7 +1741,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "283a635f",
       "events": 280,
-      "tickP95Ms": 0.03
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1428,7 +1765,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "283a635f",
       "events": 280,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s6_battery_crunch",
@@ -1452,7 +1789,31 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "192ffcc7",
       "events": 272,
-      "tickP95Ms": 0.04
+      "tickP95Ms": 0.02
+    },
+    {
+      "scenario": "s6_battery_crunch",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 46,
+      "windowS": 900,
+      "released": 70,
+      "delivered": 12,
+      "onTime": 12,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 50,
+      "due": 8,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 11,
+      "eventHash": "0641a1fe",
+      "events": 261,
+      "tickP95Ms": 0.02
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1476,7 +1837,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "8cf40d82",
       "events": 263,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1500,7 +1861,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "db707ce0",
       "events": 280,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1524,7 +1885,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "db707ce0",
       "events": 280,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1548,7 +1909,31 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "4d10dde9",
       "events": 272,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.04
+    },
+    {
+      "scenario": "s7_urgent_burst",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 42,
+      "windowS": 900,
+      "released": 43,
+      "delivered": 18,
+      "onTime": 18,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 100,
+      "due": 4,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 8,
+      "eventHash": "c55d3286",
+      "events": 271,
+      "tickP95Ms": 0.06
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1572,7 +1957,7 @@
       "deliveredAfterFirstFault": 4,
       "eventHash": "cfa27193",
       "events": 258,
-      "tickP95Ms": 0.18
+      "tickP95Ms": 0.11
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1596,7 +1981,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "2d3b6fa4",
       "events": 282,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1620,7 +2005,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "2d3b6fa4",
       "events": 282,
-      "tickP95Ms": 0.09
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1644,7 +2029,31 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "dd2eb142",
       "events": 269,
-      "tickP95Ms": 0.14
+      "tickP95Ms": 0.15
+    },
+    {
+      "scenario": "s7_urgent_burst",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 43,
+      "windowS": 900,
+      "released": 38,
+      "delivered": 15,
+      "onTime": 15,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 75,
+      "due": 4,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 1,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 4,
+      "eventHash": "bec6d5ca",
+      "events": 255,
+      "tickP95Ms": 0.28
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1668,7 +2077,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "635d80a4",
       "events": 351,
-      "tickP95Ms": 0.11
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1692,7 +2101,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "62c15add",
       "events": 366,
-      "tickP95Ms": 0.1
+      "tickP95Ms": 0.13
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1716,7 +2125,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "62c15add",
       "events": 366,
-      "tickP95Ms": 0.14
+      "tickP95Ms": 0.09
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1740,7 +2149,31 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "1209460d",
       "events": 313,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.08
+    },
+    {
+      "scenario": "s7_urgent_burst",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 44,
+      "windowS": 900,
+      "released": 47,
+      "delivered": 21,
+      "onTime": 20,
+      "onTimePctOfDelivered": 95.2,
+      "onTimeRate": 50,
+      "due": 10,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 6,
+      "eventHash": "4190f6c8",
+      "events": 351,
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1764,7 +2197,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "2f7fffa7",
       "events": 310,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1788,7 +2221,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "46991934",
       "events": 334,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1812,7 +2245,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "46991934",
       "events": 334,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.06
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1836,7 +2269,31 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "79c9f63a",
       "events": 305,
-      "tickP95Ms": 0.15
+      "tickP95Ms": 0.05
+    },
+    {
+      "scenario": "s7_urgent_burst",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 45,
+      "windowS": 900,
+      "released": 51,
+      "delivered": 19,
+      "onTime": 19,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 83.3,
+      "due": 6,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 2,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 7,
+      "eventHash": "9bace360",
+      "events": 312,
+      "tickP95Ms": 0.07
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1860,7 +2317,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "14ac0754",
       "events": 289,
-      "tickP95Ms": 0.13
+      "tickP95Ms": 0.08
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1884,7 +2341,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "f89e056c",
       "events": 306,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.05
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1908,7 +2365,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "f89e056c",
       "events": 306,
-      "tickP95Ms": 0.12
+      "tickP95Ms": 0.04
     },
     {
       "scenario": "s7_urgent_burst",
@@ -1932,7 +2389,31 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "797091c3",
       "events": 307,
-      "tickP95Ms": 0.15
+      "tickP95Ms": 0.04
+    },
+    {
+      "scenario": "s7_urgent_burst",
+      "map": "coastal_metro",
+      "system": "cbba_plain",
+      "seed": 46,
+      "windowS": 900,
+      "released": 45,
+      "delivered": 20,
+      "onTime": 20,
+      "onTimePctOfDelivered": 100,
+      "onTimeRate": 66.7,
+      "due": 6,
+      "meanLatenessS": 0,
+      "duplicateDeliveries": 0,
+      "zombiePickups": 0,
+      "leaseExpiries": 0,
+      "depotRefusals": 0,
+      "lossOfSeparation": 0,
+      "batteryDepleted": 0,
+      "deliveredAfterFirstFault": 8,
+      "eventHash": "edca73e9",
+      "events": 287,
+      "tickP95Ms": 0.04
     }
   ]
 }
