@@ -41,7 +41,8 @@ describe('depot siting vs landmark airspace', () => {
 
   // Property: for every scenario and many seeds, generation never throws and no depot is in a no-fly zone.
   // The 12 km harbour_metro_xl map is skipped for run time (pinned by the golden hash). PACT_WORLD_SEEDS deepens it.
-  const SEEDS = Number(process.env.PACT_WORLD_SEEDS ?? 6);
+  const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
+  const SEEDS = Number(env.PACT_WORLD_SEEDS ?? 6);
   it(`every scenario x ${SEEDS} seeds: no exception, no depot inside a no-fly zone`, () => {
     const seen = new Set<string>();
     const failures: string[] = [];
