@@ -45,15 +45,65 @@ export interface Landmasses {
   areaKm2: number[];
 }
 
+/** A circle of airspace that a landmark block will later close (see fillStadium / fillHospital in BlockFillers). */
+export interface AirspaceCircle {
+  blockId: string;
+  x: number;
+  z: number;
+  r: number;
+}
+
+/**
+ * Forecasts the circular no-fly zones of the landmark blocks before they are filled, so depot siting can
+ * keep clear of them. createWorld later gives the largest free block of every hospital / stadium district
+ * that kind; the radii mirror the fillers exactly: the stadium event TFR is max(w, d) / 2 + 60 around the
+ * block centre, and the helipad circle is 60 m around the main building (block centre, 6 m north).
+ * No RNG is used, so the world's random streams are untouched.
+ */
+export function landmarkAirspace(layout: CityLayout): AirspaceCircle[] {
+  const out: AirspaceCircle[] = [];
+  const add = (b: LayoutBlock, kind: string) => {
+    if (kind === 'stadium') out.push({ blockId: b.id, x: b.cx, z: b.cz, r: Math.max(Math.min(b.w - 40, 190), Math.min(b.d - 40, 150)) / 2 + 60 });
+    else if (kind === 'hospital') out.push({ blockId: b.id, x: b.cx, z: b.cz - 6, r: 60 });
+  };
+  for (const b of layout.blocks) if (b.kind === 'stadium' || b.kind === 'hospital') add(b, b.kind);
+  for (const d of layout.districts) {
+    if (d.kind !== 'hospital' && d.kind !== 'stadium') continue;
+    let best: LayoutBlock | null = null;
+    for (const b of layout.blocks) if (b.districtId === d.id && !b.kind && (!best || b.w * b.d > best.w * best.d)) best = b;
+    if (best) add(best, d.kind);
+  }
+  return out;
+}
+
+/** Margin around a depot block that its hand-off points reach (5 m outside the building) plus the 3 m check margin. */
+const DEPOT_REACH_M = 8;
+
+/** Whether any part of block `b` (grown by the depot reach) lies inside one of the airspace circles. */
+export function blockInAirspace(b: LayoutBlock, zones: readonly AirspaceCircle[]): boolean {
+  const hw = b.w / 2 + DEPOT_REACH_M;
+  const hd = b.d / 2 + DEPOT_REACH_M;
+  for (const z of zones) {
+    const dx = Math.max(Math.abs(z.x - b.cx) - hw, 0);
+    const dz = Math.max(Math.abs(z.z - b.cz) - hd, 0);
+    if (dx * dx + dz * dz < z.r * z.r) return true;
+  }
+  return false;
+}
+
 export function siteDepotBlocks(layout: CityLayout, seeds: ClusterSeed[], n: number, kind: DepotLayout = 'distributed', landmass?: Landmasses): LayoutBlock[] {
   const minSep = kind === 'micro' ? 250 : layout.size < 2500 ? 300 : 600;
   const excluded = new Set(['airport', 'water', 'hospital', 'stadium']);
+  // a block next to a stadium or hospital can sit under its airspace circle (which reaches across the street),
+  // so those blocks are never candidates: depots must never sit inside a no-fly zone, even a closable one
+  const airspace = landmarkAirspace(layout);
+  const clear = (b: LayoutBlock) => !blockInAirspace(b, airspace);
   let cands: LayoutBlock[] = [];
   for (const tier of kind === 'micro' ? CAND_TIERS_MICRO : kind === 'single_hub' ? CAND_TIERS_HUB : CAND_TIERS) {
-    cands = layout.blocks.filter((b) => !b.kind && !b.nearWater && !excluded.has(b.district) && (tier.kinds.length === 0 || tier.kinds.includes(b.district)) && fits(b, tier.w, tier.d, tier.maxArea));
+    cands = layout.blocks.filter((b) => !b.kind && !b.nearWater && !excluded.has(b.district) && (tier.kinds.length === 0 || tier.kinds.includes(b.district)) && fits(b, tier.w, tier.d, tier.maxArea) && clear(b));
     if (cands.length >= n) break;
   }
-  if (!cands.length) cands = layout.blocks.filter((b) => !b.kind && !excluded.has(b.district));
+  if (!cands.length) cands = layout.blocks.filter((b) => !b.kind && !excluded.has(b.district) && clear(b));
   if (!cands.length) throw new Error('no depot candidates');
   const chosen: LayoutBlock[] = [];
   if (landmass) {
