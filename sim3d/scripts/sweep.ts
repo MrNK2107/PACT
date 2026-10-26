@@ -20,7 +20,7 @@ function opt(name: string, env: string, def: string): string {
 
 const seeds = Number(opt('seeds', 'SWEEP_SEEDS', '30'));
 const windowS = Number(opt('window', 'SWEEP_WINDOW', '900'));
-const scenarioNames = opt('scenarios', 'SWEEP_SCENARIOS', 's6_battery_crunch,ip_radio_clutter').split(',').filter(Boolean);
+const scenarioNames = opt('scenarios', 'SWEEP_SCENARIOS', 's6_battery_crunch,dm_canyon_shadow,ip_radio_clutter').split(',').filter(Boolean);
 const systems = opt('systems', 'SWEEP_SYSTEMS', 'pact,cbba_plain').split(',').filter(Boolean) as SystemId[];
 const out = resolve(opt('out', 'SWEEP_OUT', '../results/sweep'));
 
