@@ -1306,10 +1306,12 @@ export interface DepotBuild {
   apron: { minX: number; maxX: number; minZ: number; maxZ: number };
 }
 
-export function fillDepot(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): DepotBuild {
-  const rng = env.rng;
-  addBlock(b, out, 'depot', 'gravel', '#a4a49e');
-  out.depotBlocks.push(b);
+/**
+ * Depot lot geometry from the block alone (no RNG): building footprint, apron and the two hand-off bays.
+ * fillDepot builds from it, and depot siting (Depots.ts) uses it to keep the depot points out of
+ * forecast landmark airspace, so the two can never disagree.
+ */
+export function depotGeometry(b: LayoutBlock) {
   const r = rect(b);
   const side = frontSide(b); // docks face the busiest street
   const alongX = side === 'n' || side === 's';
@@ -1318,25 +1320,34 @@ export function fillDepot(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: 
   // building sits at the back, apron (pads) in front of the docks
   const cx = alongX ? b.cx : side === 'e' ? r.minX + bw / 2 + 6 : r.maxX - bw / 2 - 6;
   const cz = alongX ? (side === 's' ? r.minZ + bd / 2 + 6 : r.maxZ - bd / 2 - 6) : b.cz;
-  const building = ctx.addBuilding(spec(b, { name: `Parcel Depot ${b.id}`, kind: 'distribution', cx, cz, w: bw, d: bd, h: 12, color: jitter(rng.pick(WAREHOUSE), rng), material: 'metal', equipment: 4, solar: true }));
-  bays(out, building, side, Math.max(3, Math.floor((alongX ? bw : bd) / 10)));
   // apron in front of the docks
   const gap = 10;
   const apron = alongX
     ? { minX: cx - bw / 2 - 2, maxX: cx + bw / 2 + 2, minZ: side === 's' ? cz + bd / 2 + gap : cz - bd / 2 - gap - 24, maxZ: side === 's' ? cz + bd / 2 + gap + 24 : cz - bd / 2 - gap }
     : { minX: side === 'e' ? cx + bw / 2 + gap : cx - bw / 2 - gap - 24, maxX: side === 'e' ? cx + bw / 2 + gap + 24 : cx - bw / 2 - gap, minZ: cz - bd / 2 - 2, maxZ: cz + bd / 2 + 2 };
-  const pads: { x: number; z: number }[] = [];
+  // hand-off bays: between docks and pads, two of them
   const handoff: { x: number; z: number }[] = [];
+  for (const t of [-(alongX ? bw : bd) / 4, (alongX ? bw : bd) / 4]) {
+    handoff.push(alongX ? { x: cx + t, z: side === 's' ? cz + bd / 2 + 5 : cz - bd / 2 - 5 } : { x: side === 'e' ? cx + bw / 2 + 5 : cx - bw / 2 - 5, z: cz + t });
+  }
+  return { side, alongX, bw, bd, cx, cz, apron, handoff };
+}
+
+export function fillDepot(ctx: BuildContext, b: LayoutBlock, env: FillEnv, out: FillOut): DepotBuild {
+  const rng = env.rng;
+  addBlock(b, out, 'depot', 'gravel', '#a4a49e');
+  out.depotBlocks.push(b);
+  const r = rect(b);
+  const { side, alongX, bw, bd, cx, cz, apron, handoff } = depotGeometry(b);
+  const building = ctx.addBuilding(spec(b, { name: `Parcel Depot ${b.id}`, kind: 'distribution', cx, cz, w: bw, d: bd, h: 12, color: jitter(rng.pick(WAREHOUSE), rng), material: 'metal', equipment: 4, solar: true }));
+  bays(out, building, side, Math.max(3, Math.floor((alongX ? bw : bd) / 10)));
+  const pads: { x: number; z: number }[] = [];
   const n = env.depotPads?.get(b.id) ?? env.padsPerDepot;
   // a hub with more than 3 pads packs them to fit the apron; 1-3 pads keep the legacy 12 m pitch
   const pitch = n > 3 ? Math.min(12, ((alongX ? bw : bd) + 4 - 8) / n) : 12;
   for (let i = 0; i < n; i++) {
     const t = (i - (n - 1) / 2) * pitch;
     pads.push(alongX ? { x: cx + t, z: (apron.minZ + apron.maxZ) / 2 + (side === 's' ? 4 : -4) } : { x: (apron.minX + apron.maxX) / 2 + (side === 'e' ? 4 : -4), z: cz + t });
-  }
-  // hand-off bays: between docks and pads, two of them
-  for (const t of [-(alongX ? bw : bd) / 4, (alongX ? bw : bd) / 4]) {
-    handoff.push(alongX ? { x: cx + t, z: side === 's' ? cz + bd / 2 + 5 : cz - bd / 2 - 5 } : { x: side === 'e' ? cx + bw / 2 + 5 : cx - bw / 2 - 5, z: cz + t });
   }
   for (const h of handoff) ctx.keepout(h.x, h.z, 6);
   ctx.keepout((apron.minX + apron.maxX) / 2, (apron.minZ + apron.maxZ) / 2, Math.max(apron.maxX - apron.minX, apron.maxZ - apron.minZ) / 2 + 6);

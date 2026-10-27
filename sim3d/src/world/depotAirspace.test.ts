@@ -32,11 +32,13 @@ describe('depot siting vs landmark airspace', () => {
     expect(worldHash(createWorld(worldConfigFrom(scn)))).toBe(worldHash(w));
   });
 
-  it('blockInAirspace counts the hand-off reach outside the block', () => {
-    const b = { cx: 0, cz: 0, w: 100, d: 80 } as LayoutBlock;
-    expect(blockInAirspace(b, [{ blockId: 'x', x: 0, z: 200, r: 100 }])).toBe(false);
-    expect(blockInAirspace(b, [{ blockId: 'x', x: 0, z: 140, r: 100 }])).toBe(true); // 140 - 40 - 8 = 92 < 100
-    expect(blockInAirspace(b, [{ blockId: 'x', x: 0, z: 150, r: 100 }])).toBe(false); // 102 >= 100
+  it('blockInAirspace tests the depot apron centre and hand-off bays with the 3 m margin', () => {
+    // busiest street on the south side: docks face south, apron centre at (0, 24), hand-off bays at (+-16, 7)
+    const b = { cx: 0, cz: 0, w: 100, d: 80, streets: { n: 0, s: 10, e: 0, w: 0 } } as LayoutBlock;
+    expect(blockInAirspace(b, [])).toBe(false);
+    expect(blockInAirspace(b, [{ blockId: 'x', x: 0, z: 130, r: 100 }])).toBe(false); // 106 m > 103
+    expect(blockInAirspace(b, [{ blockId: 'x', x: 0, z: 125, r: 100 }])).toBe(true); // 101 m <= 103
+    expect(blockInAirspace(b, [{ blockId: 'x', x: 16, z: -93, r: 100 }])).toBe(true); // hand-off bay at 100 m, apron 118 m
   });
 
   // Property: for every scenario and many seeds, generation never throws and no depot is in a no-fly zone.

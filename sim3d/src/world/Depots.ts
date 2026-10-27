@@ -1,4 +1,4 @@
-import type { DepotBuild } from './BlockFillers';
+import { depotGeometry, type DepotBuild } from './BlockFillers';
 import type { CityLayout, LayoutBlock } from './CityLayout';
 import type { DepotLayout } from './features';
 import { heightAt } from './Terrain';
@@ -76,18 +76,16 @@ export function landmarkAirspace(layout: CityLayout): AirspaceCircle[] {
   return out;
 }
 
-/** Margin around a depot block that its hand-off points reach (5 m outside the building) plus the 3 m check margin. */
-const DEPOT_REACH_M = 8;
-
-/** Whether any part of block `b` (grown by the depot reach) lies inside one of the airspace circles. */
+/**
+ * Whether a depot built on block `b` would put one of its checked points (apron centre and hand-off bays, the
+ * same points createWorld's hard check tests, with its 3 m margin) inside one of the airspace circles.
+ * The points come from `depotGeometry`, which fillDepot builds from, so this matches the final check exactly.
+ */
 export function blockInAirspace(b: LayoutBlock, zones: readonly AirspaceCircle[]): boolean {
-  const hw = b.w / 2 + DEPOT_REACH_M;
-  const hd = b.d / 2 + DEPOT_REACH_M;
-  for (const z of zones) {
-    const dx = Math.max(Math.abs(z.x - b.cx) - hw, 0);
-    const dz = Math.max(Math.abs(z.z - b.cz) - hd, 0);
-    if (dx * dx + dz * dz < z.r * z.r) return true;
-  }
+  if (!zones.length) return false;
+  const g = depotGeometry(b);
+  const pts = [...g.handoff, { x: (g.apron.minX + g.apron.maxX) / 2, z: (g.apron.minZ + g.apron.maxZ) / 2 }];
+  for (const z of zones) for (const p of pts) if (Math.hypot(p.x - z.x, p.z - z.z) <= z.r + 3) return true;
   return false;
 }
 
