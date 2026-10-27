@@ -41,15 +41,15 @@
       "policy": "reserve_10",
       "runs": 30,
       "onTimeRate": {
-        "mean": 54.39333333333333,
-        "lo": 47.99333333333333,
-        "hi": 61.589999999999996,
+        "mean": 54.019999999999996,
+        "lo": 47.71333333333333,
+        "hi": 61.173333333333325,
         "n": 30
       },
       "delivered": {
-        "mean": 11.366666666666667,
+        "mean": 11.333333333333334,
         "lo": 10.7,
-        "hi": 12,
+        "hi": 11.966666666666667,
         "n": 30
       },
       "violations": {
@@ -67,9 +67,9 @@
       "policy": "reserve_10",
       "runs": 30,
       "onTimeRate": {
-        "mean": 55.980000000000004,
-        "lo": 48.986666666666665,
-        "hi": 63.52333333333333,
+        "mean": 55.23666666666667,
+        "lo": 48.239999999999995,
+        "hi": 63.10999999999999,
         "n": 30
       },
       "delivered": {
@@ -84,7 +84,7 @@
         "hi": 0.7666666666666667,
         "n": 30
       },
-      "batteryDepleted": 13,
+      "batteryDepleted": 14,
       "pareto": true
     },
     {
@@ -99,9 +99,9 @@
         "n": 30
       },
       "delivered": {
-        "mean": 11.633333333333333,
-        "lo": 11.1,
-        "hi": 12.166666666666666,
+        "mean": 11.7,
+        "lo": 11.166666666666666,
+        "hi": 12.266666666666667,
         "n": 30
       },
       "violations": {
@@ -119,21 +119,21 @@
       "policy": "reserve_20",
       "runs": 30,
       "onTimeRate": {
-        "mean": 47.88666666666666,
-        "lo": 38.916666666666664,
-        "hi": 57.13666666666667,
+        "mean": 47.513333333333335,
+        "lo": 38.6,
+        "hi": 56.763333333333335,
         "n": 30
       },
       "delivered": {
-        "mean": 11.366666666666667,
-        "lo": 10.866666666666667,
-        "hi": 11.9,
+        "mean": 11.5,
+        "lo": 11,
+        "hi": 12.066666666666666,
         "n": 30
       },
       "violations": {
-        "mean": 0.26666666666666666,
+        "mean": 0.23333333333333334,
         "lo": 0.1,
-        "hi": 0.43333333333333335,
+        "hi": 0.4,
         "n": 30
       },
       "batteryDepleted": 0,
@@ -145,9 +145,9 @@
       "policy": "reserve_30",
       "runs": 30,
       "onTimeRate": {
-        "mean": 46.856666666666676,
-        "lo": 38.03666666666666,
-        "hi": 56.629999999999995,
+        "mean": 46.11333333333334,
+        "lo": 37.13999999999999,
+        "hi": 55.80333333333333,
         "n": 30
       },
       "delivered": {
@@ -171,15 +171,15 @@
       "policy": "reserve_30",
       "runs": 30,
       "onTimeRate": {
-        "mean": 46.02333333333334,
-        "lo": 37.36333333333334,
-        "hi": 55.79666666666666,
+        "mean": 45.28,
+        "lo": 36.44666666666665,
+        "hi": 55.019999999999996,
         "n": 30
       },
       "delivered": {
-        "mean": 11.933333333333334,
-        "lo": 11.366666666666667,
-        "hi": 12.5,
+        "mean": 11.966666666666667,
+        "lo": 11.4,
+        "hi": 12.533333333333333,
         "n": 30
       },
       "violations": {
@@ -203,9 +203,9 @@
         "n": 30
       },
       "delivered": {
-        "mean": 39.7,
+        "mean": 39.666666666666664,
         "lo": 38.06666666666667,
-        "hi": 41.266666666666666,
+        "hi": 41.2,
         "n": 30
       },
       "violations": {
@@ -229,15 +229,15 @@
         "n": 30
       },
       "delivered": {
-        "mean": 22.733333333333334,
-        "lo": 21.633333333333333,
-        "hi": 23.833333333333332,
+        "mean": 22.566666666666666,
+        "lo": 21.533333333333335,
+        "hi": 23.633333333333333,
         "n": 30
       },
       "violations": {
-        "mean": 17.6,
-        "lo": 16.866666666666667,
-        "hi": 18.3,
+        "mean": 17.766666666666666,
+        "lo": 17,
+        "hi": 18.466666666666665,
         "n": 30
       },
       "batteryDepleted": 0,
@@ -255,9 +255,9 @@
         "n": 30
       },
       "delivered": {
-        "mean": 39.53333333333333,
-        "lo": 37.93333333333333,
-        "hi": 41.06666666666667,
+        "mean": 39.63333333333333,
+        "lo": 38,
+        "hi": 41.2,
         "n": 30
       },
       "violations": {
@@ -281,15 +281,15 @@
         "n": 30
       },
       "delivered": {
-        "mean": 24.366666666666667,
-        "lo": 23.266666666666666,
-        "hi": 25.5,
+        "mean": 24.233333333333334,
+        "lo": 23.2,
+        "hi": 25.3,
         "n": 30
       },
       "violations": {
-        "mean": 16.4,
-        "lo": 15.6,
-        "hi": 17.233333333333334,
+        "mean": 16.6,
+        "lo": 15.8,
+        "hi": 17.433333333333334,
         "n": 30
       },
       "batteryDepleted": 0,
@@ -333,15 +333,15 @@
         "n": 30
       },
       "delivered": {
-        "mean": 25.1,
-        "lo": 23.8,
-        "hi": 26.433333333333334,
+        "mean": 24.933333333333334,
+        "lo": 23.666666666666668,
+        "hi": 26.2,
         "n": 30
       },
       "violations": {
-        "mean": 15.533333333333333,
-        "lo": 14.733333333333333,
-        "hi": 16.366666666666667,
+        "mean": 15.633333333333333,
+        "lo": 14.9,
+        "hi": 16.433333333333334,
         "n": 30
       },
       "batteryDepleted": 0,
@@ -552,7 +552,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "5b8e2ce0",
       "events": 242,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -652,7 +652,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "22defac2",
       "events": 271,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -702,7 +702,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "3b9d8e3c",
       "events": 285,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -727,7 +727,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "1aba79a4",
       "events": 257,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -752,7 +752,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "c4a37be4",
       "events": 249,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -777,7 +777,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "5e960b15",
       "events": 210,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -802,7 +802,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "134c46e7",
       "events": 210,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -827,7 +827,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "20743ead",
       "events": 233,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -852,7 +852,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "bc25932a",
       "events": 226,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -877,7 +877,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "0be74f2c",
       "events": 224,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -902,7 +902,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "af5d28b2",
       "events": 224,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -927,7 +927,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "946f7f46",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -977,7 +977,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "401a5c01",
       "events": 229,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1002,7 +1002,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "a8b2f5e5",
       "events": 239,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1052,7 +1052,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "f9a438e6",
       "events": 245,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1127,7 +1127,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "7a134b50",
       "events": 268,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1252,7 +1252,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "1ebfcac1",
       "events": 216,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1277,7 +1277,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "f0e7ab03",
       "events": 223,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1327,7 +1327,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "30302aeb",
       "events": 271,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1352,7 +1352,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "b627c3d3",
       "events": 271,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1402,7 +1402,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "c113fc73",
       "events": 220,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.02,
       "policy": "reserve_10"
     },
     {
@@ -1412,21 +1412,21 @@
       "seed": 60,
       "windowS": 900,
       "released": 61,
-      "delivered": 13,
-      "onTime": 12,
-      "onTimePctOfDelivered": 92.3,
-      "onTimeRate": 55.6,
+      "delivered": 12,
+      "onTime": 10,
+      "onTimePctOfDelivered": 83.3,
+      "onTimeRate": 44.4,
       "due": 9,
-      "meanLatenessS": 10.2,
+      "meanLatenessS": 28.7,
       "duplicateDeliveries": 0,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 1,
-      "deliveredAfterFirstFault": 13,
-      "eventHash": "7a9be8d2",
-      "events": 266,
+      "deliveredAfterFirstFault": 11,
+      "eventHash": "b703af3f",
+      "events": 246,
       "tickP95Ms": 0.02,
       "policy": "reserve_10"
     },
@@ -1438,20 +1438,20 @@
       "windowS": 900,
       "released": 61,
       "delivered": 11,
-      "onTime": 11,
-      "onTimePctOfDelivered": 100,
-      "onTimeRate": 55.6,
+      "onTime": 9,
+      "onTimePctOfDelivered": 81.8,
+      "onTimeRate": 33.3,
       "due": 9,
-      "meanLatenessS": 0,
+      "meanLatenessS": 7.8,
       "duplicateDeliveries": 1,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
-      "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 11,
-      "eventHash": "5e468969",
-      "events": 258,
+      "batteryDepleted": 1,
+      "deliveredAfterFirstFault": 10,
+      "eventHash": "d0a4bf1a",
+      "events": 239,
       "tickP95Ms": 0.02,
       "policy": "reserve_10"
     },
@@ -1827,7 +1827,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "fd8fb965",
       "events": 264,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -1852,7 +1852,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "704d4bff",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -1877,7 +1877,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "64ceb912",
       "events": 231,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -1902,7 +1902,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "0764cb3a",
       "events": 238,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1927,7 +1927,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "c61714ee",
       "events": 240,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -1952,7 +1952,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "85bd551b",
       "events": 232,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -1977,7 +1977,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "47febdaa",
       "events": 239,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -2002,7 +2002,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "bf461fc2",
       "events": 258,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -2127,7 +2127,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "78990cb6",
       "events": 272,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -2402,7 +2402,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "556487da",
       "events": 238,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.02,
       "policy": "reserve_20"
     },
     {
@@ -2477,7 +2477,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "2b40140c",
       "events": 233,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -2627,7 +2627,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "96dc4699",
       "events": 269,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -2827,7 +2827,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "6b26020e",
       "events": 266,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -2852,7 +2852,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "fa9f930a",
       "events": 266,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -2877,7 +2877,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "8c9c05b8",
       "events": 230,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.02,
       "policy": "reserve_20"
     },
     {
@@ -2902,7 +2902,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "2806892e",
       "events": 230,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.02,
       "policy": "reserve_20"
     },
     {
@@ -2912,21 +2912,21 @@
       "seed": 60,
       "windowS": 900,
       "released": 61,
-      "delivered": 12,
-      "onTime": 10,
-      "onTimePctOfDelivered": 83.3,
+      "delivered": 14,
+      "onTime": 13,
+      "onTimePctOfDelivered": 92.9,
       "onTimeRate": 44.4,
       "due": 9,
-      "meanLatenessS": 5.3,
+      "meanLatenessS": 5.9,
       "duplicateDeliveries": 0,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 12,
-      "eventHash": "649db7ed",
-      "events": 262,
+      "deliveredAfterFirstFault": 13,
+      "eventHash": "05fc4de9",
+      "events": 249,
       "tickP95Ms": 0.02,
       "policy": "reserve_20"
     },
@@ -2937,21 +2937,21 @@
       "seed": 60,
       "windowS": 900,
       "released": 61,
-      "delivered": 10,
-      "onTime": 9,
-      "onTimePctOfDelivered": 90,
-      "onTimeRate": 55.6,
+      "delivered": 14,
+      "onTime": 13,
+      "onTimePctOfDelivered": 92.9,
+      "onTimeRate": 44.4,
       "due": 9,
-      "meanLatenessS": 28.7,
-      "duplicateDeliveries": 1,
+      "meanLatenessS": 5.9,
+      "duplicateDeliveries": 0,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 10,
-      "eventHash": "405c30d5",
-      "events": 258,
+      "deliveredAfterFirstFault": 13,
+      "eventHash": "b5596ac9",
+      "events": 249,
       "tickP95Ms": 0.02,
       "policy": "reserve_20"
     },
@@ -2977,7 +2977,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "791fb09a",
       "events": 242,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3027,7 +3027,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "1efafddf",
       "events": 247,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3052,7 +3052,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "83f831cd",
       "events": 247,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3077,7 +3077,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "99dbc913",
       "events": 258,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3102,7 +3102,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "3f15434d",
       "events": 258,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3127,7 +3127,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "3a74d903",
       "events": 276,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3152,7 +3152,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "c1f017cb",
       "events": 276,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3177,7 +3177,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "358f5802",
       "events": 257,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3202,7 +3202,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "24915cf8",
       "events": 257,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3227,7 +3227,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "a971d36f",
       "events": 219,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3252,7 +3252,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "6d9a8a7b",
       "events": 219,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3277,7 +3277,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "8cac8b00",
       "events": 258,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3302,7 +3302,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "a33d6bfe",
       "events": 258,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3327,7 +3327,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "80f4db92",
       "events": 278,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3352,7 +3352,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "7792c8c1",
       "events": 279,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3377,7 +3377,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "424f28cf",
       "events": 238,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3427,7 +3427,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "a3352e70",
       "events": 253,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3452,7 +3452,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "abbc1354",
       "events": 253,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3477,7 +3477,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "1d758e81",
       "events": 243,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -3502,7 +3502,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "f88725e7",
       "events": 243,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -3527,7 +3527,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "89da2182",
       "events": 256,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3552,7 +3552,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "fd30bdea",
       "events": 256,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3577,7 +3577,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "5e3f46de",
       "events": 222,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3602,7 +3602,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "fb38d492",
       "events": 222,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3627,7 +3627,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "87346f30",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3652,7 +3652,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "a3b37322",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3677,7 +3677,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "ff597d85",
       "events": 300,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3702,7 +3702,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "dbb63489",
       "events": 300,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3727,7 +3727,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "e64d63d0",
       "events": 264,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3752,7 +3752,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "76dc2bc6",
       "events": 264,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3777,7 +3777,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "1f2f27c5",
       "events": 226,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -3802,7 +3802,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "3d1a9ccb",
       "events": 226,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3827,7 +3827,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "d63df3a2",
       "events": 238,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3852,7 +3852,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "ee2774b4",
       "events": 238,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3877,7 +3877,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "4127f511",
       "events": 245,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3902,7 +3902,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "db7e051f",
       "events": 245,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3927,7 +3927,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "7b0c9fa5",
       "events": 287,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -3952,7 +3952,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "6400d5e9",
       "events": 287,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -3977,7 +3977,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "48b90288",
       "events": 227,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4002,7 +4002,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "a31086ab",
       "events": 231,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4077,7 +4077,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "7f8d9635",
       "events": 233,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4102,7 +4102,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "8867758b",
       "events": 233,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4127,7 +4127,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "242d9654",
       "events": 265,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4152,7 +4152,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "9f402bf8",
       "events": 265,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4177,7 +4177,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "e8d0f975",
       "events": 295,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4202,7 +4202,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "8888e003",
       "events": 295,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4227,7 +4227,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "9319fe9f",
       "events": 231,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4252,7 +4252,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "783e280f",
       "events": 231,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4277,7 +4277,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "95220177",
       "events": 236,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4302,7 +4302,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "45664967",
       "events": 236,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -4327,7 +4327,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "9c4fe799",
       "events": 272,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -4352,7 +4352,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "03aca77f",
       "events": 272,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -4377,7 +4377,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "ca593d70",
       "events": 231,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4402,7 +4402,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "692be2d6",
       "events": 231,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4415,19 +4415,19 @@
       "delivered": 12,
       "onTime": 11,
       "onTimePctOfDelivered": 91.7,
-      "onTimeRate": 55.6,
+      "onTimeRate": 33.3,
       "due": 9,
-      "meanLatenessS": 8.5,
+      "meanLatenessS": 6.9,
       "duplicateDeliveries": 0,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 12,
-      "eventHash": "4c77774c",
-      "events": 258,
-      "tickP95Ms": 0.03,
+      "deliveredAfterFirstFault": 11,
+      "eventHash": "2f5a50d6",
+      "events": 233,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -4437,12 +4437,12 @@
       "seed": 60,
       "windowS": 900,
       "released": 61,
-      "delivered": 11,
-      "onTime": 10,
-      "onTimePctOfDelivered": 90.9,
-      "onTimeRate": 55.6,
+      "delivered": 12,
+      "onTime": 11,
+      "onTimePctOfDelivered": 91.7,
+      "onTimeRate": 33.3,
       "due": 9,
-      "meanLatenessS": 11.6,
+      "meanLatenessS": 6.9,
       "duplicateDeliveries": 1,
       "zombiePickups": 0,
       "leaseExpiries": 0,
@@ -4450,9 +4450,9 @@
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
       "deliveredAfterFirstFault": 11,
-      "eventHash": "8eb3b6c1",
-      "events": 263,
-      "tickP95Ms": 0.02,
+      "eventHash": "c5e5828c",
+      "events": 238,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -4477,7 +4477,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "961bb09d",
       "events": 248,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4502,7 +4502,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "fcd7f95d",
       "events": 248,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4527,7 +4527,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "9a1397b0",
       "events": 246,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4552,7 +4552,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "a5df3792",
       "events": 246,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4577,7 +4577,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "2e82b327",
       "events": 257,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -4602,7 +4602,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "4b8ca20d",
       "events": 257,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -4627,7 +4627,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "38149707",
       "events": 278,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4652,7 +4652,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "8fe3ac67",
       "events": 278,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4677,7 +4677,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "c06586d5",
       "events": 254,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -4702,7 +4702,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "4f329005",
       "events": 254,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4727,7 +4727,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "02be4e2a",
       "events": 220,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4752,7 +4752,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "3296881e",
       "events": 220,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4777,7 +4777,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "0e582578",
       "events": 266,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -4827,7 +4827,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "6b1ae530",
       "events": 290,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4852,7 +4852,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "7be75f65",
       "events": 279,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4877,7 +4877,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "dae34d07",
       "events": 248,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4902,7 +4902,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "6e86b829",
       "events": 248,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -4927,7 +4927,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "32e61019",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4952,7 +4952,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "8b7971f5",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -4977,7 +4977,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "ef6d4364",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -5002,7 +5002,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "0eca7d18",
       "events": 263,
-      "tickP95Ms": 0.02,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -5027,7 +5027,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "6f2c1043",
       "events": 489,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.13,
       "policy": "reserve_10"
     },
     {
@@ -5052,7 +5052,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "c69f6f42",
       "events": 484,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.13,
       "policy": "reserve_10"
     },
     {
@@ -5077,7 +5077,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "bbed70e3",
       "events": 510,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.12,
       "policy": "reserve_10"
     },
     {
@@ -5102,7 +5102,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "96e141ac",
       "events": 542,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.12,
       "policy": "reserve_10"
     },
     {
@@ -5127,7 +5127,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "884a568f",
       "events": 491,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5152,7 +5152,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "f2362a2f",
       "events": 479,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5177,7 +5177,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "823b7426",
       "events": 459,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5202,7 +5202,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "78047df9",
       "events": 473,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5227,7 +5227,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "3fe52a94",
       "events": 499,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5252,7 +5252,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "d015ddcb",
       "events": 499,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5302,7 +5302,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "173b1a02",
       "events": 636,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.15,
       "policy": "reserve_10"
     },
     {
@@ -5327,7 +5327,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "88fe7a1f",
       "events": 434,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.12,
       "policy": "reserve_10"
     },
     {
@@ -5352,7 +5352,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "efa78261",
       "events": 435,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.12,
       "policy": "reserve_10"
     },
     {
@@ -5377,7 +5377,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "ee1c1ec2",
       "events": 532,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5402,7 +5402,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "a6df2e05",
       "events": 575,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.13,
       "policy": "reserve_10"
     },
     {
@@ -5427,7 +5427,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "6be5305b",
       "events": 452,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5452,7 +5452,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "9394a4cf",
       "events": 472,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.13,
       "policy": "reserve_10"
     },
     {
@@ -5477,7 +5477,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "9e9b8573",
       "events": 441,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.12,
       "policy": "reserve_10"
     },
     {
@@ -5502,7 +5502,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "f3412207",
       "events": 461,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5527,7 +5527,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "fa574c6a",
       "events": 484,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -5552,7 +5552,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "cb12b581",
       "events": 460,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -5577,7 +5577,7 @@
       "deliveredAfterFirstFault": 19,
       "eventHash": "7e7bc6ac",
       "events": 497,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5602,7 +5602,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "e8176046",
       "events": 444,
-      "tickP95Ms": 0.13,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -5627,7 +5627,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "72d78d8c",
       "events": 503,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5652,7 +5652,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "6b443720",
       "events": 517,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -5702,7 +5702,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "e356a161",
       "events": 545,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5727,7 +5727,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "2cd761a7",
       "events": 526,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5752,7 +5752,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "90ff62b1",
       "events": 533,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.13,
       "policy": "reserve_10"
     },
     {
@@ -5777,7 +5777,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "51a3d4d7",
       "events": 526,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5802,7 +5802,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "95e64fc1",
       "events": 475,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5827,7 +5827,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "dd0a7abe",
       "events": 606,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -5852,7 +5852,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "4f48dea5",
       "events": 489,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -5877,7 +5877,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "cb940c4e",
       "events": 450,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -5902,7 +5902,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "4ad11f06",
       "events": 417,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -5927,7 +5927,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "59c4c4dd",
       "events": 458,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -5952,7 +5952,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "c71eeb71",
       "events": 532,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -5977,7 +5977,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "3c2c7747",
       "events": 459,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -6027,7 +6027,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "9b512e74",
       "events": 450,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -6052,7 +6052,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "02b0c929",
       "events": 473,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6102,7 +6102,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "e533fbaf",
       "events": 497,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -6127,7 +6127,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "dbf7b03b",
       "events": 404,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6152,7 +6152,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "ddddbebc",
       "events": 444,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -6177,7 +6177,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "b88cb3bf",
       "events": 446,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -6202,7 +6202,7 @@
       "deliveredAfterFirstFault": 5,
       "eventHash": "af446084",
       "events": 467,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.11,
       "policy": "reserve_10"
     },
     {
@@ -6212,8 +6212,8 @@
       "seed": 31025,
       "windowS": 900,
       "released": 65,
-      "delivered": 45,
-      "onTime": 45,
+      "delivered": 44,
+      "onTime": 44,
       "onTimePctOfDelivered": 100,
       "onTimeRate": 100,
       "due": 6,
@@ -6224,10 +6224,10 @@
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 19,
-      "eventHash": "7271f605",
-      "events": 512,
-      "tickP95Ms": 0.08,
+      "deliveredAfterFirstFault": 16,
+      "eventHash": "08dcf176",
+      "events": 849,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -6237,22 +6237,22 @@
       "seed": 31025,
       "windowS": 900,
       "released": 65,
-      "delivered": 26,
-      "onTime": 26,
+      "delivered": 21,
+      "onTime": 21,
       "onTimePctOfDelivered": 100,
       "onTimeRate": 100,
       "due": 6,
       "meanLatenessS": 0,
-      "duplicateDeliveries": 16,
+      "duplicateDeliveries": 21,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 9,
-      "eventHash": "1c3a27cc",
-      "events": 501,
-      "tickP95Ms": 0.08,
+      "deliveredAfterFirstFault": 7,
+      "eventHash": "fc706bb1",
+      "events": 790,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6277,7 +6277,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "ee8a8ed9",
       "events": 453,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6302,7 +6302,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "f42f60a2",
       "events": 513,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6327,7 +6327,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "a38ce62e",
       "events": 471,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -6402,7 +6402,7 @@
       "deliveredAfterFirstFault": 4,
       "eventHash": "886ae053",
       "events": 485,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -6427,7 +6427,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "7d1de9b9",
       "events": 509,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.09,
       "policy": "reserve_10"
     },
     {
@@ -6452,7 +6452,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "ec4b9029",
       "events": 481,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_10"
     },
     {
@@ -6502,7 +6502,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "6871272f",
       "events": 649,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_10"
     },
     {
@@ -6577,7 +6577,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "3096f38a",
       "events": 473,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -6602,7 +6602,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "ed1e9e70",
       "events": 540,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6627,7 +6627,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "05a2a007",
       "events": 485,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6652,7 +6652,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "5d195aaa",
       "events": 498,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -6677,7 +6677,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "fa0011c4",
       "events": 465,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.1,
       "policy": "reserve_20"
     },
     {
@@ -6702,7 +6702,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "9a9d7551",
       "events": 455,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6727,7 +6727,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "8a3340e4",
       "events": 481,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6777,7 +6777,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "4cc41f6e",
       "events": 466,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6802,7 +6802,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "559786f7",
       "events": 551,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6827,7 +6827,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "7836b2af",
       "events": 438,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -6852,7 +6852,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "d47d0694",
       "events": 427,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -6877,7 +6877,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "cdebee98",
       "events": 518,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -6902,7 +6902,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "0097ab21",
       "events": 573,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -6927,7 +6927,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "08a3af09",
       "events": 460,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_20"
     },
     {
@@ -6952,7 +6952,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "eb191331",
       "events": 453,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -6977,7 +6977,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "13eafad8",
       "events": 427,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7002,7 +7002,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "621b2ba0",
       "events": 448,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7027,7 +7027,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "9222f646",
       "events": 481,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7052,7 +7052,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "0e19d8bc",
       "events": 462,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7077,7 +7077,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "468230ab",
       "events": 482,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7102,7 +7102,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "7ffca799",
       "events": 447,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7127,7 +7127,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "621bbcba",
       "events": 496,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -7177,7 +7177,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "eb83bc33",
       "events": 514,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7202,7 +7202,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "6f5b7ce3",
       "events": 572,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7252,7 +7252,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "e61cd7f6",
       "events": 498,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7277,7 +7277,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "ed5ee179",
       "events": 526,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7302,7 +7302,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "f63d7266",
       "events": 460,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7327,7 +7327,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "fe933afb",
       "events": 468,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7352,7 +7352,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "e4f84ba6",
       "events": 483,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -7377,7 +7377,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "0f0304f1",
       "events": 440,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -7402,7 +7402,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "51a8a41e",
       "events": 431,
-      "tickP95Ms": 0.13,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -7452,7 +7452,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "9bb12747",
       "events": 556,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7477,7 +7477,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "058f52f4",
       "events": 488,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7527,7 +7527,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "9b512e74",
       "events": 450,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7552,7 +7552,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "c0772ff0",
       "events": 496,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7577,7 +7577,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "a3ab7df5",
       "events": 415,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7602,7 +7602,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "205cfacb",
       "events": 501,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7627,7 +7627,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "e75526f6",
       "events": 401,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7652,7 +7652,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "d052ab2f",
       "events": 461,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -7702,7 +7702,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "86593622",
       "events": 467,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7712,8 +7712,8 @@
       "seed": 31025,
       "windowS": 900,
       "released": 65,
-      "delivered": 43,
-      "onTime": 43,
+      "delivered": 46,
+      "onTime": 46,
       "onTimePctOfDelivered": 100,
       "onTimeRate": 100,
       "due": 6,
@@ -7724,10 +7724,10 @@
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 17,
-      "eventHash": "0272b13d",
-      "events": 498,
-      "tickP95Ms": 0.09,
+      "deliveredAfterFirstFault": 19,
+      "eventHash": "4c32ab5d",
+      "events": 857,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7737,22 +7737,22 @@
       "seed": 31025,
       "windowS": 900,
       "released": 65,
-      "delivered": 28,
-      "onTime": 28,
+      "delivered": 24,
+      "onTime": 24,
       "onTimePctOfDelivered": 100,
       "onTimeRate": 100,
       "due": 6,
       "meanLatenessS": 0,
-      "duplicateDeliveries": 13,
+      "duplicateDeliveries": 19,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 9,
-      "eventHash": "f4790d3e",
-      "events": 485,
-      "tickP95Ms": 0.1,
+      "deliveredAfterFirstFault": 8,
+      "eventHash": "02b44e82",
+      "events": 821,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7777,7 +7777,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "f19bb3da",
       "events": 453,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7802,7 +7802,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "73d56422",
       "events": 476,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7827,7 +7827,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "7269df17",
       "events": 471,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -7852,7 +7852,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "71260951",
       "events": 409,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -7877,7 +7877,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "c077787b",
       "events": 482,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7902,7 +7902,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "c932b506",
       "events": 490,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -7927,7 +7927,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "730ee205",
       "events": 476,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_20"
     },
     {
@@ -7977,7 +7977,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "0ff0569c",
       "events": 490,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -8002,7 +8002,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "18bef256",
       "events": 637,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -8052,7 +8052,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "77bbd79a",
       "events": 474,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -8077,7 +8077,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "b33fd5e7",
       "events": 533,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -8102,7 +8102,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "722ab56f",
       "events": 476,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -8127,7 +8127,7 @@
       "deliveredAfterFirstFault": 16,
       "eventHash": "34d4a23c",
       "events": 490,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8177,7 +8177,7 @@
       "deliveredAfterFirstFault": 17,
       "eventHash": "649d7c10",
       "events": 477,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.11,
       "policy": "reserve_30"
     },
     {
@@ -8202,7 +8202,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "e92d995c",
       "events": 487,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8252,7 +8252,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "a3f3c474",
       "events": 533,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8302,7 +8302,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "e1bcbd96",
       "events": 536,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8327,7 +8327,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "5f6b36b6",
       "events": 444,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8352,7 +8352,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "9bdaa156",
       "events": 438,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8377,7 +8377,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "9871f914",
       "events": 510,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8402,7 +8402,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "2ac34a86",
       "events": 620,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.11,
       "policy": "reserve_30"
     },
     {
@@ -8427,7 +8427,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "3b92a132",
       "events": 453,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8552,7 +8552,7 @@
       "deliveredAfterFirstFault": 6,
       "eventHash": "9191a857",
       "events": 452,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8577,7 +8577,7 @@
       "deliveredAfterFirstFault": 18,
       "eventHash": "9d341724",
       "events": 504,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -8602,7 +8602,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "494b889e",
       "events": 483,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -8627,7 +8627,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "f92cf3f0",
       "events": 502,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8652,7 +8652,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "389130a8",
       "events": 488,
-      "tickP95Ms": 0.15,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8677,7 +8677,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "90ddd414",
       "events": 554,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.11,
       "policy": "reserve_30"
     },
     {
@@ -8702,7 +8702,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "b53431c3",
       "events": 524,
-      "tickP95Ms": 0.13,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8727,7 +8727,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "cad52d66",
       "events": 526,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8752,7 +8752,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "9ff1f49a",
       "events": 530,
-      "tickP95Ms": 0.14,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8777,7 +8777,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "cb1a7f3c",
       "events": 539,
-      "tickP95Ms": 0.13,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8802,7 +8802,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "ed7dd6a3",
       "events": 496,
-      "tickP95Ms": 0.13,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8827,7 +8827,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "97f16273",
       "events": 472,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8877,7 +8877,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "3d6bfda7",
       "events": 454,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -8902,7 +8902,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "a431adc5",
       "events": 462,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8927,7 +8927,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "4086cc85",
       "events": 476,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -8952,7 +8952,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "e6ad37ed",
       "events": 576,
-      "tickP95Ms": 0.12,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -8977,7 +8977,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "35a5be71",
       "events": 492,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9002,7 +9002,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "47ab91a9",
       "events": 491,
-      "tickP95Ms": 0.11,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9027,7 +9027,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "b2601f7f",
       "events": 752,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9052,7 +9052,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "69867fd5",
       "events": 502,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9077,7 +9077,7 @@
       "deliveredAfterFirstFault": 12,
       "eventHash": "bc94ae30",
       "events": 414,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9102,7 +9102,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "b6848c47",
       "events": 523,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9127,7 +9127,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "48f689cc",
       "events": 403,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -9152,7 +9152,7 @@
       "deliveredAfterFirstFault": 7,
       "eventHash": "8acecc12",
       "events": 427,
-      "tickP95Ms": 0.09,
+      "tickP95Ms": 0.11,
       "policy": "reserve_30"
     },
     {
@@ -9177,7 +9177,7 @@
       "deliveredAfterFirstFault": 11,
       "eventHash": "a917d952",
       "events": 446,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.1,
       "policy": "reserve_30"
     },
     {
@@ -9202,7 +9202,7 @@
       "deliveredAfterFirstFault": 8,
       "eventHash": "b863ef3e",
       "events": 513,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9224,10 +9224,10 @@
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 18,
-      "eventHash": "a2a62fd7",
-      "events": 497,
-      "tickP95Ms": 0.06,
+      "deliveredAfterFirstFault": 13,
+      "eventHash": "40709095",
+      "events": 853,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9237,22 +9237,22 @@
       "seed": 31025,
       "windowS": 900,
       "released": 65,
-      "delivered": 29,
-      "onTime": 29,
+      "delivered": 24,
+      "onTime": 24,
       "onTimePctOfDelivered": 100,
       "onTimeRate": 100,
       "due": 6,
       "meanLatenessS": 0,
-      "duplicateDeliveries": 12,
+      "duplicateDeliveries": 15,
       "zombiePickups": 0,
       "leaseExpiries": 0,
       "depotRefusals": 0,
       "lossOfSeparation": 0,
       "batteryDepleted": 0,
-      "deliveredAfterFirstFault": 9,
-      "eventHash": "c5550498",
-      "events": 501,
-      "tickP95Ms": 0.07,
+      "deliveredAfterFirstFault": 6,
+      "eventHash": "2dc954c6",
+      "events": 802,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9277,7 +9277,7 @@
       "deliveredAfterFirstFault": 14,
       "eventHash": "3d9a3dee",
       "events": 460,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9302,7 +9302,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "20bbfcef",
       "events": 462,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9327,7 +9327,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "e082208d",
       "events": 492,
-      "tickP95Ms": 0.1,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9402,7 +9402,7 @@
       "deliveredAfterFirstFault": 10,
       "eventHash": "e5c0ddc4",
       "events": 475,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -9427,7 +9427,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "c1e34a14",
       "events": 508,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.1,
       "policy": "reserve_30"
     },
     {
@@ -9452,7 +9452,7 @@
       "deliveredAfterFirstFault": 9,
       "eventHash": "d6815874",
       "events": 542,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.13,
       "policy": "reserve_30"
     },
     {
@@ -9477,7 +9477,7 @@
       "deliveredAfterFirstFault": 15,
       "eventHash": "db74ebf4",
       "events": 492,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -9502,7 +9502,7 @@
       "deliveredAfterFirstFault": 13,
       "eventHash": "2c51335a",
       "events": 674,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -9527,7 +9527,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "bf1629b2",
       "events": 345,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -9552,7 +9552,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "901b8537",
       "events": 322,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -9577,7 +9577,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "0ca1466e",
       "events": 354,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -9602,7 +9602,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "46d455ab",
       "events": 395,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -9627,7 +9627,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "eedd1523",
       "events": 368,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -9652,7 +9652,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3c78db00",
       "events": 394,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -9677,7 +9677,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "9fa75c68",
       "events": 374,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -9702,7 +9702,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "cd3bb840",
       "events": 370,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -9752,7 +9752,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "564e14ff",
       "events": 337,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -9852,7 +9852,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "76c5385a",
       "events": 342,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -9902,7 +9902,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "723aeb6e",
       "events": 316,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -9977,7 +9977,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "f6184cd8",
       "events": 357,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10027,7 +10027,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ff8ca1ce",
       "events": 314,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -10052,7 +10052,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e42d775b",
       "events": 331,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -10077,7 +10077,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "bacf9c3d",
       "events": 340,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10127,7 +10127,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "54d8abca",
       "events": 307,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10252,7 +10252,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "30f661ca",
       "events": 276,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10327,7 +10327,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "7b6a8ef9",
       "events": 306,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -10352,7 +10352,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "878ed4b6",
       "events": 305,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -10377,7 +10377,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "953ca430",
       "events": 317,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_10"
     },
     {
@@ -10452,7 +10452,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "1de41ef4",
       "events": 320,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10477,7 +10477,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "5b4b789d",
       "events": 302,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10502,7 +10502,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "12a3060f",
       "events": 292,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10527,7 +10527,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "4454f5ef",
       "events": 296,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10652,7 +10652,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e902b451",
       "events": 372,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -10677,7 +10677,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "59c7c1bd",
       "events": 337,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -10702,7 +10702,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "44ce28f0",
       "events": 331,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -10827,7 +10827,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ca05bf61",
       "events": 334,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_10"
     },
     {
@@ -10852,7 +10852,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c8ca400f",
       "events": 328,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_10"
     },
     {
@@ -10952,7 +10952,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "302562d5",
       "events": 368,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -10977,7 +10977,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "45ff1218",
       "events": 310,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_10"
     },
     {
@@ -11002,7 +11002,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "2ad9d34f",
       "events": 295,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_10"
     },
     {
@@ -11052,7 +11052,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3234cef3",
       "events": 316,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11077,7 +11077,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e4e8dcfe",
       "events": 340,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11102,7 +11102,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "437ccba1",
       "events": 371,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -11127,7 +11127,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "8fe8a0a0",
       "events": 432,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11152,7 +11152,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "4f3b9892",
       "events": 321,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11177,7 +11177,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "f37ce860",
       "events": 382,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11202,7 +11202,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "53ba5734",
       "events": 368,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11227,7 +11227,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c8d0eec9",
       "events": 329,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11277,7 +11277,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "4192bd0a",
       "events": 315,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11352,7 +11352,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a57c0fc1",
       "events": 344,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11377,7 +11377,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "8383eefa",
       "events": 348,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11402,7 +11402,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "b4b3e338",
       "events": 321,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11452,7 +11452,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6bdfefbe",
       "events": 347,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_20"
     },
     {
@@ -11502,7 +11502,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "5bdd7bf0",
       "events": 354,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -11527,7 +11527,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "9d01ef4d",
       "events": 309,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11552,7 +11552,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "134caff7",
       "events": 331,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -11627,7 +11627,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "dbb9f53e",
       "events": 324,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11652,7 +11652,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e2c1d1b1",
       "events": 298,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -11677,7 +11677,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "02b33a33",
       "events": 353,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -11702,7 +11702,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "1f21a5c8",
       "events": 337,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11727,7 +11727,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "787c107a",
       "events": 319,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11752,7 +11752,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "0ec178bc",
       "events": 289,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11777,7 +11777,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e6948ab8",
       "events": 321,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.1,
       "policy": "reserve_20"
     },
     {
@@ -11802,7 +11802,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c4b198e5",
       "events": 316,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -11827,7 +11827,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3dc4948f",
       "events": 298,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -11852,7 +11852,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "77c2c047",
       "events": 312,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -11877,7 +11877,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a84c0cce",
       "events": 326,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11902,7 +11902,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a31ec9c2",
       "events": 297,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -11927,7 +11927,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "b4ae87af",
       "events": 335,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -11952,7 +11952,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "d9752da8",
       "events": 347,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -11977,7 +11977,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "5526dc13",
       "events": 306,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -12002,7 +12002,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ca401665",
       "events": 304,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_20"
     },
     {
@@ -12027,7 +12027,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ab3a3bb6",
       "events": 299,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12052,7 +12052,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "769f79ec",
       "events": 312,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12077,7 +12077,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "823b5fa8",
       "events": 309,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12102,7 +12102,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6dd61bcf",
       "events": 315,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12127,7 +12127,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ef0d5d84",
       "events": 354,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12152,7 +12152,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e5600981",
       "events": 327,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12177,7 +12177,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3b651116",
       "events": 347,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12202,7 +12202,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "230d6244",
       "events": 340,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -12227,7 +12227,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "df23e99e",
       "events": 321,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12252,7 +12252,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "231d25c6",
       "events": 291,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12277,7 +12277,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "01b48f81",
       "events": 338,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_20"
     },
     {
@@ -12302,7 +12302,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "779bb980",
       "events": 330,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -12327,7 +12327,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "956de22c",
       "events": 347,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12352,7 +12352,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3ef79d40",
       "events": 322,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12377,7 +12377,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "d0a892f3",
       "events": 337,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_20"
     },
     {
@@ -12402,7 +12402,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "d6450135",
       "events": 322,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_20"
     },
     {
@@ -12427,7 +12427,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "63daf45c",
       "events": 369,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_20"
     },
     {
@@ -12477,7 +12477,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "8b15680c",
       "events": 300,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_20"
     },
     {
@@ -12527,7 +12527,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "2af768c6",
       "events": 371,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -12577,7 +12577,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "d4221b81",
       "events": 388,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -12602,7 +12602,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "8c3d82a6",
       "events": 388,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -12627,7 +12627,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "1ca86c4e",
       "events": 352,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -12652,7 +12652,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "450e01c9",
       "events": 398,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -12702,7 +12702,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "65fb83c6",
       "events": 395,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -12727,7 +12727,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "84f3ebf9",
       "events": 322,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -12752,7 +12752,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "656354e4",
       "events": 331,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -12802,7 +12802,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "4f9bebc9",
       "events": 319,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -12827,7 +12827,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "17f59286",
       "events": 375,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -12852,7 +12852,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ff69f0d9",
       "events": 355,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -12902,7 +12902,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "56bdd565",
       "events": 324,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.1,
       "policy": "reserve_30"
     },
     {
@@ -12927,7 +12927,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "757ecccb",
       "events": 347,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -12952,7 +12952,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ed23f2d8",
       "events": 373,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -12977,7 +12977,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e4b47623",
       "events": 340,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -13002,7 +13002,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a0035782",
       "events": 339,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -13027,7 +13027,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "3e5bc56c",
       "events": 320,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -13052,7 +13052,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "00784a8e",
       "events": 332,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.1,
       "policy": "reserve_30"
     },
     {
@@ -13077,7 +13077,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a9ce11a3",
       "events": 347,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.1,
       "policy": "reserve_30"
     },
     {
@@ -13102,7 +13102,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "28aead55",
       "events": 355,
-      "tickP95Ms": 0.07,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -13127,7 +13127,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ce6210a9",
       "events": 327,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -13152,7 +13152,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "584ac6d0",
       "events": 324,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -13177,7 +13177,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "44b2cb29",
       "events": 378,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -13202,7 +13202,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "7b00f18b",
       "events": 390,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -13227,7 +13227,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "301e1192",
       "events": 327,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -13252,7 +13252,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "13271f37",
       "events": 305,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -13277,7 +13277,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "f348c167",
       "events": 327,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -13302,7 +13302,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6b74c292",
       "events": 339,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -13327,7 +13327,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "caf789cb",
       "events": 294,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.09,
       "policy": "reserve_30"
     },
     {
@@ -13352,7 +13352,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "23c04b70",
       "events": 316,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.04,
       "policy": "reserve_30"
     },
     {
@@ -13402,7 +13402,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "2b69d143",
       "events": 329,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13427,7 +13427,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "98b3630d",
       "events": 348,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13452,7 +13452,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "11ee10d6",
       "events": 339,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13502,7 +13502,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6eba3269",
       "events": 320,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -13527,7 +13527,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "f1013e1c",
       "events": 303,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     },
     {
@@ -13552,7 +13552,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e201a211",
       "events": 308,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -13577,7 +13577,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "666112f9",
       "events": 294,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -13602,7 +13602,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "13b3777f",
       "events": 329,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -13627,7 +13627,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a639e37b",
       "events": 341,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.06,
       "policy": "reserve_30"
     },
     {
@@ -13652,7 +13652,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "a90c079c",
       "events": 358,
-      "tickP95Ms": 0.03,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -13677,7 +13677,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "e82ad2ce",
       "events": 339,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.08,
       "policy": "reserve_30"
     },
     {
@@ -13702,7 +13702,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "34228987",
       "events": 374,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13727,7 +13727,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "1235fe23",
       "events": 320,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13752,7 +13752,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "138c5f72",
       "events": 297,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13777,7 +13777,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "6cba0aca",
       "events": 332,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.02,
       "policy": "reserve_30"
     },
     {
@@ -13802,7 +13802,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "62de80d5",
       "events": 334,
-      "tickP95Ms": 0.06,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13827,7 +13827,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "0dbe9777",
       "events": 347,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13877,7 +13877,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "c5eb5576",
       "events": 349,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13902,7 +13902,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "f34bd700",
       "events": 339,
-      "tickP95Ms": 0.04,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13927,7 +13927,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "2bf09776",
       "events": 360,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.03,
       "policy": "reserve_30"
     },
     {
@@ -13952,7 +13952,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "46de670d",
       "events": 354,
-      "tickP95Ms": 0.08,
+      "tickP95Ms": 0.05,
       "policy": "reserve_30"
     },
     {
@@ -14002,7 +14002,7 @@
       "deliveredAfterFirstFault": 0,
       "eventHash": "ae18318c",
       "events": 301,
-      "tickP95Ms": 0.05,
+      "tickP95Ms": 0.07,
       "policy": "reserve_30"
     }
   ]
