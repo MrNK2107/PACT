@@ -1,0 +1,11 @@
+# S8: 1 % clock drift on two drones (one fast, one slow) combined with a partition (AT-09).
+name: s8_clock_drift
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 5, type: clock_drift, id: A01, ppm: 10000}
+  - {t: 5, type: clock_drift, id: A02, ppm: -10000}
+  - {t: 300, type: partition, duration_s: 240, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}

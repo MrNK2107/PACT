@@ -1,0 +1,12 @@
+# S6: high demand, two pads per depot, every battery drains 1.5x faster (AT-07 at scale).
+name: s6_battery_crunch
+map: compact_town
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 4, battery_wh: 45}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 5, type: battery_drain, id: A01, factor: 1.5}
+  - {t: 5, type: battery_drain, id: A02, factor: 1.5}
+  - {t: 5, type: battery_drain, id: A03, factor: 1.5}
+  - {t: 5, type: battery_drain, id: A04, factor: 1.5}

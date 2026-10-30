@@ -1,0 +1,12 @@
+# S10: twelve drones, six pads per depot (AT-11: message load and tick budget at scale).
+name: s10_scale
+map: metro_district
+map_overrides:
+  depots:
+    - {id: D1, position: [-420, -380], pads: 6}
+    - {id: D2, position: [400, 360], pads: 6}
+seed: 42
+duration_s: 1300
+fleet: {n_drones: 12}
+workload: {arrival_rate_per_min: 4.5, start_s: 10, stop_s: 460, deadline_s: [360, 600, 840]}
+faults: []

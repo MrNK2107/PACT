@@ -1,0 +1,31 @@
+# Pre-authorised contingency configuration (PRD REQ-SAF-003). Versioned and auditable: every
+# change to this file is a change to flight behaviour and must be reviewed as such.
+version: 1
+contingencies:
+  geofence_breach: RTL          # HOLD | RTL | LAND_NEAREST
+  soc_low: LAND_NEAREST         # below soc_floor
+  soc_critical: LAND_NOW        # below soc_critical
+  command_timeout: HOLD         # mission layer silent; escalates to RTL after hold_escalation_s
+  link_loss: CONTINUE_COMMITTED # informational: the supervisor never reads the radio
+limits:
+  soc_floor: 0.10
+  soc_critical: 0.05
+  max_altitude_m: 110.0
+  min_cruise_altitude_m: 12.0
+  geofence_margin_m: 10.0
+  geofence_lookahead_s: 2.0
+  max_speed_mps: 14.0
+  max_climb_mps: 3.0
+  max_descent_mps: 3.0
+separation:
+  radius_m: 9.0
+  vertical_m: 5.0
+  horizon_s: 6.0
+  consider_range_m: 70.0
+  landing_clearance_m: 3.0        # never descend within this radius above a parked aircraft
+watchdog:
+  command_timeout_s: 1.0
+  hold_escalation_s: 20.0
+rtl:
+  altitude_m: 60.0
+  speed_mps: 8.0

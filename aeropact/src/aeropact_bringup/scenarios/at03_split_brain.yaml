@@ -1,0 +1,9 @@
+# AT-03: 5-minute partition with ~20 jobs during it; STRICT must deliver no job twice.
+name: at03_split_brain
+map: test_field
+seed: 5
+duration_s: 780
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 3.0, start_s: 10, stop_s: 380, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 80, type: partition, duration_s: 300, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}

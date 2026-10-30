@@ -1,0 +1,23 @@
+# colcon (when building in-tree)
+build/
+install/
+log/
+# results and runs
+results/runs/
+runs/
+*.mcap
+*.db3
+# python
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.venv/
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+compile_commands.json
+build-core/

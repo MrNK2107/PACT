@@ -1,0 +1,10 @@
+# S1: the central hub dies at 20 % of the run. PACT has no hub to lose; the central baseline
+# finishes what it holds and parks (AT-05, M1).
+name: s1_hub_loss
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 240, type: kill_service, name: central_hub}

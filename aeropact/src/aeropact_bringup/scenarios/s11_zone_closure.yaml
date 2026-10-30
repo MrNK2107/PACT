@@ -1,0 +1,11 @@
+# Airspace dynamics: the stadium closes for an event and a temporary incident zone appears.
+name: s11_zone_closure
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 240, type: close_zone, id: STADIUM, duration_s: 480, reason: stadium event}
+  - {t: 420, type: close_zone, id: INCIDENT, circle: {center: [60, 120], radius: 70},
+     duration_s: 300, reason: police incident}

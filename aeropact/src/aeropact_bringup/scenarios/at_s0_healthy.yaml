@@ -1,0 +1,8 @@
+# Acceptance: healthy baseline on the small test field (fast).
+name: at_s0_healthy
+map: test_field
+seed: 3
+duration_s: 560
+fleet: {n_drones: 4}
+workload: {arrival_rate_per_min: 1.5, start_s: 10, stop_s: 140, deadline_s: [200, 300, 400]}
+faults: []

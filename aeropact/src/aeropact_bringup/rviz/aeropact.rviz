@@ -1,0 +1,36 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Cell Size: 100
+      Plane Cell Count: 14
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Fleet
+      Enabled: true
+      Topic:
+        Value: /aeropact/markers
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+      Value: true
+  Global Options:
+    Fixed Frame: map
+    Background Color: 30; 32; 38
+    Frame Rate: 15
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 0.9
+      X: 0
+      Y: 0
+Window Geometry:
+  Width: 1280
+  Height: 860

@@ -1,0 +1,5 @@
+# Benchmark shard 2 of 3 (run the three side by side into one --out; the runner resumes from
+# per-run metrics, and a final run of bench_matrix.yaml merges them into one summary).
+scenarios: [s0_healthy, s1_hub_loss, s3_split_brain]
+systems: [pact_optimistic, cbba_plain]
+time_scale: 6.0

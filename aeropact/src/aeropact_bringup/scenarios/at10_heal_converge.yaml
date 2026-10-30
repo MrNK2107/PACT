@@ -1,0 +1,9 @@
+# AT-10 / I6: after the partition heals and no new orders arrive, every replica converges.
+name: at10_heal_converge
+map: test_field
+seed: 21
+duration_s: 500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 140, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 60, type: partition, duration_s: 140, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}

@@ -1,0 +1,60 @@
+# Site configuration for a deployed AeroPACT fleet: one file per site, copied to every vehicle's
+# companion computer and every depot computer. Used by vehicle.launch.py and depot.launch.py.
+# Paths refer to the target machines. Review every value marked SITE with the operator; see
+# docs/HARDWARE_DEPLOYMENT.md for the procedure. This example matches the test_field map and is
+# what the distributed SITL rehearsal (tools/px4/distributed_sitl.sh) runs.
+site:
+  name: example_site
+  world_file: /etc/aeropact/site/world.yaml   # SITE: surveyed planning map (world.yaml schema)
+  fleet_key: /etc/aeropact/fleet.key          # SITE: chmod 600, provisioned out of band
+  fleet_roster: [A01, A02]
+  depot_ids: [D1, D2]
+  safety_policy: ''                           # empty: aeropact_safety default policy
+
+mesh:                                         # SITE: the mesh radio network
+  mode: multicast                             # multicast | unicast (with peers)
+  multicast_group: 239.255.70.1
+  port: 47000
+  interface_address: 0.0.0.0                  # SITE: the mesh interface's address
+  multicast_ttl: 2
+  multicast_loopback: false
+  peers: []
+  auth: hmac                                  # SITE: ed25519 for per-node keys (D-30)
+  private_key_file: /etc/aeropact/node.key    # ed25519: this computer's key (fleet_keygen --ed25519)
+  public_keys_file: /etc/aeropact/fleet.pub   # ed25519: the site roster "node_id:hex_public_key"
+
+policy:                                       # same keys and defaults as scenario files
+  allocation: pact
+  partition: QUORUM
+  bundle_len: 3
+  auction_period_s: 2.0
+  gossip_period_s: 1.0
+  lease_ttl_s: 20.0
+  renew_period_s: 5.0
+  t_commit_s: 3.0
+  max_optimistic_claims: 2
+  use_shard_leases: true
+  use_charging_penalty: true
+  use_indirect_probing: true
+
+fleet:
+  capacity_kg: 2.0
+  cruise_speed_mps: 9.0
+  battery_wh: 60.0
+
+vehicles:
+  A01:
+    home_pad: D1-P1
+    payload: gripper                          # SITE: gripper (DO_GRIPPER) | winch (DO_WINCH) | none
+    autopilot:                                # SITE: companion <-> flight controller link
+      transport: udp                          # serial (e.g. /dev/ttyTHS1 at 921600) | udp
+      device: /dev/ttyTHS1
+      baudrate: 921600
+      port: 8888
+  A02:
+    home_pad: D2-P1
+    autopilot: {transport: udp, device: /dev/ttyTHS1, baudrate: 921600, port: 8889}
+
+depots:
+  D1: {pad_sensor_topic: ""}                 # SITE: the pad sensor driver topic (PadOccupancy)
+  D2: {}

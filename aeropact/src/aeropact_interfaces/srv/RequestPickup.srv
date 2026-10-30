@@ -1,0 +1,14 @@
+# Short-range hand-off link at the depot bay (PRD REQ-OWN-003).
+string task_id
+string drone_id
+uint32 epoch                      # the requester claim_epoch (fencing token)
+---
+uint8 RESULT_GRANT=0
+uint8 RESULT_TASK_TAKEN=1
+uint8 RESULT_STALE_EPOCH=2
+uint8 RESULT_NOT_AT_BAY=3
+uint8 RESULT_UNKNOWN_TASK=4
+uint8 RESULT_DEPOT_OFFLINE=5
+uint8 result
+string reason
+TaskRecord record

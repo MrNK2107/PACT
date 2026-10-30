@@ -1,0 +1,11 @@
+# S3: one 5-minute partition into two halves, each with one depot (AT-03). Drones are spawned
+# round-robin, so odd ids start at D1 and even ids at D2.
+name: s3_split_brain
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 300, type: partition, duration_s: 300,
+     groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}

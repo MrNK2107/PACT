@@ -1,0 +1,5 @@
+# Pure-Python test/tooling deps (no ROS needed). The ROS build uses rosdep instead.
+pytest>=7.4
+hypothesis==6.112.1
+PyYAML>=6.0
+matplotlib>=3.6

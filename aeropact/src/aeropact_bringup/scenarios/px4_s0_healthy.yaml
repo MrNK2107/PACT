@@ -1,0 +1,9 @@
+# PX4 SITL: healthy operations with real autopilots in the loop (backend px4). Four PX4 x500
+# airframes on EKF2 estimates, offboard velocity control through the vehicle interface.
+name: px4_s0_healthy
+map: test_field
+seed: 3
+duration_s: 600
+fleet: {n_drones: 4}
+workload: {arrival_rate_per_min: 1.5, start_s: 40, stop_s: 200, deadline_s: [240, 340, 440]}
+faults: []

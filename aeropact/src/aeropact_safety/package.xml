@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>aeropact_safety</name>
+  <version>0.1.0</version>
+  <description>
+    Independent on-board safety supervisor (PRD REQ-SAF-001..004, invariant I4): geofence, battery
+    floors, separation reflex and command watchdog, using only local sensing. It must never depend
+    on the coordination stack (aeropact_core, aeropact_agent) or on the mesh radio; a test enforces it.
+  </description>
+  <maintainer email="venkat@proudindian.ngo">AeroPACT Maintainers</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>aeropact_geometry</depend>
+  <depend>aeropact_interfaces</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>yaml_cpp_vendor</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

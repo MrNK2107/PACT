@@ -1,0 +1,9 @@
+line-length = 99
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["UP031"]  # %-formatting is used deliberately in ROS-style code
+
+[lint.isort]
+force-sort-within-sections = true

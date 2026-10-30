@@ -1,0 +1,13 @@
+# S9: combined stress - hub loss, partition, drone failure and a battery crunch.
+name: s9_combined
+map: metro_district
+seed: 42
+duration_s: 1500
+fleet: {n_drones: 6}
+workload: {arrival_rate_per_min: 2.5, start_s: 10, stop_s: 660, deadline_s: [360, 600, 840]}
+faults:
+  - {t: 200, type: kill_service, name: central_hub}
+  - {t: 300, type: partition, duration_s: 300, groups: [[A01, A03, A05, D1], [A02, A04, A06, D2]]}
+  - {t: 450, type: kill_drone, id: any_carrying}
+  - {t: 5, type: battery_drain, id: A02, factor: 1.5}
+  - {t: 5, type: battery_drain, id: A03, factor: 1.5}

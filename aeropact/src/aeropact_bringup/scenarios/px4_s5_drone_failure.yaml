@@ -1,0 +1,10 @@
+# PX4 SITL: a drone carrying a parcel loses its motors in flight (flight termination commanded
+# through its autopilot). AT-06 semantics with a real autopilot and a falling airframe.
+name: px4_s5_drone_failure
+map: test_field
+seed: 13
+duration_s: 700
+fleet: {n_drones: 4}
+workload: {arrival_rate_per_min: 2.0, start_s: 40, stop_s: 300, deadline_s: [240, 340, 440]}
+faults:
+  - {t: 150, type: kill_drone, id: any_carrying}

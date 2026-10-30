@@ -1,0 +1,20 @@
+# System presets for benchmarks (05 section 5.2). A preset overrides the scenario's policy block.
+pact_quorum:
+  allocation: pact
+  partition: QUORUM
+pact_strict:
+  allocation: pact
+  partition: STRICT
+pact_optimistic:
+  allocation: pact
+  partition: OPTIMISTIC_BOUNDED
+cbba_plain:            # auction + consensus; no leases, no shard leases, no depot arbitration
+  allocation: cbba_plain
+  use_shard_leases: false
+  depot_arbitration: false
+greedy_nearest:        # nearest job, no ownership protocol, no depot arbitration
+  allocation: greedy_nearest
+  use_shard_leases: false
+  depot_arbitration: false
+central:               # global planner on a hub; kill_service(central_hub) gives central_hub_loss
+  allocation: central

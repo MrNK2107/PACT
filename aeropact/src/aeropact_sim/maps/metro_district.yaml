@@ -1,0 +1,24 @@
+# 1.2 km mixed-use district: a tall core, mid-rise ring and low-rise edge, two depots with three
+# pads each, a hospital helipad zone with two medical drone ports, a closable stadium zone and a
+# substation. Default map of the scenario suite.
+name: metro_district
+size_m: 1200
+seed: 7
+block_m: 130
+road_m: 22
+tall_core: true
+park_fraction: 0.12
+lot_fill: 0.85
+drop_points: 44
+shard_size_m: 150
+wind: {mean_mps: 4.0, dir_deg: 30}
+depots:
+  - {id: D1, position: [-420, -380], pads: 3}
+  - {id: D2, position: [400, 360], pads: 3}
+no_fly:
+  - {id: HOSPITAL_HELI, kind: circle, center: [180, -200], radius: 55, medical: true,
+     reason: hospital helicopter approach}
+  - {id: SUBSTATION, kind: box, min: [-460, 150], max: [-380, 230], ceiling_m: 60,
+     reason: high-voltage substation}
+  - {id: STADIUM, kind: circle, center: [-200, 330], radius: 85, active: false, dynamic: true,
+     reason: stadium event closure}

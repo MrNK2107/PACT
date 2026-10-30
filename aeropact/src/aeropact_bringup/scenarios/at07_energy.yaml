@@ -1,0 +1,10 @@
+# AT-07: one drone's battery drains 4x faster. It must recharge (or land safely), never deplete
+# in the air (I5).
+name: at07_energy
+map: test_field
+seed: 15
+duration_s: 700
+fleet: {n_drones: 3, battery_wh: 40}
+workload: {arrival_rate_per_min: 1.2, start_s: 10, stop_s: 300, deadline_s: [200, 300, 400]}
+faults:
+  - {t: 40, type: battery_drain, id: A01, factor: 4.0}
