@@ -17,7 +17,7 @@
   .kpi .n { font-size: 46px; font-weight: 600; color: var(--deep); line-height: 1; font-variant-numeric: tabular-nums; }
   .kpi .l { font-size: 17px; color: var(--slate); margin-top: 6px; }
   .faults { position: absolute; left: 1148px; right: 44px; top: 640px; padding: 20px 22px; }
-  .faults h3 { font-size: 20px; color: var(--ink); font-weight: 600; margin-bottom: 12px; }
+  .faults h2 { font-size: 20px; color: var(--ink); font-weight: 600; margin-bottom: 12px; }
   .faults div { display: flex; flex-wrap: wrap; gap: 7px; }
   .faults span { border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 14.5px; color: var(--slate); }
 </style>
@@ -40,7 +40,7 @@
     <div class="card kpi"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></div><div class="n">75</div><div class="l">scenario acceptance checks</div></div>
   </div>
   <div class="card faults">
-    <h3>Faults we inject</h3>
+    <h2>Faults we inject</h2>
     <div><span>hub loss</span><span>drone loss</span><span>radio partitions</span><span>radio dead zones</span><span>radio blackout</span><span>link loss</span><span>clock drift</span><span>storm cells</span><span>weather fronts</span><span>closed airspace</span><span>pad outages</span><span>depot outages</span><span>battery drain</span><span>urgent job bursts</span></div>
   </div>
   <div class="band"><span class="bl">DETERMINISTIC BY DESIGN</span><span class="bi">Fixed 20 Hz step</span><span class="bi">Seeded randomness</span><span class="bi">JSONL event log</span><span class="bi">Same seed = same hash</span></div>
