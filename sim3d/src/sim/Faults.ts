@@ -2,7 +2,7 @@ import type { FaultDef } from '../scenario/types';
 import type { DropType } from '../world/types';
 import type { Priority } from './Task';
 
-/** What the engine lets the injector do. Network faults need the (future) network model and are logged as unsupported. */
+/** What the engine lets the injector do. Hooks that return false log `fault_<type>_failed` (e.g. an unknown id). */
 export interface FaultHooks {
   urgentBurst(n: number, priority: Priority, windowS: number, clusterType: DropType | undefined, now: number): void;
   closeZone(def: Extract<FaultDef, { type: 'close_zone' }>, now: number): boolean;
@@ -14,13 +14,17 @@ export interface FaultHooks {
   batteryDrain(id: string, factor: number, now: number): void;
   killDrone(id: string, now: number): void;
   killService(name: string, now: number): boolean;
+  partition(def: Extract<FaultDef, { type: 'partition' }>, now: number): boolean;
+  linkLoss(def: Extract<FaultDef, { type: 'link_loss' }>, now: number): boolean;
+  clockDrift(def: Extract<FaultDef, { type: 'clock_drift' }>, now: number): boolean;
+  backhaulCut(def: Extract<FaultDef, { type: 'backhaul_cut' }>, now: number): boolean;
   unsupported(def: FaultDef, now: number): void;
   log(type: string, data: Record<string, unknown>, now: number): void;
 }
 
 /**
  * Scripted fault injector (REQ-SIM-004). Faults fire once, in time order, from the simulation clock —
- * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, weather_front, storm_cell, altitude_cap, pad_outage, depot_outage, battery_drain, kill_drone, kill_service (only the central_hub_loss baseline has a service to lose).
+ * never from wall-clock. Supported here: urgent_job_burst, close_zone, radio_blackout, weather_front, storm_cell, altitude_cap, pad_outage, depot_outage, battery_drain, kill_drone, kill_service (only the central_hub_loss baseline has a service to lose), partition, link_loss, clock_drift, backhaul_cut (network model, src/net).
  */
 export class FaultInjector {
   private idx = 0;
@@ -84,9 +88,32 @@ export class FaultInjector {
           this.hooks.log(ok ? 'fault_kill_service' : 'fault_kill_service_failed', { name: def.name }, now);
           break;
         }
-        default:
-          this.hooks.unsupported(def, now);
-          this.hooks.log('fault_unsupported', { type: def.type }, now);
+        case 'partition': {
+          const ok = this.hooks.partition(def, now);
+          this.hooks.log(ok ? 'fault_partition' : 'fault_partition_failed', { groups: def.groups, until: def.until }, now);
+          break;
+        }
+        case 'link_loss': {
+          const ok = this.hooks.linkLoss(def, now);
+          this.hooks.log(ok ? 'fault_link_loss' : 'fault_link_loss_failed', { id: def.id, loss: def.loss ?? 1, dir: def.dir ?? 'both', until: def.until }, now);
+          break;
+        }
+        case 'clock_drift': {
+          const ok = this.hooks.clockDrift(def, now);
+          this.hooks.log(ok ? 'fault_clock_drift' : 'fault_clock_drift_failed', { id: def.id, ppm: def.ppm }, now);
+          break;
+        }
+        case 'backhaul_cut': {
+          const ok = this.hooks.backhaulCut(def, now);
+          this.hooks.log(ok ? 'fault_backhaul_cut' : 'fault_backhaul_cut_failed', { depots: def.depots ?? 'all', until: def.until }, now);
+          break;
+        }
+        default: {
+          // a type the schema does not know (scenario files are not checked against the union)
+          const unknown = def as FaultDef;
+          this.hooks.unsupported(unknown, now);
+          this.hooks.log('fault_unsupported', { type: unknown.type }, now);
+        }
       }
     }
   }

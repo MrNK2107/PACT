@@ -1,4 +1,7 @@
 import { useSimSnapshot } from '../app/hooks';
+import { messagesPerDroneMin } from '../app/netGraph';
+import { latestConverged } from '../app/netView';
+import { engine } from '../app/simContext';
 import { useUI } from '../app/uiStore';
 import type { DroneSummary } from '../sim/SimulationEngine';
 
@@ -32,6 +35,8 @@ function Metric({ label, value, sub, tone }: { label: string; value: string | nu
 
 export function TelemetryPanel() {
   const s = useSimSnapshot();
+  const mpm = messagesPerDroneMin(engine);
+  const conv = engine.p2p ? latestConverged() : null;
   return (
     <section className="panel">
       <h3>
@@ -56,6 +61,16 @@ export function TelemetryPanel() {
         <span className={s.structureHits ? 'bad' : ''} title="Samples where an airborne drone was inside a building volume">
           Structure hits <b>{s.structureHits}</b>
         </span>
+      </div>
+      <div className="safety">
+        <span className={mpm !== null && mpm > 120 ? 'bad' : ''} title="Messages sent by drones per drone per minute, beacons (HEARTBEAT) excluded (AT-11 budget 120)">
+          Msgs / drone / min <b>{mpm === null ? '—' : mpm.toFixed(1)}</b>
+        </span>
+        {engine.p2p && (
+          <span title="Latest replica_converged event: every live replica holds the ledger key of every task after a partition heal">
+            Replicas converged <b>{conv ? `${fmtTime(conv.t)} (+${conv.elapsed.toFixed(1)} s)` : '—'}</b>
+          </span>
+        )}
       </div>
     </section>
   );

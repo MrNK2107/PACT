@@ -27,12 +27,17 @@ export interface ScriptedTaskSpec {
 
 export type FaultDef =
   | { t: number; type: 'kill_drone'; id: string }
-  | { t: number; type: 'link_loss'; id: string; until?: number }
+  /** Per-node loss on transmit and/or receive (asymmetric links); `loss` defaults to 1 (link down), `dir` to both. */
+  | { t: number; type: 'link_loss'; id: string; until?: number; loss?: number; dir?: 'both' | 'tx' | 'rx' }
+  /** Node ids (drones or depots) per group; unlisted nodes join group 0. A newer partition replaces an open one. */
   | { t: number; type: 'partition'; groups: string[][]; until?: number }
+  /** Infrastructure outage: the depots' backhaul (default: every depot) is down until `until`; their radio is not. */
+  | { t: number; type: 'backhaul_cut'; depots?: string[]; until?: number }
   | { t: number; type: 'kill_service'; name: string }
   | { t: number; type: 'battery_drain'; id: string; factor: number }
   | { t: number; type: 'close_zone'; id?: string; name?: string; polygon?: { x: number; y: number }[]; circle?: { x: number; y: number; r: number }; until?: number }
   | { t: number; type: 'urgent_job_burst'; n?: number; window_s?: number; priority?: Priority; cluster_type?: DropType }
+  /** Local clock of a drone or depot runs at (1 + ppm * 1e-6) from `t` on (rebased: no jump). */
   | { t: number; type: 'clock_drift'; id: string; ppm: number }
   | { t: number; type: 'weather_front'; mean_mps?: number; dir_deg?: number; gust_mps?: number; ramp_s?: number; until?: number }
   | { t: number; type: 'storm_cell'; name?: string; circle: { x: number; y: number; r: number }; to?: { x: number; y: number }; duration_s?: number; wind_mps?: number; ceiling_m?: number; until?: number }
@@ -114,6 +119,8 @@ export interface Scenario {
     loss: number;
     latency_ms: [number, number];
     range_m: number;
+    /** Depot <-> depot wired / cellular link (Decision 20): no range limit, no radio zones; partitions still cut it. */
+    backhaul: { enabled: boolean; latency_ms: [number, number]; loss: number };
   };
   policy: {
     partition: 'STRICT' | 'QUORUM' | 'OPTIMISTIC_BOUNDED';

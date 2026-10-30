@@ -37,11 +37,11 @@ The toolbar has map and scenario pickers, pause/reset, sim speed (0.5x to 8x) an
 | `make` target | npm equivalent (in `sim3d/`) | What it does |
 |---|---|---|
 | `make test` | `npm test` | Unit and property tests: world generation, maps, scenarios, planner, pads, radio, weather, terrain, baselines, eval (about 2 min). |
-| `make scenarios` | `npm run scenarios` | Scenario acceptance suite: every scenario runs headless for 900 simulated seconds against its tier gate, plus the invariants and AT-01 determinism (about 1 min). `RUN_HEAVY=1` adds the 12 km map. |
+| `make scenarios` | `npm run scenarios` | Scenario acceptance suite: every scenario runs headless for 900 simulated seconds against its tier gate, plus the invariants and AT-01 determinism, and the P2P acceptance checks AT-03 / 04 / 06 / 09 / 10 / 11 (`src/scenario/acceptance.scenarios.ts`; about 3 min). `RUN_HEAVY=1` adds the 12 km map to the tier suite. |
 | `make lint` | `npm run typecheck` | `tsc --noEmit`. |
 | `make bench` | `npm run bench -- --seeds=5 --window=900` | Runs scenario x system x seed and writes `results/` (about 2 min with 5 seeds). Options: `SEEDS=30 WINDOW=900 SCENARIOS=a,b SYSTEMS=x,y`. Exits non-zero if a run breaks I1 or I3; add `--strict` to also fail on AT-05. |
-| `make sweep` | `npm run sweep -- --seeds=30 --window=900` | AT-12 policy sweep: scenario x system x policy x seed, writes `results/sweep/` (about 10 min for 540 runs). Options: `SWEEP_SEEDS`, `SWEEP_WINDOW`; `--scenarios=` / `--systems=` on the npm script. Exits non-zero if a run is missing (crashed) or a fenced system breaks I1 / I3. |
-| `make plots` | `npm run plots` | Renders `results/plots/bench_on_time.svg` and `sweep_pareto.svg` from the bench and sweep JSON (no plotting dependency). |
+| `make sweep` | `npm run sweep -- --seeds=30 --window=900` | AT-12 policy sweep: partition policy (STRICT / QUORUM / OPTIMISTIC_BOUNDED) under `pact`, plus `cbba_plain` as the unfenced reference, per scenario and seed; writes `results/sweep/` (about 10 min for 240 runs). Options: `SWEEP_SEEDS`, `SWEEP_WINDOW`; `--scenarios=` / `--systems=` / `--references=` on the npm script. Exits non-zero if a run is missing (crashed) or a fenced system breaks I1 / I3. |
+| `make plots` | `npm run plots` | Renders `results/plots/bench_on_time.svg`, `message_load.svg`, `recovery_cdf.svg` and `sweep_pareto.svg` from the bench, recovery and sweep JSON (no plotting dependency). |
 | `make demo` | `npm run dev -- --open "/?scenario=s_scripted_demo&autostart"` | Opens the scripted demo scenario in the live viewer. |
 
 `npm run build` makes a production bundle in `sim3d/dist/`.
@@ -49,7 +49,8 @@ The toolbar has map and scenario pickers, pause/reset, sim speed (0.5x to 8x) an
 ## How coordination works
 
 - **Allocation, no controller:** each idle drone scores the open jobs (priority, distance, lateness, energy, pad contention). Hard constraints are payload and pessimistic energy, which must cover the reserve plus reaching a pad (I5). The drone broadcasts a `CLAIM` over a range-limited radio and backs off if a neighbour outbids it.
-- **Ownership:** claims carry an epoch and a lease that heartbeats renew. When a lease lapses before pickup, the job re-opens at a higher epoch and the old owner stops (zombie-stop, I3). The depot hands the parcel only to the highest valid epoch, and ownership is sticky after pickup, so no parcel is delivered twice (I1).
+- **Ownership:** claims carry an epoch and a lease that the owner renews and the origin depot acknowledges. When a lease lapses before pickup, the old owner stops first (zombie-stop, I3) and only then does the origin depot re-open the job at a higher epoch. The depot hands the parcel only to the highest valid epoch, and ownership is sticky after pickup, so no parcel is delivered twice (I1).
+- **Replicated state:** under `pact` every drone and depot keeps its own CRDT replica of the job board and gossips deltas and digests over the simulated radio network (latency, loss, range, partitions, asymmetric links, clock drift). Depots are also linked to each other by a wired / cellular **backhaul**; it only carries the depots' own gossip (drones never use it), so drone state reaches other radio islands by relay through the depots. It is not a coordination hub, it can fail (`backhaul_cut`) and partitions cut it. A partition policy decides whether a drone may claim new work while cut off: STRICT (a live shard lease held on its side), QUORUM (a strict majority of the configured fleet is reachable) or OPTIMISTIC_BOUNDED. Failures are declared only on physical evidence (a quorum of observers that expected to hear the drone, or silence past its endurance). See `docs/P2P_DESIGN.md`.
 - **Separation:** drones share intent in their heartbeats and resolve conflicts with a priority order that every drone evaluates the same way. Onboard sensing keeps separation working even with the radio off (I4).
 - **Determinism:** fixed 20 Hz steps, seeded RNGs and ordered iteration. The structured JSONL event log is hashed, and two runs with the same scenario and seed must give the same hash (AT-01).
 
@@ -57,7 +58,7 @@ The toolbar has map and scenario pickers, pause/reset, sim speed (0.5x to 8x) an
 
 | System | Description |
 |---|---|
-| `pact` | The decentralised protocol above (the default). |
+| `pact` | The decentralised protocol above (the default), with per-node replicas over the network and the scenario's partition policy. |
 | `central_full` | A central hub with global knowledge assigns idle drones to jobs (global greedy) every auction period. It never fails, so it is the upper bound. |
 | `central_hub_loss` | The same hub, but `kill_service(central_hub)` takes it down. Drones finish the job they hold, then go home. |
 | `greedy_nearest` | Decentralised. Each drone grabs the nearest feasible job, with no priorities, deadlines or bids. |
@@ -67,16 +68,21 @@ A scenario can set `system:`. The bench runner overrides it so every system runs
 
 ![On-time rate by system and scenario](results/plots/bench_on_time.svg)
 
-`make bench` (5 seeds x 900 s, 100 runs): fenced systems had 0 duplicate deliveries and 0 zombie pickups; `cbba_plain` had 14 duplicate deliveries over its 20 runs. AT-05 still fails narrowly at 900 s (`central_hub_loss` drops 34 % against the > 40 % gate; it passes at 1800 s, see `docs/DECISIONS.md` Decision 13). The window choice is left open.
+`make bench` (5 seeds x 900 s, 100 runs): fenced systems had 0 duplicate deliveries and 0 zombie pickups; `cbba_plain` had 15 duplicate deliveries over its 20 runs. `pact` on `s0_healthy`: 86.3 % on time, 20.0 deliveries per run (`central_full` 86.3 %, 20.2). AT-05 still fails narrowly on the central side only: `pact` loses nothing under hub loss (86.3 -> 86.3 %), `central_hub_loss` drops 34 % (86.3 -> 56.8 %) against the > 40 % gate; it passes at 1800 s (`docs/DECISIONS.md` Decision 13). Message load: `pact` 74-76 messages per drone per minute besides beacons (budget 120); each depot sends about 143 backhaul copies per minute (3.4 KB/s). Without the depot backhaul, QUORUM over the fleet roster stalls on this map, where the depots are beyond radio range of each other: 0 deliveries (Decisions 19, 20).
+
+Recovery after a carrier failure (`results/recovery.json`, 8 seeds of `at06_drone_failure` per system): `pact` declares the carrier failed 3.7 s after the kill (median) and a replacement is claimed 6.2 s later (one seed of eight was not recovered within 200 s); the baselines wait for their fixed 60 s stand-in, so kill -> replacement claimed is 9.9 s for `pact` against 61.7-67.9 s. Every system re-orders the lost parcel the same way (priority 1, fresh delivery window).
+
+![Message load](results/plots/message_load.svg)
+
+![Recovery-time CDF](results/plots/recovery_cdf.svg)
 
 ### AT-12 policy sweep
 
-`make sweep` crosses the ownership protocol (`pact` fenced vs `cbba_plain` unfenced) with three energy-reserve policies (`policy.soc_reserve` 0.1 / 0.2 / 0.3) on `s6_battery_crunch`, `dm_canyon_shadow` and `ip_radio_clutter`, 30 seeds x 900 s (540 runs, about 10 min). The PRD's partition policies are not swept because the network model they need does not exist yet. Latest run (`results/sweep/sweep.md`): **AT-12 PASS**, 540/540 runs completed, 0 I1 / I3 violations for `pact`.
+`make sweep` runs the three partition policies (STRICT / QUORUM / OPTIMISTIC_BOUNDED) under `pact`, with `cbba_plain` (no fencing, no policy) once per scenario as the unfenced reference, on two partition scenarios: `at03_split_brain_strict` (6 drones, 5 min partition cutting D1 and its two drones off) and `dm_canyon_partition` (`dm_canyon_shadow` with a 5 min north / south partition added), 30 seeds x 900 s (240 runs, about 10 min). Latest run (`results/sweep/sweep.md`): **AT-12 PASS**, 240/240 runs completed, 0 duplicate deliveries and 0 zombie pickups for `pact` under every policy; the depots refused no pickups (0 wasted sorties) in any cell.
 
-- `dm_canyon_shadow` (urban radio canyons, 8 drones): `pact` 99.4 / 99.4 / 98.8 % on time at reserve 10 / 20 / 30 %, with 0 violations and 38.7-39.7 deliveries per run. `cbba_plain` 97.3 / 97.8 / 95.7 % on time, but with 17.8 / 16.6 / 15.6 duplicate deliveries per run and only 22.6-24.9 distinct deliveries, because shadowed links hide claims and drones fly the same parcels. (This scenario used to crash world generation at seed 31006; see `docs/DECISIONS.md` Decision 15.)
-- `ip_radio_clutter` (degraded radio): `pact` 94.8 / 93.4 / 91.3 % on time, with 0 violations. `cbba_plain` 90.1 / 89.9 / 88.3 %, with 8.4 / 7.5 / 6.2 duplicate deliveries per run, and about 7 fewer distinct deliveries per run (18.9-20.7 against 26.6-27.3).
-- `s6_battery_crunch`: the reserve is the trade-off. At 10 % `pact` reaches 54.0 % on time against 48.6 % at 20 % (overlapping CIs), but its 30 runs logged 13 battery-depleted events (`cbba_plain`: 14); at 20 % and 30 % there were none. `cbba_plain` has few duplicates here (0.1-0.5 per run), since the drones mostly stay within radio range.
-- The Pareto rings only use on-time rate and violations. Battery depletion is listed in the table but is not part of the front.
+- `at03_split_brain_strict`: on time / delivered per run: STRICT 76.9 % / 28.8, QUORUM 80.8 % / 30.0, OPTIMISTIC_BOUNDED 80.9 % / 31.4. `cbba_plain` 84.1 % / 28.8, with 3.7 duplicate deliveries per run.
+- `dm_canyon_partition` (450 m radio, canyon shadows): STRICT 88.6 % / 33.2, QUORUM 82.1 % / 26.4 (the 4 + 4 split leaves no majority side, so nobody claims new work during it), OPTIMISTIC_BOUNDED 82.1 % / 34.6. `cbba_plain` 98.5 % on time but only 23.9 distinct deliveries and 17.8 duplicate deliveries per run.
+- The Pareto rings only use on-time rate and violations (duplicates + zombie pickups). CIs are in the sweep table.
 
 ![AT-12 Pareto data](results/plots/sweep_pareto.svg)
 
@@ -91,13 +97,14 @@ A scenario can set `system:`. The bench runner overrides it so every system runs
 | `river_valley` | 5 km | hard | Hills as obstacles, valley radio shadow, ridge storm |
 | `island_archipelago` | 6 km | hard | Islands, over-water legs, sea fog ceiling, gale |
 | `harbour_metro_xl` | 12 km | stress | Scalability (30 drones) |
-| `coastal_testbed` | 2 km | tutorial | Small fixture for the automated tests |
+| `coastal_testbed` | 2 km | tutorial | Small fixture for the automated tests, and the P2P acceptance scenarios `at03`/`at04`/`at06`/`at09`/`at10` |
 
-Supported faults include `urgent_job_burst`, `close_zone`, `radio_blackout`, `pad_outage` / `depot_outage`, `weather_front`, `storm_cell`, `altitude_cap`, `battery_drain`, `kill_drone` and `kill_service`. `partition`, `link_loss` and `clock_drift` are parsed but logged as unsupported until the network model (TC-02) exists. `sim3d/README.md` covers the world generator, scenario schema, tiers and module layout in detail.
+Supported faults include `urgent_job_burst`, `close_zone`, `radio_blackout`, `pad_outage` / `depot_outage`, `weather_front`, `storm_cell`, `altitude_cap`, `battery_drain`, `kill_drone`, `kill_service`, and the network faults `partition` (drone and depot groups; it also cuts the backhaul between depots in different groups), `link_loss` (per-node radio, optionally one direction), `clock_drift` (a node's local clock, in ppm) and `backhaul_cut` (depot backhaul outage). `sim3d/README.md` covers the world generator, scenario schema, tiers and module layout in detail.
 
 ## Status and known limits
 
-- Done: deterministic engine, procedural worlds and maps, workload generator, fault injector, energy model, path planner, decentralised allocation with epoch-fenced leases and depot arbitration, safety separation, 3D viewer, scenario acceptance suite, and the baselines plus bench runner.
-- Not yet: the network model with partitions and gossip (TC-02/04), the CRDT replica (TC-03), the failure detector (TC-09), partition policies `STRICT` / `QUORUM` / `OPTIMISTIC_BOUNDED`, and the replay viewer (TC-13). AT-12 sweeps the energy-reserve policy instead of the partition policies until those exist.
+- Done: deterministic engine, procedural worlds and maps, workload generator, fault injector, energy model, path planner, decentralised allocation with epoch-fenced leases and depot arbitration, safety separation, the network model with partitions and gossip (TC-02/04), per-node CRDT replicas (TC-03), ownership and partition policies (TC-07), depot nodes (TC-08), the failure detector (TC-09), 3D viewer, scenario acceptance suite with the P2P acceptance checks, the baselines, bench runner and AT-12 sweep.
+- Not yet: the replay viewer (TC-13).
+- Depots are assumed to have a backhaul link to each other (`docs/02_assumptions.md` T12). With `network.backhaul.enabled: false`, QUORUM cannot start work on maps whose depots sit beyond radio range of each other (Decision 19).
 - The fleet is capped at one drone per charging pad. A scenario asking for more drones runs fewer and logs `fleet_capped`; for example, `s0_healthy` asks for 12 and runs 6.
 - The radio is a disc model with dead zones, and planning is 2.5D over altitude layers. Ground vehicles are decorative.

@@ -30,6 +30,12 @@ export interface BenchRow extends RunMetrics {
   eventHash: string;
   events: number;
   tickP95Ms: number;
+  /** Messages sent per drone per minute, beacons (HEARTBEAT) excluded (AT-11 budget 120). */
+  msgsPerDroneMin: number;
+  /** Backhaul copies sent per depot per minute, mean over depots (Decision 20). */
+  backhaulPerDepotMin: number;
+  /** Backhaul payload bytes per depot per second, mean over depots. */
+  backhaulBytesPerDepotS: number;
 }
 
 export function runOne(scn: Scenario, system: SystemId, seed: number, windowS: number): BenchRow {
@@ -45,7 +51,81 @@ export function runOne(scn: Scenario, system: SystemId, seed: number, windowS: n
   }
   times.sort((a, b) => a - b);
   const m = computeMetrics(eng.events, windowS);
-  return { scenario: scn.name, map: scn.map, system, seed, windowS, ...m, eventHash: eng.eventHash(), events: eng.events.length, tickP95Ms: Math.round((times[Math.floor(steps * 0.95)] ?? 0) * 100) / 100 };
+  return { scenario: scn.name, map: scn.map, system, seed, windowS, ...m, eventHash: eng.eventHash(), events: eng.events.length, tickP95Ms: Math.round((times[Math.floor(steps * 0.95)] ?? 0) * 100) / 100, msgsPerDroneMin: msgsPerDroneMin(eng, windowS), ...backhaulLoad(eng, windowS) };
+}
+
+/** Mean backhaul load per depot: copies per minute and payload bytes per second (Decision 20). */
+export function backhaulLoad(eng: SimulationEngine, seconds: number): { backhaulPerDepotMin: number; backhaulBytesPerDepotS: number } {
+  const ds = eng.world.depots;
+  if (!ds.length || seconds <= 0) return { backhaulPerDepotMin: 0, backhaulBytesPerDepotS: 0 };
+  let c = 0;
+  let b = 0;
+  for (const d of ds) {
+    const s = eng.net.backhaulStats(d.id);
+    c += s.copies;
+    b += s.bytes;
+  }
+  return { backhaulPerDepotMin: Math.round((10 * c) / ds.length / (seconds / 60)) / 10, backhaulBytesPerDepotS: Math.round(b / ds.length / seconds) };
+}
+
+/** Messages sent per live drone per minute, beacons excluded (AT-11). */
+export function msgsPerDroneMin(eng: SimulationEngine, seconds: number): number {
+  if (!eng.agents.length || seconds <= 0) return 0;
+  let n = 0;
+  for (const a of eng.agents) for (const [type, v] of Object.entries(eng.net.stats(a.id).byType)) if (type !== 'HEARTBEAT') n += v?.sent ?? 0;
+  return Math.round((10 * n) / eng.agents.length / (seconds / 60)) / 10;
+}
+
+// ---- AT-06-style recovery experiment (REQ-EVAL-004 recovery-time CDF) -------------------------------------------
+
+export interface RecoveryRow {
+  system: SystemId;
+  seed: number;
+  victim: string;
+  task: string;
+  tKill: number;
+  /** Sim seconds from the kill to the declaration that ordered the replacement (pact: the origin depot's peer_failed;
+   * baselines: their fixed endurance-bound stand-in, `SIM.tFailed`). null: never declared within the run. */
+  detectS: number | null;
+  /** Declaration -> first claim of the replacement by another drone (AT-06 recovery). null: not claimed. */
+  recoveryS: number | null;
+  /** Kill -> replacement claimed. */
+  totalS: number | null;
+}
+
+/**
+ * Per system and seed: run once to find the first pickup after `afterS`, then rerun with that carrier killed 10 s
+ * later (sudden death), and measure detection and recovery from the event log (Decision 18 definition). Every system
+ * re-orders a lost parcel the same way (priority 1, fresh window; Decision 19).
+ */
+export function runRecovery(scn: Scenario, systems: readonly SystemId[], seeds: number, o: { afterS?: number; tailS?: number } = {}): RecoveryRow[] {
+  const afterS = o.afterS ?? 120;
+  const tailS = o.tailS ?? 200;
+  const rows: RecoveryRow[] = [];
+  const runFor = (s: Scenario, seconds: number) => {
+    const eng = new SimulationEngine(createWorld(worldConfigFrom(s)), s);
+    eng.start();
+    for (let i = 0; i < Math.round(seconds / 0.05); i++) eng.update(0.05);
+    return eng.events;
+  };
+  const taskOf = (e: { data: Record<string, unknown> }) => (typeof e.data.task === 'string' ? e.data.task : undefined);
+  for (const system of systems) {
+    for (let i = 0; i < seeds; i++) {
+      const seed = scn.seed + i;
+      const pick = runFor({ ...scn, seed, system, faults: [] }, afterS + 210).find((e) => e.type === 'picked_up' && e.t > afterS);
+      if (!pick || !pick.agent) continue;
+      const task = taskOf(pick)!;
+      const tKill = Math.round((pick.t + 10) * 20) / 20;
+      const ev = runFor({ ...scn, seed, system, faults: [{ t: tKill, type: 'kill_drone', id: pick.agent }] }, tKill + tailS);
+      const re = ev.find((e) => e.type === 'task_reordered' && e.data.of === task);
+      const decl = re && system === 'pact' ? ev.find((e) => e.type === 'peer_failed' && e.data.peer === pick.agent && e.data.node === task.split(':')[0]) : re;
+      const declT = decl ? decl.t : null;
+      const claim = re ? ev.find((e) => e.type === 'claimed' && taskOf(e) === re.data.task && e.agent !== pick.agent) : undefined;
+      const r1 = (x: number) => Math.round(x * 10) / 10;
+      rows.push({ system, seed, victim: pick.agent, task, tKill, detectS: declT === null ? null : r1(declT - tKill), recoveryS: claim && declT !== null ? r1(claim.t - declT) : null, totalS: claim ? r1(claim.t - tKill) : null });
+    }
+  }
+  return rows;
 }
 
 export function runBench(o: BenchOptions): BenchRow[] {
@@ -123,7 +203,9 @@ export function acceptanceChecks(rows: readonly BenchRow[], healthy = 's0_health
   const pl = cellMean(rows, hubLoss, 'pact');
   const ch = cellMean(rows, healthy, 'central_hub_loss');
   const cl = cellMean(rows, hubLoss, 'central_hub_loss');
-  if (ph !== null && pl !== null && ch !== null && cl !== null && ph > 0 && ch > 0) {
+  if (ph !== null && pl !== null && ch !== null && cl !== null && (ph <= 0 || ch <= 0)) {
+    out.push({ id: 'AT-05', pass: false, detail: `no relative drop defined: healthy on-time rate pact ${ph.toFixed(1)} %, central_hub_loss ${ch.toFixed(1)} % (hub loss: pact ${pl.toFixed(1)} %, central_hub_loss ${cl.toFixed(1)} %)` });
+  } else if (ph !== null && pl !== null && ch !== null && cl !== null) {
     const pDrop = (100 * (ph - pl)) / ph;
     const cDrop = (100 * (ch - cl)) / ch;
     out.push({
@@ -144,7 +226,7 @@ export function acceptanceChecks(rows: readonly BenchRow[], healthy = 's0_health
 
 // ---- outputs --------------------------------------------------------------------------------------------
 
-const CSV_COLS: (keyof BenchRow)[] = ['scenario', 'map', 'system', 'seed', 'windowS', 'released', 'due', 'delivered', 'onTime', 'onTimeRate', 'onTimePctOfDelivered', 'meanLatenessS', 'deliveredAfterFirstFault', 'duplicateDeliveries', 'zombiePickups', 'leaseExpiries', 'depotRefusals', 'lossOfSeparation', 'batteryDepleted', 'events', 'eventHash', 'tickP95Ms'];
+const CSV_COLS: (keyof BenchRow)[] = ['scenario', 'map', 'system', 'seed', 'windowS', 'released', 'due', 'delivered', 'onTime', 'onTimeRate', 'onTimePctOfDelivered', 'meanLatenessS', 'deliveredAfterFirstFault', 'duplicateDeliveries', 'zombiePickups', 'leaseExpiries', 'depotRefusals', 'lossOfSeparation', 'batteryDepleted', 'msgsPerDroneMin', 'backhaulPerDepotMin', 'backhaulBytesPerDepotS', 'events', 'eventHash', 'tickP95Ms'];
 
 export function toCsv(rows: readonly BenchRow[]): string {
   const lines = [CSV_COLS.join(',')];
@@ -162,20 +244,20 @@ export function summaryMarkdown(rows: readonly BenchRow[], o: { seeds: number; w
   L.push('**On-time rate** = tasks that fell due inside the window and were delivered by their deadline, divided by the tasks that fell due.', '');
   for (const scn of scenarios) {
     L.push(`## ${scn}`, '');
-    L.push('| System | On-time rate % | Delivered | Delivered after first fault | Mean lateness s | Dup. deliveries | Zombie pickups | Loss of sep. | Tick p95 ms |');
-    L.push('|---|---|---|---|---|---|---|---|---|');
+    L.push('| System | On-time rate % | Delivered | Delivered after first fault | Mean lateness s | Dup. deliveries | Zombie pickups | Loss of sep. | Msgs / drone / min | Backhaul copies / depot / min | Tick p95 ms |');
+    L.push('|---|---|---|---|---|---|---|---|---|---|---|');
     for (const sys of systems) {
       const rs = rows.filter((r) => r.scenario === scn && r.system === sys);
       if (!rs.length) continue;
       const tick = Math.max(...rs.map((r) => r.tickP95Ms));
-      L.push(`| \`${sys}\` | ${fmt(bootstrapMean(vals(rs, 'onTimeRate')))} | ${fmt(bootstrapMean(vals(rs, 'delivered')))} | ${fmt(bootstrapMean(vals(rs, 'deliveredAfterFirstFault')))} | ${fmt(bootstrapMean(vals(rs, 'meanLatenessS')))} | ${sum(rs, 'duplicateDeliveries')} | ${sum(rs, 'zombiePickups')} | ${sum(rs, 'lossOfSeparation')} | ${tick.toFixed(1)} |`);
+      L.push(`| \`${sys}\` | ${fmt(bootstrapMean(vals(rs, 'onTimeRate')))} | ${fmt(bootstrapMean(vals(rs, 'delivered')))} | ${fmt(bootstrapMean(vals(rs, 'deliveredAfterFirstFault')))} | ${fmt(bootstrapMean(vals(rs, 'meanLatenessS')))} | ${sum(rs, 'duplicateDeliveries')} | ${sum(rs, 'zombiePickups')} | ${sum(rs, 'lossOfSeparation')} | ${fmt(bootstrapMean(rs.map((r) => r.msgsPerDroneMin ?? 0)))} | ${fmt(bootstrapMean(rs.map((r) => r.backhaulPerDepotMin ?? 0)))} | ${tick.toFixed(1)} |`);
     }
     L.push('');
   }
   L.push('## Acceptance checks', '');
   for (const c of acceptanceChecks(rows)) L.push(`- **${c.id}**: ${c.pass === null ? 'not evaluated' : c.pass ? 'PASS' : 'FAIL'} — ${c.detail}`);
   L.push('', '## Systems', '');
-  L.push('- `pact`: decentralised bid / claim / back-off over the radio, epoch-fenced leases, depot arbitration.');
+  L.push('- `pact`: decentralised bid / claim / back-off over the radio; every drone and depot keeps its own CRDT replica, synchronised by gossip over the simulated network; epoch-fenced leases on local clocks, depot arbitration, the scenario partition policy (STRICT / QUORUM / OPTIMISTIC_BOUNDED) and failure detection with physical evidence.');
   L.push('- `central_full`: central hub, global greedy assignment every auction period, no radio limits, never fails (upper bound).');
   L.push('- `central_hub_loss`: the same hub; `kill_service(central_hub)` stops all new dispatches.');
   L.push('- `greedy_nearest`: decentralised, nearest feasible task first, no priorities, deadlines or bids.');

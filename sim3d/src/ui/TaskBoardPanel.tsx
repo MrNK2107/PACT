@@ -1,6 +1,7 @@
 import { engine, map, scenario } from '../app/simContext';
 import { useSimSnapshot } from '../app/hooks';
 import { useUI } from '../app/uiStore';
+import { partitionState } from './NetworkPanel';
 import { fmtTime } from './TelemetryPanel';
 
 const PRI = { 1: 'P1 urgent', 2: 'P2', 3: 'P3 low' } as const;
@@ -10,6 +11,7 @@ export function TaskBoardPanel() {
   const s = useSimSnapshot();
   const select = useUI((u) => u.select);
   const st = s.tasks;
+  const part = partitionState();
   const onTimePct = st.delivered ? Math.round((100 * st.onTime) / st.delivered) : null;
   return (
     <section className="panel">
@@ -41,6 +43,11 @@ export function TaskBoardPanel() {
         ))}
         {s.faultsPending > 0 && <span className="pri fault">{s.faultsPending} fault{s.faultsPending > 1 ? 's' : ''} pending</span>}
         {s.closedZones.length > 0 && <span className="pri fault">closed: {s.closedZones.join(', ')}</span>}
+        {part && (
+          <span className="pri fault" title={part.groups.map((g, i) => `G${i}: ${g.join(' ')}`).join(' | ')}>
+            partition {part.groups.length} groups{part.until !== undefined ? ` until ${fmtTime(part.until)}` : ''}
+          </span>
+        )}
         {s.padOutages.length > 0 && <span className="pri fault">pads out: {s.padOutages.join(', ')}</span>}
       </div>
       <ul className="tasks">
@@ -48,7 +55,7 @@ export function TaskBoardPanel() {
           const left = t.deadline - s.time;
           const owner = s.drones.find((d) => d.id === t.owner);
           return (
-            <li key={t.id} className={left < 0 ? 'overdue' : left < 120 ? 'soon' : ''} onClick={() => select(t.owner ?? t.drop)} title={`${t.id} → ${t.drop} (${t.type}) from ${t.depot}`}>
+            <li key={t.id} className={left < 0 ? 'overdue' : left < 120 ? 'soon' : ''} onClick={() => select(t.id)} title={`${t.id} → ${t.drop} (${t.type}) from ${t.depot}${t.owner ? ` · owner ${t.owner}` : ''}`}>
               <span className={`pri pri-${t.priority}`}>P{t.priority}</span>
               <code>{t.id.split(':').slice(0, 1)}·{t.drop}</code>
               <span className="state">{t.state.toLowerCase().replace('_', ' ')}</span>

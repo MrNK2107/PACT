@@ -1,12 +1,15 @@
 /**
  * `npm run plots` / `make plots`: renders the results plots (REQ-EVAL-004) from the files `bench` and `sweep` wrote:
  *   ../results/bench.json        -> ../results/plots/bench_on_time.svg
+ *   ../results/bench.json        -> ../results/plots/message_load.svg
+ *   ../results/recovery.json     -> ../results/plots/recovery_cdf.svg
  *   ../results/sweep/sweep.json  -> ../results/plots/sweep_pareto.svg
  * A missing input is skipped with a note (run `make bench` / `make sweep` first). --results=dir overrides ../results.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { benchOnTimeSvg, sweepParetoSvg } from '../src/eval/plots';
+import { benchOnTimeSvg, messageLoadSvg, recoveryCdfSvg, sweepParetoSvg } from '../src/eval/plots';
+import { SIM } from '../src/sim/config';
 
 const flag = process.argv.find((a) => a.startsWith('--results='));
 const dir = resolve(flag ? flag.slice('--results='.length) : '../results');
@@ -18,8 +21,16 @@ const bench = resolve(dir, 'bench.json');
 if (existsSync(bench)) {
   const j = JSON.parse(readFileSync(bench, 'utf8'));
   writeFileSync(resolve(out, 'bench_on_time.svg'), benchOnTimeSvg(j.rows, j));
-  n++;
+  writeFileSync(resolve(out, 'message_load.svg'), messageLoadSvg(j.rows, j));
+  n += 2;
 } else console.warn(`skip: ${bench} not found (make bench)`);
+
+const recovery = resolve(dir, 'recovery.json');
+if (existsSync(recovery)) {
+  const j = JSON.parse(readFileSync(recovery, 'utf8'));
+  writeFileSync(resolve(out, 'recovery_cdf.svg'), recoveryCdfSvg(j.rows, { seeds: j.seeds, scenario: j.scenario, tFailedS: SIM.tFailed }));
+  n++;
+} else console.warn(`skip: ${recovery} not found (make bench)`);
 
 const sweep = resolve(dir, 'sweep', 'sweep.json');
 if (existsSync(sweep)) {

@@ -123,7 +123,7 @@ describe('scenario acceptance suite', () => {
       perMap.set(SCENARIOS[n].map, (perMap.get(SCENARIOS[n].map) ?? 0) + 1);
     }
     for (const [map, n] of perMap) {
-      if (map === 'coastal_testbed' || map === 'harbour_metro_xl') continue; // single-scenario fixtures
+      if (map === 'harbour_metro_xl') continue; // single-scenario fixture (coastal_testbed also holds the P2P acceptance scenarios)
       expect(n, map).toBeGreaterThanOrEqual(3);
       expect(n, map).toBeLessThanOrEqual(6);
     }

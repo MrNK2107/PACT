@@ -85,9 +85,13 @@ Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/
 dead zone on, or create a temporary circle/box/polygon), `pad_outage` / `depot_outage` (charging out of
 service for a window), `weather_front` (wind ramps to new speed, direction and gusts), `storm_cell` (a closed,
 optionally drifting circle with extra wind) and `altitude_cap` (a ceiling over the whole map or an area), `battery_drain`,
-`kill_drone` (in-flight parcel re-ordered after the endurance timeout), `kill_service` (`central_hub`: only the
-`central_hub_loss` baseline has a hub to lose). `partition`, `link_loss` and `clock_drift` are parsed and logged as
-unsupported until the network model exists.
+`kill_drone` (sudden death; under `pact` the in-flight parcel is re-ordered by its origin depot once the failure
+detector declares the drone failed, under the baselines after the `SIM.tFailed` stand-in; every system re-orders it
+as priority 1 with a fresh window), `kill_service` (`central_hub`: only the `central_hub_loss` baseline has a hub to
+lose), and the network faults (`src/net/`, docs/P2P_DESIGN.md): `partition { groups, until? }` (drones and depots;
+unlisted nodes join group 0; depots in different groups also lose their backhaul), `link_loss { id, until?, loss?, dir? }`
+(asymmetric per-node radio loss), `clock_drift { id, ppm }` (a node's local clock) and `backhaul_cut { depots?, until? }`
+(the depots' wired / cellular link, `network.backhaul`, default on, 10-40 ms).
 
 ## The world
 Generated deterministically from `(seed, size_m, depots, pads_per_depot)` by `src/world/`:

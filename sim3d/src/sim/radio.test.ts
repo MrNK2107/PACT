@@ -4,10 +4,8 @@ import { findMap } from '../map/registry';
 import { getScenario } from '../scenario/registry';
 import { createWorld } from '../world/buildWorld';
 import { radioEffectAt, radioSpecsFrom, radioZoneFromSpec } from '../world/Radio';
-import { Rng } from '../world/rng';
 import type { RadioZone, Vec3 } from '../world/types';
-import { MessageBus } from './AgentCoordinator';
-import { SIM } from './config';
+import { Network } from '../net/Network';
 import { RadioModel } from './Radio';
 import { SimulationEngine } from './SimulationEngine';
 import type { Message } from './types';
@@ -51,18 +49,17 @@ describe('radio effect geometry', () => {
   });
 });
 
-describe('radio in the message bus', () => {
-  const hb = (from: string, pos: Vec3): Message => ({ type: 'HEARTBEAT', from, pos, vel: at(0, 0, 0), intent: at(0, 0, 0), priority: 1, phase: 'idle', site: null, stage: null }) as Message;
-  const run = (radio: RadioModel | undefined, agents: { id: string; pos: Vec3 }[], senders: string[]) => {
-    const bus = new MessageBus();
-    for (const s of senders) bus.broadcast(s, agents.find((a) => a.id === s)!.pos, hb(s, agents.find((a) => a.id === s)!.pos));
-    bus.deliver(agents, new Rng(1), radio);
-    return Object.fromEntries(agents.map((a) => [a.id, bus.take(a.id).length]));
+describe('radio in the network model', () => {
+  const hb = (from: string, pos: Vec3): Message => ({ type: 'HEARTBEAT', from, pos, vel: at(0, 0, 0), intent: at(0, 0, 0), priority: 1, phase: 'idle', site: null, stage: null, t: 0 });
+  const run = (radio: RadioModel | undefined, agents: { id: string; pos: Vec3 }[], senders: string[], rangeM: number, loss = 0, seed = 1) => {
+    const net = new Network({ loss, latencyMs: [50, 50], rangeM, seed }, radio);
+    for (const a of agents) net.register(a.id, 'drone', () => a.pos);
+    for (const s of senders) net.send({ type: 'HEARTBEAT', src: s, dst: '*', t_send: 0, payload: hb(s, agents.find((a) => a.id === s)!.pos) });
+    net.step(0.05);
+    return Object.fromEntries(agents.map((a) => [a.id, net.take(a.id).length]));
   };
 
   it('drops every link with an endpoint inside a dark zone and keeps links outside it', () => {
-    SIM.packetLoss = 0;
-    SIM.commRange = 1500;
     const radio = new RadioModel([zone()]);
     const agents = [
       { id: 'IN1', pos: at(10, 30, 10) },
@@ -71,35 +68,32 @@ describe('radio in the message bus', () => {
       { id: 'OUT2', pos: at(320, 30, 40) },
     ];
     // sender inside: nobody hears it (dark endpoint)
-    expect(run(radio, agents, ['IN1'])).toEqual({ IN1: 0, IN2: 0, OUT1: 0, OUT2: 0 });
+    expect(run(radio, agents, ['IN1'], 1500)).toEqual({ IN1: 0, IN2: 0, OUT1: 0, OUT2: 0 });
     // sender outside: the dark receivers hear nothing, the other outside agent does
-    expect(run(radio, agents, ['OUT1'])).toEqual({ IN1: 0, IN2: 0, OUT1: 0, OUT2: 1 });
+    expect(run(radio, agents, ['OUT1'], 1500)).toEqual({ IN1: 0, IN2: 0, OUT1: 0, OUT2: 1 });
     // without a radio model the plain disc model delivers to everyone in range
-    expect(run(undefined, agents, ['IN1'])).toEqual({ IN1: 0, IN2: 1, OUT1: 1, OUT2: 1 });
+    expect(run(undefined, agents, ['IN1'], 1500)).toEqual({ IN1: 0, IN2: 1, OUT1: 1, OUT2: 1 });
   });
 
   it('shrinks the range for partially degraded zones', () => {
-    SIM.packetLoss = 0;
-    SIM.commRange = 1000;
     const radio = new RadioModel([zone({ rangeFactor: 0.1 })]);
     const agents = [
       { id: 'IN', pos: at(0, 30, 0) },
       { id: 'NEAR', pos: at(80, 30, 0) },
       { id: 'FAR', pos: at(400, 30, 0) },
     ];
-    expect(run(radio, agents, ['IN'])).toEqual({ IN: 0, NEAR: 1, FAR: 0 });
+    expect(run(radio, agents, ['IN'], 1000)).toEqual({ IN: 0, NEAR: 1, FAR: 0 });
   });
 
   it('a clear model changes nothing, including the loss draws', () => {
-    SIM.packetLoss = 0.3;
-    SIM.commRange = 1500;
     const agents = [
       { id: 'A', pos: at(0, 30, 0) },
       { id: 'B', pos: at(50, 30, 0) },
     ];
-    const a = Array.from({ length: 40 }, () => run(undefined, agents, ['A']).B);
-    const b = Array.from({ length: 40 }, () => run(new RadioModel([zone({ shape: { type: 'circle', x: 9000, z: 9000, r: 10 } })]), agents, ['A']).B);
+    const a = Array.from({ length: 40 }, (_, i) => run(undefined, agents, ['A'], 1500, 0.3, i).B);
+    const b = Array.from({ length: 40 }, (_, i) => run(new RadioModel([zone({ shape: { type: 'circle', x: 9000, z: 9000, r: 10 } })]), agents, ['A'], 1500, 0.3, i).B);
     expect(b).toEqual(a);
+    expect(a.some((n) => n === 0) && a.some((n) => n === 1)).toBe(true);
   });
 });
 
@@ -166,10 +160,10 @@ describe('radio zones in the world and engine', () => {
 });
 
 describe('separation without a radio (invariant I4)', () => {
-  it('drones keep apart when the whole map is a radio dead zone', () => {
-    // every link is dark: heartbeats never arrive, so only on-board sensing can keep the drones apart
-    const dark = { id: 'RAD-ALL', circle: { x: 0, y: 0, r: 5000 }, range_factor: 0, max_alt_m: 200 };
-    const scn = scenarioWith(getScenario('test_small'), { fleet: { n_drones: 6 }, workload: { arrival_rate_per_min: 6 }, world: { radio_zones: [dark] } });
+  // every link is dark: heartbeats never arrive, so only on-board sensing can keep the drones apart
+  const dark = { id: 'RAD-ALL', circle: { x: 0, y: 0, r: 5000 }, range_factor: 0, max_alt_m: 200 };
+  const runDark = (system: 'pact' | 'greedy_nearest') => {
+    const scn = scenarioWith(getScenario('test_small'), { system, fleet: { n_drones: 6 }, workload: { arrival_rate_per_min: 6 }, world: { radio_zones: [dark] } } as never);
     const eng = new SimulationEngine(createWorld(worldConfigFrom(scn)), scn);
     expect(eng.radio.zones).toHaveLength(1);
     eng.start();
@@ -178,10 +172,25 @@ describe('separation without a radio (invariant I4)', () => {
       eng.update(0.05);
       if (i % 20 === 0) for (const a of eng.agents) heard += a.controller.neighborCount;
     }
+    return { eng, heard };
+  };
+
+  it('drones keep apart when the whole map is a radio dead zone (shared-board baseline still delivers)', () => {
+    const { eng, heard } = runDark('greedy_nearest');
     const s = eng.snapshot();
     expect(heard).toBe(0); // nobody heard a heartbeat
     expect(s.collisions).toBe(0);
     expect(s.completed).toBeGreaterThan(5);
+  });
+
+  it('pact without any radio: no coordination is possible (no task ever reaches a drone), separation still holds', () => {
+    // tasks live in the depots' replicas and travel by gossip only: with every link dark no drone learns of one
+    const { eng, heard } = runDark('pact');
+    const s = eng.snapshot();
+    expect(heard).toBe(0);
+    expect(s.collisions).toBe(0);
+    expect(eng.events.filter((e) => e.type === 'claimed')).toHaveLength(0);
+    for (const { id, replica } of eng.replicas()) if (!id.startsWith('D')) expect(replica.taskCount).toBe(0);
   });
 
   it('sensed drones are added as neighbours with my own priority, so the id tie-break is symmetric', () => {

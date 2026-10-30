@@ -10,6 +10,7 @@ import { shardPolygon } from '../world/Shards';
 import type { BuildingData, DepotData, DistrictData, NoFlyZone, RadioZone, StaticObstacle } from '../world/types';
 import { windAt } from '../world/Wind';
 import { ChunkedInstances } from './ChunkedInstances';
+import { NetworkOverlay } from './NetworkOverlay';
 import { hatchTexture } from './textures';
 import { GROUND_TOP } from './terrain';
 
@@ -466,20 +467,14 @@ function ShardGrid() {
 // Communication ranges + links
 // -------------------------------------------------------------------------------------------------
 
+/** Radio range rings per drone; links and depot masts are drawn by `NetworkOverlay`. */
 function CommsOverlay() {
   const group = useRef<THREE.Group>(null);
   const rings = useRef(new Map<string, THREE.LineLoop>());
-  const links = useRef<THREE.LineSegments>(null);
   const ringGeo = useMemo(() => {
     const pts: THREE.Vector3[] = [];
     for (let i = 0; i < 72; i++) pts.push(new THREE.Vector3(Math.cos((i / 72) * Math.PI * 2) * SIM.commRange, 0, Math.sin((i / 72) * Math.PI * 2) * SIM.commRange));
     return new THREE.BufferGeometry().setFromPoints(pts);
-  }, []);
-  const linkGeo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6 * 400), 3));
-    g.setDrawRange(0, 0);
-    return g;
   }, []);
 
   useFrame(() => {
@@ -506,29 +501,9 @@ function CommsOverlay() {
       }
       r.position.set(a.body.pos.x, a.body.pos.y, a.body.pos.z);
     }
-    const ls = links.current;
-    if (ls) {
-      const arr = linkGeo.attributes.position.array as Float32Array;
-      let n = 0;
-      for (const [i, j] of engine.links()) {
-        if (n >= 400) break;
-        const A = engine.agents[i].body.pos;
-        const B = engine.agents[j].body.pos;
-        arr.set([A.x, A.y, A.z, B.x, B.y, B.z], n * 6);
-        n++;
-      }
-      linkGeo.setDrawRange(0, n * 2);
-      linkGeo.attributes.position.needsUpdate = true;
-    }
   });
 
-  return (
-    <group ref={group} visible={false}>
-      <lineSegments ref={links} geometry={linkGeo} frustumCulled={false}>
-        <lineBasicMaterial color="#0f766e" transparent opacity={0.7} depthWrite={false} />
-      </lineSegments>
-    </group>
-  );
+  return <group ref={group} visible={false} />;
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -609,6 +584,7 @@ export function Overlays() {
       <WindArrows />
       <ShardGrid />
       <CommsOverlay />
+      <NetworkOverlay />
       <SelectionHighlight />
     </group>
   );

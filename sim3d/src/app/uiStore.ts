@@ -16,6 +16,8 @@ export interface UIState {
   showLabels: boolean;
   showWind: boolean;
   showShards: boolean;
+  /** P2P view: radio components (halos, links, depot masts), ledger-owner tints on task drops. */
+  showP2P: boolean;
   selection: Selection | null;
   cameraResetNonce: number;
   focusNonce: number;
@@ -25,7 +27,7 @@ export interface UIState {
   focusSelection: () => void;
 }
 
-export type ToggleKey = 'showBuildings' | 'showGrid' | 'showRoutes' | 'showWaypoints' | 'showNoFly' | 'showObstacles' | 'showComms' | 'showRadio' | 'showLabels' | 'showWind' | 'showShards';
+export type ToggleKey = 'showBuildings' | 'showGrid' | 'showRoutes' | 'showWaypoints' | 'showNoFly' | 'showObstacles' | 'showComms' | 'showRadio' | 'showLabels' | 'showWind' | 'showShards' | 'showP2P';
 
 export const useUI = create<UIState>((set) => ({
   showBuildings: true,
@@ -39,6 +41,7 @@ export const useUI = create<UIState>((set) => ({
   showLabels: true,
   showWind: false,
   showShards: false,
+  showP2P: false,
   selection: null,
   cameraResetNonce: 0,
   focusNonce: 0,

@@ -57,3 +57,12 @@ export const TASK_ID_RE = /^D\d+:\d{8}:[0-9a-f]{4}$/;
 export function isTerminal(t: Task): boolean {
   return t.state === 'DELIVERED' || t.state === 'ABORTED';
 }
+
+/**
+ * Terms of the replacement for a parcel lost with a failed carrier (every system, so comparisons are fair; Decisions
+ * 18, 19): a new urgent order, priority 1, with a fresh delivery window of the original length (at least 60 s) from
+ * the moment it is re-ordered. A parcel its carrier gives back keeps its priority and deadline.
+ */
+export function urgentReplacementTerms(original: { deadline: number; created_at: number }, reorderedAt: number): { priority: Priority; deadline: number } {
+  return { priority: 1, deadline: reorderedAt + Math.max(60, original.deadline - original.created_at) };
+}

@@ -674,3 +674,135 @@ ul.tasks li.empty {
   color: var(--muted);
   cursor: default;
 }
+
+/* network (P2P) view */
+.legend .sw.comp {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 50%;
+  margin-right: 3px;
+}
+.legend .sw.comp:last-of-type {
+  margin-right: 7px;
+}
+.legend .sw.oneway {
+  border-top: 2px solid #64748b;
+}
+.legend .sw.owner {
+  width: 9px;
+  height: 9px;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  margin: 0 4px 0 8px;
+}
+.legend .sw.mast {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 50%;
+  background: #0f766e;
+  box-shadow: 0 0 0 2px rgba(154, 163, 171, 0.6);
+}
+.mode {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.mode.ok {
+  color: #bbf7d0;
+  border-color: #14532d;
+  background: rgba(20, 83, 45, 0.3);
+}
+.mode.warn {
+  color: #fde68a;
+  border-color: #78350f;
+  background: rgba(120, 53, 15, 0.3);
+}
+.mode.bad {
+  color: #fecaca;
+  border-color: #7f1d1d;
+  background: rgba(127, 29, 29, 0.35);
+}
+.partition {
+  border: 1px solid #9a3412;
+  background: rgba(154, 52, 18, 0.18);
+  border-radius: 5px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+}
+.partition .ph-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #fdba74;
+  margin-bottom: 4px;
+}
+.partition .ph-head span {
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+.partition .ph-group {
+  display: flex;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text);
+}
+.partition .gi {
+  color: var(--muted);
+  min-width: 18px;
+}
+.comp-head {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin-bottom: 4px;
+}
+ul.comps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+ul.comps li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--line);
+}
+ul.comps .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+  align-self: center;
+}
+ul.comps .n {
+  font-family: var(--mono);
+  font-size: 11px;
+  min-width: 18px;
+}
+ul.comps .members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+}
+ul.comps .link.node {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 0;
+  color: var(--text);
+}
+ul.comps .link.node.depot {
+  color: var(--accent);
+  font-weight: 600;
+}
+ul.comps .link.node:hover {
+  text-decoration: underline;
+}

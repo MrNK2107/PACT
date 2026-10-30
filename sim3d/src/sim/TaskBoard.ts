@@ -1,4 +1,4 @@
-import { isTerminal, type Priority, type Task, type TaskState } from './Task';
+import { isTerminal, urgentReplacementTerms, type Priority, type Task, type TaskState } from './Task';
 import type { TaskBoardView } from './types';
 
 export interface BoardEvent {
@@ -242,9 +242,10 @@ export class TaskBoard implements TaskBoardView {
 
   /**
    * In-flight parcel lost or returned (drone declared failed, or unreachable destination): the task is
-   * ABORTED and a replacement parcel is ordered from the depot as a new task (assumption O4).
+   * ABORTED and a replacement parcel is ordered from the depot as a new task (assumption O4). `urgent` (a parcel lost
+   * with a failed carrier): the replacement is priority 1 with a fresh delivery window, as under pact (Decision 19).
    */
-  abortInFlight(taskId: string, now: number, reason: string): Task | null {
+  abortInFlight(taskId: string, now: number, reason: string, urgent = false): Task | null {
     const t = this.byId.get(taskId);
     if (!t || isTerminal(t)) return null;
     const owner = t.owner;
@@ -269,12 +270,67 @@ export class TaskBoard implements TaskBoardView {
       deliveredAt: undefined,
       abortedAt: undefined,
       reorderOf: taskId,
+      ...(urgent ? urgentReplacementTerms(t, now) : {}),
     };
     this.tasks.push(re);
     this.byId.set(re.task_id, re);
     if (re.priority === 1) this.urgentCounter++;
     this.emit({ t: now, type: 'REORDERED', taskId: re.task_id, agent: null, data: { of: taskId } });
     return re;
+  }
+
+  /**
+   * Ledger mode (`pact`): the engine keeps this board as the omniscient merge of every node's replica. `t` is the
+   * winning record of a merge (the caller decides the order); its state, epoch, owner and bid replace the stored ones
+   * and the sim-time stamps of the transitions are filled in. A new id (replacement parcels) is appended. Emits no
+   * board events: under `pact` the node that made the transition logs it.
+   */
+  applyLedger(t: Task, now: number): void {
+    const cur = this.byId.get(t.task_id);
+    this.version++;
+    if (!cur) {
+      const fresh: Task = { ...t, lease_ttl: null };
+      this.stamp(fresh, null, now);
+      this.tasks.push(fresh);
+      this.byId.set(fresh.task_id, fresh);
+      if (fresh.priority === 1) this.urgentCounter++;
+      return;
+    }
+    const prev = { state: cur.state, epoch: cur.epoch };
+    cur.state = t.state;
+    cur.epoch = t.epoch;
+    cur.owner = t.owner;
+    cur.bid = t.bid;
+    cur.lease_ttl = null;
+    this.stamp(cur, prev, now);
+  }
+
+  private stamp(t: Task, prev: { state: TaskState; epoch: number } | null, now: number): void {
+    const moved = !prev || prev.state !== t.state || prev.epoch !== t.epoch;
+    if (!moved) return;
+    switch (t.state) {
+      case 'UNASSIGNED':
+        t.claimedAt = undefined;
+        t.committedAt = undefined;
+        break;
+      case 'CLAIMED':
+        t.claimedAt = now;
+        t.committedAt = undefined;
+        break;
+      case 'COMMITTED':
+        t.claimedAt ??= now;
+        t.committedAt = now;
+        break;
+      case 'PICKED_UP':
+        t.pickedAt ??= now;
+        break;
+      case 'DELIVERED':
+        t.deliveredAt ??= now;
+        break;
+      case 'ABORTED':
+        t.abortedAt ??= now;
+        break;
+    }
   }
 
   /** Not yet delivered or aborted. */

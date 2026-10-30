@@ -1,15 +1,23 @@
 import type { BridgeState, ExternalBridge } from '../integration/ExternalBridge';
 import type { FaultDef, Scenario } from '../scenario/types';
-import { polygonShape } from '../world/NoFly';
+import { pointInShape, polygonShape } from '../world/NoFly';
 import { radioSpecsFrom, radioZoneFromSpec } from '../world/Radio';
+import { shardOf } from '../world/Shards';
 import { heightAt } from '../world/Terrain';
 import { blendWindParams, boostWind, retargetWind, type WindBoost, type WindParams } from '../world/Wind';
+import { LocalClock } from '../net/Clock';
+import { Network, type WindowEnd } from '../net/Network';
+import { P2P_DEFAULTS, type Envelope, type TaskKey, type TaskRecord } from '../p2p/contracts';
+import { DepotNode } from '../p2p/DepotNode';
+import { defaultP2PConfig, type NodeEvent, type P2PConfig } from '../p2p/node';
+import { P2PNode } from '../p2p/P2PNode';
+import { ReplicaBoard } from '../p2p/ReplicaBoard';
+import { compareTaskKey, compareTaskRecord, isTerminalState, normTask, recordFromTask, taskFromRecord, taskKey, type Replica } from '../p2p/replica';
 import { Rng } from '../world/rng';
-import type { DropType, NoFlyShape, NoFlyZone, PadData, Vec3, WindField, WorldData } from '../world/types';
-import { MessageBus } from './AgentCoordinator';
+import type { DropType, NoFlyShape, NoFlyZone, PadData, RadioZone, Vec3, WindField, WorldData } from '../world/types';
 import { CentralHub, type HubDrone } from './CentralHub';
 import { allocationOf, isFenced, SERVICES, type SystemId } from './systems';
-import { drainPct, makeEnergyModel, type EnergyModel } from './Battery';
+import { drainPct, enduranceBoundS, makeEnergyModel, type EnergyModel } from './Battery';
 import { applyScenario, SIM } from './config';
 import { DRONE_COLORS, DroneAgent } from './DroneAgent';
 import { FaultInjector } from './Faults';
@@ -19,7 +27,7 @@ import { PadBook } from './PadBook';
 import { RadioModel } from './Radio';
 import type { Priority, Task, TaskState } from './Task';
 import { TaskBoard, type TaskStats } from './TaskBoard';
-import type { AgentController, AgentEvent, DronePhase } from './types';
+import type { AgentController, AgentEvent, DronePhase, Message } from './types';
 import { WorkloadGenerator } from './WorkloadGenerator';
 
 export type SimStatus = 'idle' | 'running' | 'paused';
@@ -81,6 +89,24 @@ export interface DroneSummary {
 }
 
 const WIND_STEP_S = 10;
+
+/** Envelope types the current controllers understand (their payload is a `Message`). */
+const isControllerMessage = (e: Envelope): boolean => e.type === 'HEARTBEAT' || e.type === 'CLAIM';
+/** Ledger changes younger than this (sim s) may still be in flight: `replica_converged` accepts the previous key. */
+const CONVERGE_SETTLE_S = 3;
+
+/**
+ * Worst range factor of the static (map) radio zones touching the ball of radius `r` around `p` (1 if none). The
+ * P2P nodes' a-priori radio knowledge (TC-09): an observer expects to hear a drone only where the map promises a link.
+ */
+function staticRadioFactor(zones: readonly RadioZone[], p: Vec3, r: number): number {
+  let f = 1;
+  for (const z of zones) {
+    if (!z.active || p.y - r > z.maxY || z.rangeFactor >= f) continue;
+    if (pointInShape(z.shape, p.x, p.z, r)) f = z.rangeFactor;
+  }
+  return f;
+}
 const STORM_STEP_S = 30;
 
 export interface SimSnapshot {
@@ -139,7 +165,8 @@ export class SimulationEngine {
   board: TaskBoard;
   workload: WorkloadGenerator;
   faults: FaultInjector;
-  bus = new MessageBus();
+  /** Simulated radio network (src/net): every drone and depot is a node. Rebuilt on reset. */
+  net!: Network;
   agents: DroneAgent[] = [];
   status: SimStatus = 'idle';
   speed = 1;
@@ -164,9 +191,16 @@ export class SimulationEngine {
   /** Airborne samples below the ground surface (never on flat maps: the floor clamp prevents it). */
   terrainHits = 0;
 
-  private rng: Rng;
+  /** Local (possibly drifting) clock per drone and depot; nothing but tests reads them yet. */
+  private clocks = new Map<string, LocalClock>();
   private acc = 0;
   private droneSeq = 0;
+  /**
+   * Configured fleet roster (pact): every drone id launched, known to every node like any fleet configuration. The
+   * QUORUM denominator is this roster minus the drones a node has DECLARED_FAILED (Decision 19). A fault-injected kill
+   * leaves the roster unchanged (nobody is told); an operator removal is a reconfiguration and takes the drone out.
+   */
+  private roster: string[] = [];
   private conflicts = new Map<string, number>();
   private collisionPairs = new Set<string>();
   private listeners = new Set<() => void>();
@@ -177,6 +211,20 @@ export class SimulationEngine {
   readonly system: SystemId;
   /** Central hub of the `central_*` baselines (null for decentralised systems). */
   hub: CentralHub | null = null;
+  /**
+   * Under `pact` every drone and depot is a P2P node with its own replica (src/p2p); `board` is then a read-only
+   * ledger: the CRDT merge of every node's writes, for the UI, stats and convergence checks. Agents never read it.
+   */
+  readonly p2p: boolean;
+  private p2pCfg!: P2PConfig;
+  private readonly staticRadioZones: RadioZone[];
+  private droneNodes = new Map<string, P2PNode>();
+  private replicaBoards = new Map<string, ReplicaBoard>();
+  private depotNodes = new Map<string, DepotNode>();
+  /** Ledger records (the merge of every write) and, per task, when the ledger key last changed and the key before. */
+  private ledger = new Map<string, TaskRecord>();
+  private ledgerMeta = new Map<string, { at: number; prev: TaskKey | null; terminalAt: number | null }>();
+  private convergeWatch: { t0: number; warned: boolean } | null = null;
 
   constructor(
     readonly world: WorldData,
@@ -184,16 +232,18 @@ export class SimulationEngine {
   ) {
     applyScenario(scenario);
     this.system = scenario.system ?? 'pact';
+    this.p2p = this.system === 'pact';
     this.energy = makeEnergyModel(scenario);
     this.initialDrones = scenario.fleet.n_drones;
     this.obstacles = new ObstacleManager(world);
     this.planner = new PathPlanner(this.obstacles, world.bounds);
     this.radio = new RadioModel(world.radioZones);
+    // a-priori radio knowledge of the P2P nodes: the map's own zones as built, never fault windows (TC-09 quorum votes)
+    this.staticRadioZones = world.radioZones.filter((z) => z.source !== 'fault').map((z) => ({ ...z }));
     this.pads = new PadBook(world.pads);
     this.baseWind = world.wind;
     this.baseWindParams = { mean_mps: world.wind.mean, dir_deg: world.wind.dirDeg, gust_mps: world.wind.gust };
     this.windParams = { ...this.baseWindParams };
-    this.rng = new Rng(world.seed + 7);
     this.board = new TaskBoard({ leaseTtlS: scenario.policy.lease_ttl_s, tCommitS: scenario.policy.t_commit_s, fenced: isFenced(scenario.system ?? 'pact') });
     this.workload = new WorkloadGenerator(world, scenario, new Rng(world.seed + 11));
     this.faults = new FaultInjector(scenario.faults, this.faultHooks());
@@ -207,8 +257,11 @@ export class SimulationEngine {
     this.board = new TaskBoard({ leaseTtlS: s.policy.lease_ttl_s, tCommitS: s.policy.t_commit_s, fenced: isFenced(this.system) });
     this.workload = new WorkloadGenerator(this.world, s, new Rng(this.world.seed + 11));
     this.faults = new FaultInjector(s.faults, this.faultHooks());
-    this.bus = new MessageBus();
     this.agents = [];
+    this.ledger = new Map();
+    this.ledgerMeta = new Map();
+    this.convergeWatch = null;
+    this.initNetwork();
     this.time = 0;
     this.acc = 0;
     this.status = 'idle';
@@ -226,8 +279,8 @@ export class SimulationEngine {
     this.conflicts.clear();
     this.collisionPairs.clear();
     this.droneSeq = 0;
+    this.roster = [];
     this.hub = allocationOf(this.system) === 'central' ? new CentralHub(s.policy.auction_period_s) : null;
-    this.rng = new Rng(this.world.seed + 7);
     // re-open every closable zone and clear fault-added zones
     for (const z of this.obstacles.allNoFly) if (z.closable && z.active) this.obstacles.setZoneActive(z.id, false);
     for (let i = this.obstacles.allNoFly.length - 1; i >= 0; i--) if (this.obstacles.allNoFly[i].source === 'fault') this.obstacles.allNoFly.splice(i, 1);
@@ -252,6 +305,79 @@ export class SimulationEngine {
     this.avoidVersion++;
     this.resetEpoch++;
     this.emit();
+  }
+
+  /**
+   * Fresh network and clocks: depots become static nodes on a mast above the depot (they send nothing yet); drones
+   * register as they spawn. The network draws from its own RNG stream (`seed ^ NET_RNG_SALT`), never the engine's.
+   */
+  private initNetwork(): void {
+    const n = this.scenario.network;
+    const bh = n.backhaul;
+    this.net = new Network({ loss: n.loss, latencyMs: [n.latency_ms[0], n.latency_ms[1]], rangeM: n.range_m, seed: this.world.seed, backhaul: bh ? { enabled: bh.enabled, latencyMs: [bh.latency_ms[0], bh.latency_ms[1]], loss: bh.loss } : undefined }, this.radio);
+    this.clocks = new Map();
+    this.droneNodes = new Map();
+    this.replicaBoards = new Map();
+    this.depotNodes = new Map();
+    const p = this.scenario.policy;
+    this.p2pCfg = defaultP2PConfig({ leaseTtlS: p.lease_ttl_s, tCommitS: p.t_commit_s, policy: p.partition, gossipPeriodS: p.gossip_period_s });
+    // TC-09 physical evidence: quorum votes only from observers that expected to hear the drone (nominal range x the
+    // map's static radio zones, its position bounded by 1.5 x cruise speed since last located), and silence only past
+    // the drone's endurance bound (full battery for a drone never heard from).
+    const zones = this.staticRadioZones;
+    const rangeM = n.range_m;
+    this.p2pCfg.expect = {
+      rangeM: (a, b, r) => rangeM * Math.min(staticRadioFactor(zones, a, 0), staticRadioFactor(zones, b, r)),
+      maxSpeedMps: 1.5 * this.scenario.fleet.speed_mps,
+      margin: 0.8,
+    };
+    this.p2pCfg.failure.opts = { ...this.p2pCfg.failure.opts, maxEnduranceS: enduranceBoundS(this.energy, 100) };
+    const depotIds = this.world.depots.map((d) => d.id);
+    for (const d of this.world.depots) {
+      const mast = { x: d.pos.x, y: d.pos.y + P2P_DEFAULTS.depotMastM, z: d.pos.z };
+      this.net.register(d.id, 'depot', () => mast);
+      const clock = new LocalClock(() => this.time);
+      this.clocks.set(d.id, clock);
+      if (this.p2p) {
+        this.depotNodes.set(
+          d.id,
+          new DepotNode({ id: d.id, clock, port: this.net.port(d.id), cfg: this.p2pCfg, pos: mast, catchmentShards: d.catchmentShards, depotIds, events: (e) => this.onNodeEvent(e), onWrite: (r) => this.ledgerMerge(r) }),
+        );
+      }
+    }
+  }
+
+  /** P2P node of a drone (pact only). */
+  nodeOf(id: string): P2PNode | undefined {
+    return this.droneNodes.get(id);
+  }
+
+  /** P2P node of a depot (pact only). */
+  depotNodeOf(id: string): DepotNode | undefined {
+    return this.depotNodes.get(id);
+  }
+
+  /** Every live replica (depots first, then drones, in id order). Empty for the baselines. */
+  replicas(): { id: string; replica: Replica }[] {
+    const out: { id: string; replica: Replica }[] = [];
+    for (const id of [...this.depotNodes.keys()].sort()) out.push({ id, replica: this.depotNodes.get(id)!.replica });
+    for (const id of [...this.droneNodes.keys()].sort()) out.push({ id, replica: this.droneNodes.get(id)!.replica });
+    return out;
+  }
+
+  /** Ledger record of a task (pact: the CRDT merge of every node's writes; undefined for the baselines). Read-only, for the viewer. */
+  ledgerRecord(taskId: string): TaskRecord | undefined {
+    return this.ledger.get(taskId);
+  }
+
+  /** The P2P configuration in force (pact). */
+  get p2pConfig(): P2PConfig {
+    return this.p2pCfg;
+  }
+
+  /** Local clock of a drone or depot (undefined for an unknown or removed id). */
+  clockOf(id: string): LocalClock | undefined {
+    return this.clocks.get(id);
   }
 
   subscribe(fn: () => void): () => void {
@@ -396,6 +522,25 @@ export class SimulationEngine {
     const idx = n - 1;
     const a = DroneAgent.create(id, idx, DRONE_COLORS[idx % DRONE_COLORS.length], fp.pad, SIM.layers[idx % SIM.layers.length], this.scenario.fleet.capacity_kg, allocationOf(this.system));
     this.agents.push(a);
+    this.net.register(id, 'drone', () => a.body.pos);
+    const clock = new LocalClock(() => this.time);
+    this.clocks.set(id, clock);
+    this.roster.push(id);
+    if (this.p2p) {
+      const node = new P2PNode({
+        id,
+        clock,
+        port: this.net.port(id),
+        cfg: this.p2pCfg,
+        depots: this.world.depots.map((d) => ({ id: d.id, catchmentShards: d.catchmentShards })),
+        homeDepot: fp.pad.depotId,
+        roster: () => this.roster,
+        events: (e) => this.onNodeEvent(e),
+        onWrite: (r) => this.ledgerMerge(r),
+      });
+      this.droneNodes.set(id, node);
+      this.replicaBoards.set(id, new ReplicaBoard(node));
+    }
     this.pads.reserve(fp.pad.id, id);
     if (announce) this.note('info', `${id} added at ${fp.pad.id}`, id, 'drone_added', { pad: fp.pad.id });
     return a;
@@ -419,7 +564,11 @@ export class SimulationEngine {
     if (!a) return null;
     const tid = a.controller.taskId;
     const task = tid ? this.board.get(tid) : undefined;
-    if (task && task.state === 'PICKED_UP') {
+    if (this.p2p) {
+      // the drone just stops: its origin depot re-opens a pre-pickup lease on expiry, or aborts + re-orders a
+      // carried parcel once the drone is declared failed (failure detector, design section 7)
+      this.note('warn', `${a.id} ${reason}${task ? ` holding ${task.task_id} (${task.state})` : ''}`, a.id, task?.state === 'PICKED_UP' ? 'drone_lost_in_flight' : 'drone_removed', task ? { task: task.task_id } : {});
+    } else if (task && task.state === 'PICKED_UP') {
       // in-flight parcel: re-ordered only once the drone is declared failed (endurance-bound stand-in)
       this.reorders.push({ taskId: task.task_id, at: this.time + SIM.tFailed, drone: a.id });
       this.note('warn', `${a.id} ${reason} with ${task.task_id} on board — replacement after ${SIM.tFailed} s unless it reappears`, a.id, 'drone_lost_in_flight', { task: task.task_id });
@@ -428,8 +577,12 @@ export class SimulationEngine {
       this.note('warn', `${a.id} ${reason} — ${task.task_id} returned to the order board`, a.id, 'drone_removed', { task: task.task_id });
     } else this.note('info', `${a.id} ${reason}`, a.id, 'drone_removed', {});
     this.agents = this.agents.filter((x) => x !== a);
+    if (reason === 'removed') this.roster = this.roster.filter((x) => x !== a.id);
     this.pads.release(a.id);
-    this.bus.drop(a.id);
+    this.net.unregister(a.id);
+    this.clocks.delete(a.id);
+    this.droneNodes.delete(a.id);
+    this.replicaBoards.delete(a.id);
     for (const k of [...this.conflicts.keys()]) if (k.split('|').includes(a.id)) this.conflicts.delete(k);
     this.fleetVersion++;
     this.emit();
@@ -441,6 +594,71 @@ export class SimulationEngine {
   private addTask(t: Task): void {
     const added = this.board.add(t);
     this.note('task', `${added.task_id} P${added.priority} ${added.origin_depot} → ${added.dropId}${added.scripted ? ' (scripted)' : ''}`, null, 'task_created', { task: added.task_id, priority: added.priority, deadline: added.deadline, weight_kg: added.weight_kg, shard: added.shard, scripted: added.scripted });
+    if (this.p2p) {
+      // intake: the origin depot writes the record into its replica and gossips it (the ledger already has it)
+      const rec = recordFromTask(added);
+      this.ledger.set(rec.task_id, rec);
+      this.ledgerMeta.set(rec.task_id, { at: this.time, prev: null, terminalAt: null });
+      this.depotNodes.get(added.origin_depot)?.intake(added);
+    }
+  }
+
+  /** Ledger: merge one node write (CRDT join); the board mirrors the winner with sim-time stamps. */
+  private ledgerMerge(rec: TaskRecord): void {
+    const cur = this.ledger.get(rec.task_id);
+    if (cur && compareTaskRecord(rec, cur) <= 0) return;
+    const r = normTask(rec);
+    this.ledger.set(r.task_id, r);
+    if (!cur || compareTaskKey(taskKey(r), taskKey(cur)) !== 0) {
+      const m = this.ledgerMeta.get(r.task_id);
+      this.ledgerMeta.set(r.task_id, { at: this.time, prev: cur ? taskKey(cur) : null, terminalAt: isTerminalState(r.state) ? (m?.terminalAt ?? this.time) : null });
+    }
+    this.board.applyLedger(taskFromRecord(r, undefined), this.time);
+  }
+
+  /** Events reported by P2P nodes: stamped with sim time; some also go to the UI log. */
+  private onNodeEvent(e: NodeEvent): void {
+    if (e.text) this.note(e.kind ?? 'info', e.text, e.agent, e.type, e.data);
+    else this.events.push({ t: this.time, agent: e.agent, type: e.type, data: e.data });
+  }
+
+  /**
+   * AT-10 measurement: after a heal, the first tick at which every live replica holds the ledger's task keys. A
+   * ledger change younger than `CONVERGE_SETTLE_S` may still be in flight (renewals never stop in a live run), so the
+   * previous key is accepted for it; a terminal task a replica never saw is accepted once its tombstone would have
+   * been pruned everywhere (it is no longer gossiped).
+   */
+  private checkConvergence(): void {
+    const w = this.convergeWatch;
+    if (!w) return;
+    const reps = this.replicas();
+    for (const [id, rec] of this.ledger) {
+      const m = this.ledgerMeta.get(id);
+      const want = taskKey(rec);
+      const fresh = m !== undefined && this.time - m.at < CONVERGE_SETTLE_S;
+      for (const { replica } of reps) {
+        const r = replica.getTask(id);
+        if (!r) {
+          if (m && m.terminalAt !== null && this.time - m.terminalAt > P2P_DEFAULTS.tombstoneTtlS) continue;
+          if (fresh && m!.prev === null) continue;
+          return this.convergeTimeout(w);
+        }
+        const k = taskKey(r);
+        if (compareTaskKey(k, want) === 0) continue;
+        if (fresh && m!.prev && compareTaskKey(k, m!.prev) === 0) continue;
+        return this.convergeTimeout(w);
+      }
+    }
+    const elapsed = this.time - w.t0;
+    this.convergeWatch = null;
+    this.note('info', `Replicas converged ${elapsed.toFixed(1)} s after the heal (${reps.length} replicas, ${this.ledger.size} tasks)`, null, 'replica_converged', { elapsed_s: Math.round(elapsed * 1000) / 1000, replicas: reps.length, tasks: this.ledger.size });
+  }
+
+  private convergeTimeout(w: { t0: number; warned: boolean }): void {
+    if (!w.warned && this.time - w.t0 > 6 * P2P_DEFAULTS.convergeS) {
+      w.warned = true;
+      this.note('warn', `Replicas not converged ${(this.time - w.t0).toFixed(0)} s after the heal`, null, 'replica_not_converged', { elapsed_s: Math.round((this.time - w.t0) * 1000) / 1000 });
+    }
   }
 
   private faultHooks() {
@@ -573,8 +791,38 @@ export class SimulationEngine {
         this.note('fault', `Fault: ${name} killed${affected ? ' — no new dispatches' : ` (no effect on ${this.system})`}`, null, 'fault', { type: 'kill_service', name, affected, t: now });
         return true;
       },
+      partition: (def: Extract<FaultDef, { type: 'partition' }>, now: number) => {
+        const ok = this.net.partition(def.groups, def.until);
+        if (ok) this.note('fault', `Fault: network partition ${def.groups.map((g) => `[${g.join(' ')}]`).join(' | ')}${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'partition', groups: def.groups, until: def.until, t: now });
+        else this.note('warn', `Fault: partition with an unknown node in ${JSON.stringify(def.groups)}`, null, 'fault_failed', { type: 'partition', groups: def.groups });
+        return ok;
+      },
+      linkLoss: (def: Extract<FaultDef, { type: 'link_loss' }>, now: number) => {
+        const loss = def.loss ?? 1;
+        const dir = def.dir ?? 'both';
+        const ok = this.net.setLinkLoss(def.id, loss, dir, def.until);
+        if (ok) this.note('fault', `Fault: ${def.id} link loss ${Math.round(loss * 100)}% (${dir})${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'link_loss', id: def.id, loss, dir, until: def.until, t: now });
+        else this.note('warn', `Fault: link_loss ${def.id}: no such node`, null, 'fault_failed', { type: 'link_loss', id: def.id });
+        return ok;
+      },
+      clockDrift: (def: Extract<FaultDef, { type: 'clock_drift' }>, now: number) => {
+        const c = this.clocks.get(def.id);
+        if (!c) {
+          this.note('warn', `Fault: clock_drift ${def.id}: no such node`, null, 'fault_failed', { type: 'clock_drift', id: def.id });
+          return false;
+        }
+        c.setDrift(def.ppm, now);
+        this.note('fault', `Fault: ${def.id} clock drifts ${def.ppm} ppm`, null, 'fault', { type: 'clock_drift', id: def.id, ppm: def.ppm, t: now });
+        return true;
+      },
+      backhaulCut: (def: Extract<FaultDef, { type: 'backhaul_cut' }>, now: number) => {
+        const ids = this.net.cutBackhaul(def.depots, def.until);
+        if (ids) this.note('fault', `Fault: depot backhaul cut (${ids.join(' ')})${def.until !== undefined ? ` until ${def.until} s` : ''}`, null, 'fault', { type: 'backhaul_cut', depots: ids, until: def.until, t: now });
+        else this.note('warn', `Fault: backhaul_cut with an unknown depot in ${JSON.stringify(def.depots)}`, null, 'fault_failed', { type: 'backhaul_cut', depots: def.depots });
+        return !!ids;
+      },
       unsupported: (def: FaultDef, now: number) => {
-        this.note('warn', `Fault ${def.type} at ${now.toFixed(0)} s is not supported yet (needs the network model)`, null, 'fault_unsupported', { type: def.type });
+        this.note('warn', `Fault ${def.type} at ${now.toFixed(0)} s is not supported`, null, 'fault_unsupported', { type: def.type });
       },
       log: (type: string, data: Record<string, unknown>, now: number) => {
         this.events.push({ t: now, agent: null, type, data });
@@ -588,36 +836,54 @@ export class SimulationEngine {
     const dt = SIM.dt;
     this.obstacles.step(this.time);
     this.radio.step(this.time);
+    for (const end of this.net.advance(this.time)) this.onNetWindowEnd(end);
     this.pads.step(this.time);
     this.stepWeather(this.time);
     this.obstacles.expireZones(this.time);
     this.faults.step(this.time);
     for (const t of this.workload.step(this.time)) this.addTask(t);
-    for (const t of this.board.step(this.time)) this.note('warn', `${t.task_id} lease expired — re-opened at epoch ${t.epoch}`, null, 'lease_expired', { task: t.task_id, epoch: t.epoch });
-    // replacement parcels for drones declared failed
-    for (let i = this.reorders.length - 1; i >= 0; i--) {
-      const r = this.reorders[i];
-      if (this.time < r.at) continue;
-      this.reorders.splice(i, 1);
-      const re = this.board.abortInFlight(r.taskId, this.time, `${r.drone} declared failed`);
-      if (re) this.note('task', `${r.drone} declared failed — ${r.taskId} re-ordered as ${re.task_id}`, r.drone, 'task_reordered', { of: r.taskId, task: re.task_id });
+    if (!this.p2p) {
+      for (const t of this.board.step(this.time)) this.note('warn', `${t.task_id} lease expired — re-opened at epoch ${t.epoch}`, null, 'lease_expired', { task: t.task_id, epoch: t.epoch });
+      // replacement parcels for drones declared failed (endurance-bound stand-in; pact uses the failure detector)
+      for (let i = this.reorders.length - 1; i >= 0; i--) {
+        const r = this.reorders[i];
+        if (this.time < r.at) continue;
+        this.reorders.splice(i, 1);
+        const re = this.board.abortInFlight(r.taskId, this.time, `${r.drone} declared failed`, true);
+        if (re) this.note('task', `${r.drone} declared failed — ${r.taskId} re-ordered as ${re.task_id} (urgent)`, r.drone, 'task_reordered', { of: r.taskId, task: re.task_id, cause: 'declared_failed', peer: r.drone });
+      }
     }
     if (this.hub?.due(this.time)) this.planCentral();
-    this.bus.deliver(
-      this.agents.map((a) => ({ id: a.id, pos: a.body.pos })),
-      this.rng,
-      this.radio,
-    );
+    this.net.deliver();
+    // depots: P2P nodes under pact (intake, arbitration, re-opens, failure declaration); otherwise they only listen
+    for (const d of this.world.depots) {
+      const envs = this.net.take(d.id);
+      const node = this.depotNodes.get(d.id);
+      if (!node) continue;
+      for (const e of envs) {
+        if (e.type === 'HEARTBEAT') node.onBeacon(e.src, (e.payload as Extract<Message, { type: 'HEARTBEAT' }>).pos);
+        else node.onEnvelope(e);
+      }
+      node.step();
+    }
 
     for (const a of this.agents) {
+      const node = this.droneNodes.get(a.id);
+      const inbox = this.net.take(a.id, isControllerMessage);
+      if (node) {
+        for (const e of inbox) if (e.type === 'HEARTBEAT') node.onBeacon(e.src, (e.payload as Extract<Message, { type: 'HEARTBEAT' }>).pos);
+        for (const e of this.net.take(a.id)) node.onEnvelope(e);
+        const b = a.body;
+        node.preStep({ pos: b.pos, battery: b.battery, enduranceS: enduranceBoundS(this.energy, b.battery), charging: a.controller.phase === 'charging', shard: shardOf(this.world.shards, b.pos.x, b.pos.z) });
+      }
       const cmd = a.controller.update({
         time: this.time,
         dt,
         body: a.body,
-        inbox: this.bus.take(a.id),
+        inbox: inbox.map((e) => e.payload as Message),
         obstacles: this.obstacles,
         planner: this.planner,
-        tasks: this.board,
+        tasks: this.replicaBoards.get(a.id) ?? this.board,
         world: this.world,
         energy: this.energy,
         capacityKg: a.capacityKg,
@@ -626,12 +892,16 @@ export class SimulationEngine {
         sensed: this.sense(a),
         hub: this.hub ?? undefined,
       });
-      for (const m of cmd.outbox) this.bus.broadcast(a.id, a.body.pos, m);
+      for (const m of cmd.outbox) this.net.send({ type: m.type, src: a.id, dst: '*', t_send: this.clocks.get(a.id)!.nowLocal(), payload: m });
+      node?.step();
       for (const e of cmd.events) this.onAgentEvent(a, e);
       this.integrate(a, cmd.velocity, cmd.charging, dt);
       this.sampleTrails(a, dt);
     }
 
+    // this tick's sends are resolved against end-of-tick positions and the link state in force now
+    this.net.flush();
+    this.checkConvergence();
     this.updateSafety();
     // board events become structured events (depot arbitration, leases, commits)
     if (this.board.events.length) {
@@ -645,6 +915,17 @@ export class SimulationEngine {
         br.b.onState(this.exportState());
       }
     }
+  }
+
+  private onNetWindowEnd(end: WindowEnd): void {
+    if (end.kind === 'partition') {
+      this.note('fault', 'Network partition healed', null, 'partition_end', {});
+      if (this.p2p) this.convergeWatch = { t0: this.time, warned: false };
+    }
+    else if (end.kind === 'backhaul_cut') {
+      this.note('fault', `Depot backhaul restored (${end.depots.join(' ')})`, null, 'backhaul_restored', { depots: end.depots });
+      if (this.p2p) this.convergeWatch = { t0: this.time, warned: false };
+    } else this.note('fault', `${end.id} link loss ended`, null, 'link_loss_end', { id: end.id });
   }
 
   /** One central planning round: every idle drone (global knowledge, no radio) against every open task. */
@@ -920,15 +1201,14 @@ export class SimulationEngine {
 
   // ---- queries ---------------------------------------------------------------------------------------
 
-  /** Pairs of agent indices currently within radio range (for the comm-link overlay). */
+  /** Pairs of agent indices with a usable link in at least one direction (range, partitions, link loss), for the overlay. */
   links(): [number, number][] {
     const out: [number, number][] = [];
     for (let i = 0; i < this.agents.length; i++) {
       for (let j = i + 1; j < this.agents.length; j++) {
-        const a = this.agents[i].body.pos;
-        const b = this.agents[j].body.pos;
-        const range = this.radio.hasZones ? SIM.commRange * this.radio.link(a, b).rangeFactor : SIM.commRange;
-        if (Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) <= range) out.push([i, j]);
+        const a = this.agents[i].id;
+        const b = this.agents[j].id;
+        if (this.net.linkUp(a, b) || this.net.linkUp(b, a)) out.push([i, j]);
       }
     }
     return out;

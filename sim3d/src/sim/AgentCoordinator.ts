@@ -1,55 +1,9 @@
-import type { Rng } from '../world/rng';
 import type { Vec3, WindField } from '../world/types';
 import { estimatePct, type EnergyModel } from './Battery';
 import { SIM } from './config';
 import type { ObstacleManager } from './ObstacleManager';
-import type { RadioModel } from './Radio';
 import type { NeighborInfo } from './PathPlanner';
 import type { DronePhase, Message, SiteStage, Task } from './types';
-
-/**
- * Simulated broadcast radio. A message sent in tick k is delivered at the start of tick k+1 to every
- * agent within `commRange` of the sender's position *at send time*. The bus knows nothing about
- * tasks or avoidance; it is a dumb medium (optionally lossy).
- */
-export class MessageBus {
-  private pending: { from: string; pos: Vec3; msg: Message }[] = [];
-  private inboxes = new Map<string, Message[]>();
-
-  broadcast(from: string, pos: Vec3, msg: Message): void {
-    this.pending.push({ from, pos: { ...pos }, msg });
-  }
-
-  deliver(agents: { id: string; pos: Vec3 }[], rng: Rng, radio?: RadioModel): void {
-    const zoned = !!radio && radio.hasZones;
-    for (const p of this.pending) {
-      for (const a of agents) {
-        if (a.id === p.from) continue;
-        const d = Math.hypot(a.pos.x - p.pos.x, a.pos.y - p.pos.y, a.pos.z - p.pos.z);
-        // dead zones shrink the range and add loss; with no active zone this is exactly the plain disc model
-        const fx = zoned ? radio!.link(p.pos, a.pos) : null;
-        if (d > (fx ? SIM.commRange * fx.rangeFactor : SIM.commRange)) continue;
-        const loss = fx && fx.loss > 0 ? 1 - (1 - SIM.packetLoss) * (1 - fx.loss) : SIM.packetLoss;
-        if (loss > 0 && rng.next() < loss) continue;
-        let box = this.inboxes.get(a.id);
-        if (!box) this.inboxes.set(a.id, (box = []));
-        box.push(p.msg);
-      }
-    }
-    this.pending.length = 0;
-  }
-
-  take(id: string): Message[] {
-    const box = this.inboxes.get(id);
-    if (!box || !box.length) return [];
-    this.inboxes.set(id, []);
-    return box;
-  }
-
-  drop(id: string): void {
-    this.inboxes.delete(id);
-  }
-}
 
 interface NeighborRecord {
   pos: Vec3;
@@ -146,8 +100,9 @@ export class AgentCoordinator {
    * charging-contention penalties, under hard payload / energy-reserve constraints. The broadcast CLAIM
    * carries `cost = -score`, so the existing "lower cost wins, ties to the lower id" consensus applies.
    */
-  chooseTask(open: readonly Task[], ctx: ScoreContext): { task: Task; cost: number; score: number; needPct: number } | null {
-    const taken = new Set([...this.claims.values()].map((c) => c.taskId));
+  chooseTask(open: readonly Task[], ctx: ScoreContext, distrust?: (peer: string) => boolean): { task: Task; cost: number; score: number; needPct: number } | null {
+    const taken = new Set<string>();
+    for (const [from, c] of this.claims) if (!distrust?.(from)) taken.add(c.taskId);
     const contention = this.returningNeighbours();
     let best: { task: Task; cost: number; score: number; needPct: number } | null = null;
     for (const t of open) {
@@ -180,18 +135,23 @@ export class AgentCoordinator {
     return { type: 'CLAIM', from: this.id, taskId: task.task_id, cost, t: now };
   }
 
-  /** True if a neighbour is bidding for the same task with a better (lower) cost. */
-  outbid(): boolean {
+  /**
+   * True if a neighbour is bidding for the same task with a better (lower) cost. Bids from peers in `distrust`
+   * (suspected by my failure detector) do not count: a suspect gets no new work (docs/P2P_DESIGN.md section 7).
+   */
+  outbid(distrust?: (peer: string) => boolean): boolean {
     if (!this.attempt) return false;
     for (const [from, c] of this.claims) {
       if (c.taskId !== this.attempt.task.task_id) continue;
+      if (distrust?.(from)) continue;
       if (c.cost < this.attempt.cost - 1e-6 || (Math.abs(c.cost - this.attempt.cost) < 1e-6 && from < this.id)) return true;
     }
     return false;
   }
 
+  /** The claim window (stretched to the scenario's latency bound, `SIM.claimWait`) has passed. */
   claimWindowElapsed(now: number): boolean {
-    return !!this.attempt && now - this.attempt.startedAt >= SIM.claimWindow;
+    return !!this.attempt && now - this.attempt.startedAt >= SIM.claimWait;
   }
 
   endClaim(): void {

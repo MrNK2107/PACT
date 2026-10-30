@@ -17,7 +17,7 @@ export const SCENARIO_DEFAULTS: Scenario = {
     weight_kg: { median: 0.8, sigma: 0.45 },
     tasks: [],
   },
-  network: { loss: 0, latency_ms: [50, 800], range_m: 1500 },
+  network: { loss: 0, latency_ms: [50, 800], range_m: 1500, backhaul: { enabled: true, latency_ms: [10, 40], loss: 0 } },
   policy: { partition: 'QUORUM', bundle_len: 3, lease_ttl_s: 20, gossip_period_s: 1.0, auction_period_s: 2.0, t_commit_s: 3, soc_reserve: 0.2, shard_m: 500 },
   faults: [],
 };

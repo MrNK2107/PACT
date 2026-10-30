@@ -79,3 +79,13 @@ export function estimatePct(m: EnergyModel, field: WindField, legs: { from: Vec3
   wh += (powerW(m, 0, 0, true) * extraHoverS) / 3600;
   return (wh / m.batteryWh) * 100 * m.demoScale * (1 + m.sigma);
 }
+
+/**
+ * Upper bound of the seconds a drone can stay aloft on `socPct` %: its energy over the minimum electrical draw of the
+ * model (hotel load at zero airspeed, no payload; hovering and cruising both draw more). Physical evidence for the
+ * failure detector (03 section 3.6): a silent drone cannot be declared failed by silence before this bound.
+ */
+export function enduranceBoundS(m: EnergyModel, socPct: number): number {
+  const pctPerS = (m.pBaseW / 3600 / m.batteryWh) * 100 * m.demoScale;
+  return Math.max(0, socPct) / pctPerS;
+}

@@ -97,6 +97,24 @@ describe('task board (ownership rules, PRD 3.3 / 3.5 / 10)', () => {
     expect(b.stats(80).reordered).toBe(1);
   });
 
+  it('a parcel lost with a failed carrier is re-ordered as pact does: priority 1, fresh window of the original length (Decision 19)', () => {
+    const b = new TaskBoard({ leaseTtlS: 20, tCommitS: 2 });
+    const t = b.add(mk());
+    const len = t.deadline - t.created_at;
+    b.claim(t.task_id, 'A01', -1, 0);
+    b.pickup(t.task_id, 'A01', 1, 5);
+    const re = b.abortInFlight(t.task_id, 500, 'A01 declared failed', true)!;
+    expect(re.priority).toBe(1);
+    expect(re.deadline).toBe(500 + Math.max(60, len));
+    expect(re.created_at).toBe(500);
+    // a parcel given back keeps its terms
+    const u = b.add(mk('D1:00000002:0002', 3));
+    b.claim(u.task_id, 'A02', -1, 0);
+    b.pickup(u.task_id, 'A02', 1, 5);
+    const back = b.abortInFlight(u.task_id, 500, 'returned to depot')!;
+    expect([back.priority, back.deadline]).toEqual([u.priority, u.deadline]);
+  });
+
   it('keeps epoch and state rank monotonic over random operation sequences', () => {
     const rng = new Rng(77);
     for (let run = 0; run < 30; run++) {

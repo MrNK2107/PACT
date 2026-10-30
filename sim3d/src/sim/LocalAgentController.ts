@@ -216,7 +216,7 @@ export class LocalAgentController implements AgentController {
       } else {
         // cbba_plain: the same auction, but over the tasks this drone believes are free (no board fencing)
         const pool = this.allocation === 'cbba' ? p.tasks.believedOpen(this.coord.heardIds(), this.id) : p.tasks.open();
-        const choice = this.coord.chooseTask(pool, ctx);
+        const choice = this.coord.chooseTask(pool, ctx, p.tasks.suspected ? (id) => p.tasks.suspected!(id) : undefined);
         if (choice) {
           out.outbox.push(this.coord.startClaim(choice.task, choice.cost, now));
           this.phase = 'claiming';
@@ -235,7 +235,7 @@ export class LocalAgentController implements AgentController {
 
   private doClaiming(p: Percept, out: Command): void {
     const now = p.time;
-    if (this.coord.outbid()) {
+    if (this.coord.outbid(p.tasks.suspected ? (id) => p.tasks.suspected!(id) : undefined)) {
       this.coord.endClaim();
       this.phase = 'idle';
       this.nextChoose = now + 0.25 + (hash(this.id) % 5) * 0.06;
@@ -412,6 +412,8 @@ export class LocalAgentController implements AgentController {
     if (this.phase === 'loading') {
       // depot arbitration: only the highest valid epoch's owner receives the parcel (REQ-OWN-003)
       const verdict = p.tasks.pickup(this.task.task_id, this.id, this.task.epoch, now);
+      // replica board: the PICKUP_REQ is on its way to the origin depot; keep waiting at the bay (baselines never wait)
+      if (verdict === 'PENDING') return;
       if (verdict === 'TASK_TAKEN') {
         out.events.push({ type: 'task_taken', taskId: this.task.task_id });
         this.dropTask();
@@ -511,6 +513,8 @@ export class LocalAgentController implements AgentController {
     if (!this.startRoute(p, out, pad.pos, 'returning', pad.id)) {
       p.pads?.release(this.id);
       this.backoffUntil = now + 3;
+      // no route home from here (e.g. stopped under a new ceiling): ask again in a few seconds, not every tick
+      this.padRetryAt = now + 3;
       this.leaveDeadPhase(now);
     }
   }

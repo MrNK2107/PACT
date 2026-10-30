@@ -476,7 +476,18 @@ export function computeAvoidance(inp: AvoidanceInput): AvoidanceResult {
     if (mustYield) {
       yielding = true;
       avoiding = true;
-      sidestep(rxv, rzv, 0.9, 0.35, urgency);
+      const hv = Math.hypot(n.vel.x, n.vel.z);
+      if (hv > 2) {
+        let px = -n.vel.z / hv;
+        let pz = n.vel.x / hv;
+        if (-rxv * px - rzv * pz < 0) {
+          px = -px;
+          pz = -pz;
+        }
+        av.x += px * 0.9 * V * urgency;
+        av.z += pz * 0.9 * V * urgency;
+        sidestep(rxv, rzv, 0, 0.35, urgency);
+      } else sidestep(rxv, rzv, 0.9, 0.35, urgency);
       const dh = Math.hypot(rxv, rzv);
       if (dh < sep * 0.7 && Math.abs(n.pos.y - inp.pos.y) < 9) {
         // stacked: separate vertically, away from where the other drone will be at closest approach
@@ -489,7 +500,19 @@ export function computeAvoidance(inp: AvoidanceInput): AvoidanceResult {
       // distance is small, and backs off if dangerously close
       if (dmin < sep * 0.7) {
         avoiding = true;
-        sidestep(rxv, rzv, 0.4, 0, urgency);
+        const hv = Math.hypot(inp.desired.x, inp.desired.z);
+        if (hv > 2) {
+          // complementary to the yielder's rule (it steps off my track to its own side): I step perpendicular to my
+          // own track, away from its side. Right-of-bearing could point towards it in a near head-on pass.
+          let px = -inp.desired.z / hv;
+          let pz = inp.desired.x / hv;
+          if (rxv * px + rzv * pz > 0) {
+            px = -px;
+            pz = -pz;
+          }
+          av.x += px * 0.4 * V * urgency;
+          av.z += pz * 0.4 * V * urgency;
+        } else sidestep(rxv, rzv, 0.4, 0, urgency);
       }
       if (d < sep * 0.6) {
         avoiding = true;

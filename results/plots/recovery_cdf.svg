@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 912 430" width="912" height="430" role="img" aria-labelledby="title desc">
+<title id="title">Recovery-time CDF after a carrier failure</title><desc id="desc">Empirical CDF per system over 8 seeds of at06_drone_failure.</desc>
+<style>
+svg{background:#fcfcfb;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.t1{fill:#0b0b0b}.t2{fill:#52514e}.grid{stroke:#e4e3df;stroke-width:1}.axis{stroke:#9a9993;stroke-width:1}.pf{fill:none;stroke:#52514e;stroke-width:1.5}.ring{stroke:#fcfcfb}.legend-mark{fill:#52514e;stroke:none}
+.ci{stroke-width:2;fill:none;stroke:#0b0b0b}.s-pact{fill:#2a78d6;stroke:#2a78d6}.s-central_full{fill:#eb6834;stroke:#eb6834}.s-central_hub_loss{fill:#1baf7a;stroke:#1baf7a}.s-greedy_nearest{fill:#eda100;stroke:#eda100}.s-cbba_plain{fill:#e87ba4;stroke:#e87ba4}
+@media (prefers-color-scheme: dark){svg{background:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.grid{stroke:#33332f}.axis{stroke:#6b6a64}.pf{stroke:#c3c2b7}.ring{stroke:#1a1a19}.legend-mark{fill:#c3c2b7}.ci{stroke:#f0efec}.s-pact{fill:#3987e5;stroke:#3987e5}.s-central_full{fill:#d95926;stroke:#d95926}.s-central_hub_loss{fill:#199e70;stroke:#199e70}.s-greedy_nearest{fill:#c98500;stroke:#c98500}.s-cbba_plain{fill:#d55181;stroke:#d55181}}
+</style>
+<text x="16" y="26" class="t1" font-size="16" font-weight="600">Recovery after a carrier failure (empirical CDF)</text>
+<text x="16" y="46" class="t2" font-size="12">at06_drone_failure, 8 seeds per system: the first carrier after 120 s is killed 10 s after its pickup. Curves stay below 1 for runs never recovered.</text>
+<rect x="16" y="61" width="12" height="4" class="s-pact"/><text x="34" y="68" class="t2" font-size="12">pact</text>
+<rect x="166" y="61" width="12" height="4" class="s-central_full"/><text x="184" y="68" class="t2" font-size="12">central_full</text>
+<rect x="316" y="61" width="12" height="4" class="s-central_hub_loss"/><text x="334" y="68" class="t2" font-size="12">central_hub_loss</text>
+<rect x="466" y="61" width="12" height="4" class="s-greedy_nearest"/><text x="484" y="68" class="t2" font-size="12">greedy_nearest</text>
+<rect x="616" y="61" width="12" height="4" class="s-cbba_plain"/><text x="634" y="68" class="t2" font-size="12">cbba_plain</text>
+<text x="60" y="92" class="t1" font-size="13" font-weight="600">kill -&gt; replacement claimed (s)</text>
+<line x1="60" y1="350" x2="420" y2="350" class="grid"/><text x="54" y="354" class="t2" font-size="10" text-anchor="end">0</text>
+<line x1="60" y1="287.5" x2="420" y2="287.5" class="grid"/><text x="54" y="291.5" class="t2" font-size="10" text-anchor="end">0.25</text>
+<line x1="60" y1="225" x2="420" y2="225" class="grid"/><text x="54" y="229" class="t2" font-size="10" text-anchor="end">0.5</text>
+<line x1="60" y1="162.5" x2="420" y2="162.5" class="grid"/><text x="54" y="166.5" class="t2" font-size="10" text-anchor="end">0.75</text>
+<line x1="60" y1="100" x2="420" y2="100" class="grid"/><text x="54" y="104" class="t2" font-size="10" text-anchor="end">1</text>
+<text x="60" y="364" class="t2" font-size="10" text-anchor="middle">0</text>
+<text x="165.88235294117646" y="364" class="t2" font-size="10" text-anchor="middle">50</text>
+<text x="271.7647058823529" y="364" class="t2" font-size="10" text-anchor="middle">100</text>
+<text x="377.6470588235294" y="364" class="t2" font-size="10" text-anchor="middle">150</text>
+<line x1="60" y1="350" x2="420" y2="350" class="axis"/><line x1="60" y1="100" x2="60" y2="350" class="axis"/>
+<text x="240" y="382" class="t2" font-size="11" text-anchor="middle">seconds</text>
+<g><title>pact: 7/8 recovered; median 9.9 s; values 4.2, 4.9, 5.0, 9.9, 15.8, 31.0, 42.4</title><path d="M60,350 H68.89411764705882 V318.75 H70.37647058823529 V287.5 H70.58823529411765 V256.25 H80.96470588235294 V225 H93.45882352941177 V193.75 H125.6470588235294 V162.5 H149.78823529411764 V131.25 H420" class="s-pact" style="fill:none;stroke-width:2"/></g>
+<g><title>central_full: 8/8 recovered; median 61.5 s; values 60.9, 60.9, 61.2, 61.5, 61.9, 83.9, 87.3, 166.1</title><path d="M60,350 H188.96470588235294 V318.75 H188.96470588235294 V287.5 H189.60000000000002 V256.25 H190.23529411764704 V225 H191.08235294117648 V193.75 H237.67058823529413 V162.5 H244.87058823529412 V131.25 H411.74117647058824 V100 H420" class="s-central_full" style="fill:none;stroke-width:2"/></g>
+<g><title>central_hub_loss: 8/8 recovered; median 61.5 s; values 60.9, 60.9, 61.2, 61.5, 61.9, 83.9, 87.3, 166.1</title><path d="M60,350 H188.96470588235294 V318.75 H188.96470588235294 V287.5 H189.60000000000002 V256.25 H190.23529411764704 V225 H191.08235294117648 V193.75 H237.67058823529413 V162.5 H244.87058823529412 V131.25 H411.74117647058824 V100 H420" class="s-central_hub_loss" style="fill:none;stroke-width:2"/></g>
+<g><title>greedy_nearest: 8/8 recovered; median 65.8 s; values 60.0, 63.3, 65.1, 65.8, 66.9, 73.3, 75.9, 124.0</title><path d="M60,350 H187.05882352941177 V318.75 H194.0470588235294 V287.5 H197.85882352941175 V256.25 H199.34117647058824 V225 H201.67058823529413 V193.75 H215.2235294117647 V162.5 H220.7294117647059 V131.25 H322.5882352941176 V100 H420" class="s-greedy_nearest" style="fill:none;stroke-width:2"/></g>
+<g><title>cbba_plain: 7/8 recovered; median 67.9 s; values 60.9, 60.9, 60.9, 67.9, 90.1, 95.3, 98.9</title><path d="M60,350 H188.96470588235294 V318.75 H188.96470588235294 V287.5 H188.96470588235294 V256.25 H203.78823529411767 V225 H250.79999999999998 V193.75 H261.81176470588235 V162.5 H269.43529411764706 V131.25 H420" class="s-cbba_plain" style="fill:none;stroke-width:2"/></g>
+<text x="500" y="92" class="t1" font-size="13" font-weight="600">declaration -&gt; replacement claimed (s)</text>
+<line x1="500" y1="350" x2="860" y2="350" class="grid"/><text x="494" y="354" class="t2" font-size="10" text-anchor="end">0</text>
+<line x1="500" y1="287.5" x2="860" y2="287.5" class="grid"/><text x="494" y="291.5" class="t2" font-size="10" text-anchor="end">0.25</text>
+<line x1="500" y1="225" x2="860" y2="225" class="grid"/><text x="494" y="229" class="t2" font-size="10" text-anchor="end">0.5</text>
+<line x1="500" y1="162.5" x2="860" y2="162.5" class="grid"/><text x="494" y="166.5" class="t2" font-size="10" text-anchor="end">0.75</text>
+<line x1="500" y1="100" x2="860" y2="100" class="grid"/><text x="494" y="104" class="t2" font-size="10" text-anchor="end">1</text>
+<text x="500" y="364" class="t2" font-size="10" text-anchor="middle">0</text>
+<text x="581.8181818181818" y="364" class="t2" font-size="10" text-anchor="middle">25</text>
+<text x="663.6363636363636" y="364" class="t2" font-size="10" text-anchor="middle">50</text>
+<text x="745.4545454545455" y="364" class="t2" font-size="10" text-anchor="middle">75</text>
+<text x="827.2727272727273" y="364" class="t2" font-size="10" text-anchor="middle">100</text>
+<line x1="500" y1="350" x2="860" y2="350" class="axis"/><line x1="500" y1="100" x2="500" y2="350" class="axis"/>
+<line x1="598.1818181818181" y1="100" x2="598.1818181818181" y2="350" class="axis" stroke-dasharray="4 3"/><text x="602.1818181818181" y="112" class="t2" font-size="10">AT-06 median gate 30 s</text>
+<text x="680" y="382" class="t2" font-size="11" text-anchor="middle">seconds</text>
+<g><title>pact: 7/8 recovered; median 6.2 s; values 1.0, 1.4, 1.5, 6.2, 11.9, 27.1, 38.3</title><path d="M500,350 H503.27272727272725 V318.75 H504.58181818181816 V287.5 H504.90909090909093 V256.25 H520.290909090909 V225 H538.9454545454546 V193.75 H588.6909090909091 V162.5 H625.3454545454546 V131.25 H860" class="s-pact" style="fill:none;stroke-width:2"/></g>
+<g><title>central_full: 8/8 recovered; median 1.5 s; values 0.9, 0.9, 1.2, 1.5, 1.8, 23.9, 27.2, 106.1</title><path d="M500,350 H502.94545454545454 V318.75 H502.94545454545454 V287.5 H503.92727272727274 V256.25 H504.90909090909093 V225 H505.8909090909091 V193.75 H578.2181818181818 V162.5 H589.0181818181818 V131.25 H847.2363636363636 V100 H860" class="s-central_full" style="fill:none;stroke-width:2"/></g>
+<g><title>central_hub_loss: 8/8 recovered; median 1.5 s; values 0.9, 0.9, 1.2, 1.5, 1.8, 23.9, 27.2, 106.1</title><path d="M500,350 H502.94545454545454 V318.75 H502.94545454545454 V287.5 H503.92727272727274 V256.25 H504.90909090909093 V225 H505.8909090909091 V193.75 H578.2181818181818 V162.5 H589.0181818181818 V131.25 H847.2363636363636 V100 H860" class="s-central_hub_loss" style="fill:none;stroke-width:2"/></g>
+<g><title>greedy_nearest: 8/8 recovered; median 5.8 s; values 0.0, 3.3, 5.0, 5.8, 6.9, 13.3, 15.9, 63.9</title><path d="M500,350 H500 V318.75 H510.8 V287.5 H516.3636363636364 V256.25 H518.9818181818182 V225 H522.5818181818182 V193.75 H543.5272727272727 V162.5 H552.0363636363636 V131.25 H709.1272727272727 V100 H860" class="s-greedy_nearest" style="fill:none;stroke-width:2"/></g>
+<g><title>cbba_plain: 7/8 recovered; median 7.8 s; values 0.9, 0.9, 0.9, 7.8, 30.0, 35.3, 38.9</title><path d="M500,350 H502.94545454545454 V318.75 H502.94545454545454 V287.5 H502.94545454545454 V256.25 H525.5272727272727 V225 H598.1818181818181 V193.75 H615.5272727272727 V162.5 H627.3090909090909 V131.25 H860" class="s-cbba_plain" style="fill:none;stroke-width:2"/></g>
+<text x="16" y="420" class="t2" font-size="11">pact declares from physical evidence (failure quorum); baselines re-order after a fixed 60 s stand-in. Every system re-orders the parcel as priority 1 with a fresh window.</text>
+</svg>

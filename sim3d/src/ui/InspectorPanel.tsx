@@ -1,16 +1,59 @@
 import { engine, world } from '../app/simContext';
 import { useSimSnapshot } from '../app/hooks';
+import { droneNetInfo, taskLedgerInfo } from '../app/netGraph';
+import { currentNetView } from '../app/netView';
 import { useUI } from '../app/uiStore';
+import { P2P_DEFAULTS } from '../p2p/contracts';
 import type { SimSnapshot } from '../sim/SimulationEngine';
 import { shapeBounds } from '../world/NoFly';
 import type { BuildingData, ChargerData, DemandCluster, DepotData, DistrictData, DropPointData, NoFlyZone, PadData, RoadData, StationData, ZoneData } from '../world/types';
 import { windAt } from '../world/Wind';
-import { phaseLabel } from './TelemetryPanel';
+import { fmtTime, phaseLabel } from './TelemetryPanel';
 
 type Row = [string, string];
 
 const f = (n: number, d = 1) => n.toFixed(d);
 const xyz = (p: { x: number; y: number; z: number }) => `${f(p.x)}, ${f(p.y)}, ${f(p.z)}`;
+
+/** Radio component of a network node: size and colour (from the memoised radio graph). */
+function componentOf(id: string): { color: string; size: number; label: string } | null {
+  const v = currentNetView();
+  const root = v.comp.get(id);
+  if (!root) return null;
+  const c = v.components.find((x) => x.root === root);
+  const size = c?.members.length ?? 1;
+  const links = v.links.filter((l) => l.a === id || l.b === id);
+  const oneWay = links.filter((l) => !l.both).length;
+  return { color: v.colorOf.get(root)!, size, label: `${size === v.nodes.length ? 'whole network' : `${size} of ${v.nodes.length} nodes`} · ${links.length} link${links.length === 1 ? '' : 's'}${oneWay ? ` (${oneWay} one-way)` : ''}` };
+}
+
+/** Ledger rows of a task (pact): merge key and replica divergence. */
+function ledgerRows(taskId: string): Row[] {
+  const info = taskLedgerInfo(engine, taskId);
+  if (!info) return [];
+  const r = info.rec;
+  const total = info.agree.length + info.behind.length + info.missing.length + info.ahead.length;
+  const short = (ids: string[]) => (ids.length > 6 ? `${ids.slice(0, 6).join(', ')} …` : ids.join(', '));
+  const rows: Row[] = [
+    ['Ledger record', `${r.state} · epoch ${r.epoch} · owner ${r.owner ?? '—'} · renew ${r.renew} · lease ${r.lease_s} s`],
+    ['Replicas agree', `${info.agree.length} / ${total}`],
+  ];
+  if (info.behind.length) rows.push(['Replicas behind', `${info.behind.length}: ${short(info.behind)}`]);
+  if (info.missing.length) rows.push(['Never saw it', `${info.missing.length}: ${short(info.missing)}`]);
+  if (info.ahead.length) rows.push(['Ahead of ledger', `${info.ahead.length}: ${short(info.ahead)}`]);
+  return rows;
+}
+
+const MODE_TONE: Record<string, string> = { CONNECTED: 'ok', DEGRADED: 'warn', PARTITIONED: 'bad', SOLO: 'bad' };
+
+function depotNetRows(id: string): Row[] {
+  if (!engine.net.has(id)) return [];
+  const c = componentOf(id);
+  const rows: Row[] = [['Network node', `mast +${P2P_DEFAULTS.depotMastM} m · ${c ? c.label : '—'}`]];
+  const node = engine.depotNodeOf(id);
+  if (node) rows.push(['Replica', `${node.replica.taskCount} tasks · ${node.counters.grants} grants · ${node.counters.reopens} re-opens · ${node.counters.replacements} replacements`]);
+  return rows;
+}
 
 function describe(id: string, snap: SimSnapshot): { title: string; kind: string; rows: Row[] } | null {
   const e = world.index.get(id);
@@ -50,6 +93,7 @@ function describe(id: string, snap: SimSnapshot): { title: string; kind: string;
           ['Drones based here', occupants.length ? occupants.map((d) => `${d.id} (${phaseLabel(d.phase)})`).join(', ') : 'none'],
           ['Charging now', `${occupants.filter((d) => d.phase === 'charging').length}`],
           ['Building', h.buildingId],
+          ...depotNetRows(h.id),
         ],
       };
     }
@@ -131,6 +175,68 @@ function describe(id: string, snap: SimSnapshot): { title: string; kind: string;
   }
 }
 
+function droneNetRows(id: string): Row[] {
+  const rows: Row[] = [];
+  const c = componentOf(id);
+  if (c) rows.push(['Radio component', c.label]);
+  const n = droneNetInfo(engine, id);
+  if (!n) return rows;
+  rows.push(['Reachable / known fleet', `${n.reachable.length} / ${n.known.length} · quorum ${n.quorum ? 'holds' : 'lost'}`]);
+  rows.push(['Suspects (reported)', n.suspects.length ? n.suspects.join(', ') : 'none']);
+  if (n.unhealthy.length) rows.push(['Peer health', n.unhealthy.map((p) => `${p.id} ${p.health.toLowerCase().replace('_', ' ')}`).join(', ')]);
+  return rows;
+}
+
+/** Inspector for a task (selected from the order board): board fields, ledger record and replica divergence. */
+function TaskInspector({ id }: { id: string }) {
+  const snap = useSimSnapshot();
+  const select = useUI((u) => u.select);
+  const t = engine.board.get(id);
+  if (!t) return null;
+  const owner = snap.drones.find((x) => x.id === t.owner);
+  const rows: Row[] = [
+    ['State', `${t.state} · P${t.priority} · epoch ${t.epoch}`],
+    ['Owner', t.owner ?? 'unassigned'],
+    ['Route', `${t.origin_depot} → ${t.dropId} (${t.type})`],
+    ['Shard', t.shard],
+    ['Weight', `${f(t.weight_kg, 2)} kg`],
+    ['Deadline', `${fmtTime(t.deadline)}${snap.time > t.deadline ? ' (overdue)' : ` (in ${fmtTime(t.deadline - snap.time)})`}`],
+    ...ledgerRows(id),
+  ];
+  return (
+    <section className="panel">
+      <h3>
+        {owner && <span className="dot" style={{ background: owner.color }} />} Task {id}
+        <button className="link" onClick={() => select(null)}>
+          Clear
+        </button>
+      </h3>
+      <div className="kind">{engine.p2p ? 'Order · ledger = merge of every replica' : `Order · global board (${engine.system})`}</div>
+      <dl className="kv">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="actions">
+        {t.owner && (
+          <button className="btn" onClick={() => select(t.owner)}>
+            Owner {t.owner}
+          </button>
+        )}
+        <button className="btn" onClick={() => select(t.dropId)}>
+          Drop point
+        </button>
+        <button className="btn" onClick={() => select(t.origin_depot)}>
+          Depot
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function InspectorPanel() {
   const snap = useSimSnapshot();
   const sel = useUI((u) => u.selection?.id);
@@ -148,6 +254,7 @@ export function InspectorPanel() {
 
   const d = snap.drones.find((x) => x.id === sel);
   if (d) {
+    const mode = droneNetInfo(engine, d.id)?.mode ?? null;
     const rows: Row[] = [
       ['State', d.avoiding ? `${phaseLabel(d.phase)} · avoiding ${d.conflictWith.join(', ')}` : d.holdReason ? `${phaseLabel(d.phase)} · ${d.holdReason}` : phaseLabel(d.phase)],
       ['Task', d.taskId ? `${d.taskId}  ${d.pickup} → ${d.delivery}${d.carrying ? ` (carrying ${f(d.payloadKg, 2)} kg)` : ''}` : '—'],
@@ -159,6 +266,8 @@ export function InspectorPanel() {
       ['Speed / heading', `${f(d.speed)} m/s · ${f(d.heading, 0)}°`],
       ['Route progress', `${d.routeProgress[0]} / ${d.routeProgress[1]} waypoints`],
       ['Neighbours in radio range', `${d.neighbors}`],
+      ...droneNetRows(d.id),
+      ...(d.taskId ? ledgerRows(d.taskId) : []),
       ['Priority tier', `${d.priority}`],
       ['Home pad', d.homePad],
       ['Deliveries', `${d.delivered}`],
@@ -168,6 +277,7 @@ export function InspectorPanel() {
       <section className="panel">
         <h3>
           <span className="dot" style={{ background: d.color }} /> Drone {d.id}
+          {mode && <span className={`mode ${MODE_TONE[mode] ?? ''}`} title="DroneMode from its own published status">{mode}</span>}
           <button className="link" onClick={() => select(null)}>
             Clear
           </button>
@@ -192,6 +302,7 @@ export function InspectorPanel() {
     );
   }
 
+  if (!world.index.get(sel) && engine.board.get(sel)) return <TaskInspector id={sel} />;
   const info = describe(sel, snap);
   if (!info) return null;
   return (

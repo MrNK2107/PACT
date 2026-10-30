@@ -1,0 +1,16 @@
+# AT-03 (PRD section 11): split-brain under STRICT. A 5 min partition cuts D1 and its two drones off from the rest;
+# at least 20 jobs are created while it lasts. Pass: 0 duplicate deliveries, I1 holds (src/scenario/acceptance.scenarios.ts).
+name: at03_split_brain_strict
+map: coastal_testbed
+tier: standard
+tags: [acceptance, partition]
+description: AT-03. STRICT, 6 drones, 6 orders/min; partition {D1, A01, A04} | {D2, D3, A02, A03, A05, A06} from 120 s to 420 s.
+seed: 20240611
+duration_s: 600
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [2000, 2000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 3 } }
+workload: { arrival_rate_per_min: 6, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: STRICT }
+faults:
+  - { t: 120, type: partition, groups: [[D1, A01, A04], [D2, D3, A02, A03, A05, A06]], until: 420 }

@@ -1,48 +1,37 @@
 # PACT AT-12 policy sweep
 
-540 runs: scenario x system x policy x 30 seed(s), 900 s of simulated time each. Values are means with a 95 % bootstrap CI. Simulation only.
+240 runs: scenario x (policy x `pact` + `cbba_plain` reference) x 30 seed(s), 900 s of simulated time each. Values are means with a 95 % bootstrap CI. Simulation only.
 
-Policies vary `policy.soc_reserve`. The partition policies STRICT / QUORUM / OPTIMISTIC_BOUNDED need the network model, which is not implemented, so they are not swept. Systems: `pact` (fenced: atomic claims, leases, depot arbitration) and `cbba_plain` (unfenced).
+The policy axis is the partition policy (`policy.partition`) under `pact`. `cbba_plain` has no fencing and no partition policy; it runs once per scenario as the unfenced reference (policy `unfenced`).
 
-**Violations** = duplicate deliveries + zombie pickups per run. **Pareto** = not dominated within the scenario on (on-time rate up, violations down).
+**Violations** = duplicate deliveries + zombie pickups per run. **Refusals** = pickups the depot refused (`task_taken`, a wasted sortie) per run. **Pareto** = not dominated within the scenario on (on-time rate up, violations down).
 
-- `reserve_10`: energy reserve 10 %
-- `reserve_20`: energy reserve 20 % (default)
-- `reserve_30`: energy reserve 30 %
+- `STRICT`: claim only under a live shard lease held on my side (REQ-OWN-005)
+- `QUORUM`: claim only while a strict majority of the fleet roster is reachable
+- `OPTIMISTIC_BOUNDED`: QUORUM, or at most 1 priority >= 2 claim without it; never priority 1
 
-## s6_battery_crunch
+## at03_split_brain_strict
 
-| System | Policy | Runs | On-time rate % | Delivered | Violations / run | Battery depleted | Pareto |
-|---|---|---|---|---|---|---|---|
-| `pact` | `reserve_10` | 30 | 54.0 [47.7, 61.2] | 11.3 [10.7, 12.0] | 0.00 | 13 | yes |
-| `cbba_plain` | `reserve_10` | 30 | 55.2 [48.2, 63.1] | 10.8 [10.2, 11.5] | 0.53 [0.30, 0.77] | 14 | yes |
-| `pact` | `reserve_20` | 30 | 48.6 [39.6, 58.0] | 11.7 [11.2, 12.3] | 0.00 | 0 |  |
-| `cbba_plain` | `reserve_20` | 30 | 47.5 [38.6, 56.8] | 11.5 [11.0, 12.1] | 0.23 [0.10, 0.40] | 0 |  |
-| `pact` | `reserve_30` | 30 | 46.1 [37.1, 55.8] | 12.0 [11.5, 12.6] | 0.00 | 0 |  |
-| `cbba_plain` | `reserve_30` | 30 | 45.3 [36.4, 55.0] | 12.0 [11.4, 12.5] | 0.10 [0.00, 0.20] | 0 |  |
+coastal_testbed: AT-03. STRICT, 6 drones, 6 orders/min; partition {D1, A01, A04} | {D2, D3, A02, A03, A05, A06} from 120 s to 420 s.
 
-## dm_canyon_shadow
+| System | Policy | Runs | On-time rate % | Delivered | Duplicates / run | Zombie pickups / run | Refusals / run | Battery depleted | Pareto |
+|---|---|---|---|---|---|---|---|---|---|
+| `pact` | `STRICT` | 30 | 76.9 [70.2, 83.4] | 28.8 [26.4, 30.9] | 0.00 | 0.00 | 0.00 | 0 |  |
+| `pact` | `QUORUM` | 30 | 80.8 [75.9, 85.7] | 30.0 [28.3, 31.6] | 0.00 | 0.00 | 0.00 | 0 |  |
+| `pact` | `OPTIMISTIC_BOUNDED` | 30 | 80.9 [75.7, 86.0] | 31.4 [29.7, 33.1] | 0.00 | 0.00 | 0.00 | 0 | yes |
+| `cbba_plain` | `unfenced` | 30 | 84.1 [78.9, 89.0] | 28.8 [27.1, 30.6] | 3.67 [3.13, 4.17] | 0.00 | 0.00 | 0 | yes |
 
-| System | Policy | Runs | On-time rate % | Delivered | Violations / run | Battery depleted | Pareto |
-|---|---|---|---|---|---|---|---|
-| `pact` | `reserve_10` | 30 | 99.4 [98.3, 100.0] | 39.7 [38.1, 41.2] | 0.00 | 1 | yes |
-| `cbba_plain` | `reserve_10` | 30 | 97.3 [94.8, 99.3] | 22.6 [21.5, 23.6] | 17.77 [17.00, 18.47] | 0 |  |
-| `pact` | `reserve_20` | 30 | 99.4 [98.3, 100.0] | 39.6 [38.0, 41.2] | 0.00 | 0 | yes |
-| `cbba_plain` | `reserve_20` | 30 | 97.8 [95.6, 99.7] | 24.2 [23.2, 25.3] | 16.60 [15.80, 17.43] | 0 |  |
-| `pact` | `reserve_30` | 30 | 98.8 [96.8, 100.0] | 38.7 [37.3, 40.1] | 0.00 | 0 |  |
-| `cbba_plain` | `reserve_30` | 30 | 95.7 [91.8, 98.8] | 24.9 [23.7, 26.2] | 15.63 [14.90, 16.43] | 0 |  |
+## dm_canyon_partition
 
-## ip_radio_clutter
+dense_metro_core: Radio range 450 m with canyon dead zones (range x0.2, +30 % packet loss) in the tallest districts. Coordination must survive degraded links. Sweep variant: partition {D1, D4, A01, A04, A05, A08} | {D2, D3, A02, A03, A06, A07} from 300 s to 600 s.
 
-| System | Policy | Runs | On-time rate % | Delivered | Violations / run | Battery depleted | Pareto |
-|---|---|---|---|---|---|---|---|
-| `pact` | `reserve_10` | 30 | 94.8 [90.9, 98.1] | 27.3 [26.5, 28.1] | 0.00 | 0 | yes |
-| `cbba_plain` | `reserve_10` | 30 | 90.1 [85.9, 93.9] | 18.9 [17.8, 20.1] | 8.43 [7.80, 9.10] | 0 |  |
-| `pact` | `reserve_20` | 30 | 93.4 [89.6, 96.6] | 26.8 [26.0, 27.7] | 0.00 | 0 |  |
-| `cbba_plain` | `reserve_20` | 30 | 89.9 [85.6, 93.7] | 19.8 [18.7, 21.0] | 7.50 [6.97, 8.10] | 0 |  |
-| `pact` | `reserve_30` | 30 | 91.3 [86.9, 95.3] | 26.6 [25.8, 27.5] | 0.00 | 0 |  |
-| `cbba_plain` | `reserve_30` | 30 | 88.3 [84.2, 92.3] | 20.7 [19.7, 21.8] | 6.23 [5.73, 6.77] | 0 |  |
+| System | Policy | Runs | On-time rate % | Delivered | Duplicates / run | Zombie pickups / run | Refusals / run | Battery depleted | Pareto |
+|---|---|---|---|---|---|---|---|---|---|
+| `pact` | `STRICT` | 30 | 88.6 [83.7, 93.0] | 33.2 [31.9, 34.5] | 0.00 | 0.00 | 0.00 | 0 | yes |
+| `pact` | `QUORUM` | 30 | 82.1 [75.9, 87.6] | 26.4 [25.0, 27.7] | 0.00 | 0.00 | 0.00 | 0 |  |
+| `pact` | `OPTIMISTIC_BOUNDED` | 30 | 82.1 [75.7, 88.5] | 34.6 [33.4, 35.8] | 0.00 | 0.00 | 0.00 | 0 |  |
+| `cbba_plain` | `unfenced` | 30 | 98.5 [96.6, 100.0] | 23.9 [22.9, 24.9] | 17.80 [17.10, 18.43] | 0.00 | 0.00 | 0 | yes |
 
 ## Acceptance check
 
-- **AT-12**: PASS — 540/540 runs completed without crashing; fenced-system I1 / I3 violations 0
+- **AT-12**: PASS — 240/240 runs completed without crashing; fenced-system I1 / I3 violations 0

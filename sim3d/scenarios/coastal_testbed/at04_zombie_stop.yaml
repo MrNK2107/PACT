@@ -1,0 +1,18 @@
+# AT-04 (PRD section 11): zombie stop. The owner of a pre-pickup task loses its radio (link_loss, both directions)
+# for 90 s, right after its claim. Its lease cannot be renewed: it must stop acting on the task (zombie_stop) before
+# the origin depot re-opens it (lease_expired), a new owner claims it, and the old owner never picks it up (I3).
+# The machine check verifies the premise (the isolated drone held a pre-pickup lease) from the event log.
+name: at04_zombie_stop
+map: coastal_testbed
+tier: standard
+tags: [acceptance]
+description: AT-04. QUORUM, 6 drones; link_loss on a pre-pickup owner for 90 s.
+seed: 20240611
+duration_s: 600
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [2000, 2000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 3 } }
+workload: { arrival_rate_per_min: 4, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 117.5, type: link_loss, id: A06, until: 207.5 }

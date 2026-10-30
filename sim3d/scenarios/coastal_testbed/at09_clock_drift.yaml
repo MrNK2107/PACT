@@ -1,0 +1,18 @@
+# AT-09 (PRD section 11): 1 % clock drift on one drone, no I3 violation. A01's clock runs 1 % fast from the start;
+# it also loses its radio link for 60 s mid-run, so leases it holds must lapse and be re-opened while its clock
+# drifts (src/scenario/acceptance.scenarios.ts).
+name: at09_clock_drift
+map: coastal_testbed
+tier: standard
+tags: [acceptance]
+description: AT-09. QUORUM, 6 drones; clock_drift A01 +10 000 ppm at 0 s; link_loss A01 from 200 s to 260 s.
+seed: 20240611
+duration_s: 600
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [2000, 2000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 3 } }
+workload: { arrival_rate_per_min: 4, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.0, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 0, type: clock_drift, id: A01, ppm: 10000 }
+  - { t: 200, type: link_loss, id: A01, until: 260 }

@@ -136,6 +136,18 @@ export function loadScenario(
   }
   num(path, s.network.range_m, 'network.range_m', 10, 100000);
   num(path, s.network.loss, 'network.loss', 0, 1);
+  const lat = s.network.latency_ms;
+  if (!Array.isArray(lat) || lat.length !== 2) fail(path, 'network.latency_ms must be [min, max]');
+  num(path, lat[0], 'network.latency_ms[0]', 0, 60000);
+  num(path, lat[1], 'network.latency_ms[1]', lat[0], 60000);
+  const bh = s.network.backhaul as unknown;
+  if (!isObj(bh)) fail(path, 'network.backhaul must be { enabled, latency_ms, loss }');
+  if (typeof bh.enabled !== 'boolean') fail(path, 'network.backhaul.enabled must be true or false');
+  num(path, bh.loss, 'network.backhaul.loss', 0, 1);
+  const bl = bh.latency_ms;
+  if (!Array.isArray(bl) || bl.length !== 2) fail(path, 'network.backhaul.latency_ms must be [min, max]');
+  num(path, bl[0], 'network.backhaul.latency_ms[0]', 0, 60000);
+  num(path, bl[1], 'network.backhaul.latency_ms[1]', bl[0] as number, 60000);
   num(path, s.policy.lease_ttl_s, 'policy.lease_ttl_s', 1, 3600);
   num(path, s.policy.soc_reserve, 'policy.soc_reserve', 0, 0.9);
   if (!['STRICT', 'QUORUM', 'OPTIMISTIC_BOUNDED'].includes(s.policy.partition)) fail(path, `policy.partition must be STRICT | QUORUM | OPTIMISTIC_BOUNDED`);
@@ -156,6 +168,7 @@ export function loadScenario(
     if (fd.type === 'radio_blackout') radioSpec(path, fd, `faults[${i}]`, true);
     if (fd.type === 'weather_front' || fd.type === 'storm_cell' || fd.type === 'altitude_cap') weatherFault(path, fd, `faults[${i}]`);
     if ((fd.type === 'pad_outage' || fd.type === 'depot_outage') && typeof fd.id !== 'string') fail(path, `faults[${i}] (${fd.type}) needs the id of a ${fd.type === 'pad_outage' ? 'pad' : 'depot'}`);
+    if (fd.type === 'partition' || fd.type === 'link_loss' || fd.type === 'clock_drift' || fd.type === 'backhaul_cut') networkFault(path, fd, `faults[${i}]`);
   });
   s.faults = [...s.faults].sort((a, b) => a.t - b.t) as FaultDef[];
   return s;
@@ -184,6 +197,30 @@ function weatherFault(path: string, f: Record<string, unknown>, where: string): 
     num(path, f.cap_m, `${where}.cap_m`, 10, 200);
     if (f.circle !== undefined && !isObj(f.circle)) fail(path, `${where}.circle must be {x, y, r}`);
   }
+}
+
+/** Validates network faults: partition, link_loss, clock_drift. Node ids are checked against the run at fault time. */
+function networkFault(path: string, f: Record<string, unknown>, where: string): void {
+  if (f.until !== undefined) num(path, f.until, `${where}.until`, 0, 1e7);
+  if (f.type === 'partition') {
+    const g = f.groups;
+    if (!Array.isArray(g) || g.length < 2 || !g.every((x) => Array.isArray(x) && x.every((id) => typeof id === 'string'))) fail(path, `${where} (partition) needs groups: a list of at least 2 lists of node ids`);
+    const seen = new Set<string>();
+    for (const id of (g as string[][]).flat()) {
+      if (seen.has(id)) fail(path, `${where} (partition) lists ${id} in more than one group`);
+      seen.add(id);
+    }
+    return;
+  }
+  if (f.type === 'backhaul_cut') {
+    if (f.depots !== undefined && (!Array.isArray(f.depots) || !f.depots.every((d) => typeof d === 'string'))) fail(path, `${where} (backhaul_cut) depots must be a list of depot ids`);
+    return;
+  }
+  if (typeof f.id !== 'string') fail(path, `${where} (${f.type}) needs the id of a drone or depot`);
+  if (f.type === 'link_loss') {
+    if (f.loss !== undefined) num(path, f.loss, `${where}.loss`, 0, 1);
+    if (f.dir !== undefined && !['both', 'tx', 'rx'].includes(f.dir as string)) fail(path, `${where}.dir must be both | tx | rx`);
+  } else num(path, f.ppm, `${where}.ppm`, -100000, 100000);
 }
 
 /** Validates the shape and numbers of a radio zone spec (file coordinates). `fault` allows a bare id reference. */

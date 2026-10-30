@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PACT Slide 11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #121614; --slate: #4A524C; --grey: #9AA19A; --div: #3A403C;
+    --off: #F4F6F2; --white: #FFFFFF; --border: #E3E7E0;
+    --green: #7DBF3A; --deep: #2F6B1F; --tint: #EEF6E4; --gline: #CFE3BC;
+    --red: #C8453B; --redtint: #F6E3E1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; background: var(--off); }
+  body { font-family: 'Work Sans', system-ui, sans-serif; color: var(--slate); overflow: hidden; }
+  .mono { font-family: 'JetBrains Mono', Consolas, monospace; }
+  .slide { position: relative; width: 1920px; height: 1080px; }
+
+  /* Frame */
+  .hdr { position: absolute; inset: 0 0 auto 0; height: 70px; background: var(--ink); display: flex; align-items: center; padding-left: 44px; gap: 18px; }
+  .kpit { color: var(--green); font-weight: 600; font-size: 30px; letter-spacing: .22em; }
+  .vdiv { width: 1.5px; height: 30px; background: var(--div); }
+  .spark { color: #fff; font-weight: 600; font-size: 22px; letter-spacing: .02em; }
+  .pact { color: #fff; font-weight: 600; font-size: 22px; letter-spacing: .04em; }
+  .pact-sub { color: var(--grey); font-size: 17px; margin-left: -6px; }
+  .tab { position: absolute; top: 0; right: 0; height: 70px; width: 340px; background: var(--green);
+         clip-path: polygon(38px 0, 100% 0, 100% 100%, 0 100%); display: flex; align-items: center; justify-content: center;
+         padding-left: 30px; color: var(--ink); font-weight: 700; font-size: 22px; letter-spacing: .14em; }
+
+  .titles { position: absolute; top: 88px; left: 44px; right: 44px; }
+  .eyebrow { color: var(--deep); font-weight: 600; font-size: 14px; letter-spacing: .24em; text-transform: uppercase; }
+  h1 { color: var(--ink); font-weight: 700; font-size: 40px; letter-spacing: -.02em; line-height: 1.15; margin-top: 4px; }
+  .sub { font-size: 19px; color: var(--slate); margin-top: 2px; }
+
+  .foot { position: absolute; left: 44px; right: 44px; top: 1034px; border-top: 1px solid var(--border); padding-top: 12px;
+          display: flex; justify-content: space-between; font-size: 13px; color: var(--slate); }
+
+  /* Layout */
+  .main { position: absolute; top: 204px; left: 44px; right: 44px; height: 754px; display: flex; flex-direction: column; gap: 14px; }
+  .row1 { display: grid; grid-template-columns: 372fr 520fr 446fr 446fr; gap: 14px; height: 254px; }
+  .lower { display: grid; grid-template-columns: 590fr 600fr 610fr; gap: 14px; flex: 1; min-height: 0; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+  .ph { height: 38px; flex: none; background: var(--tint); display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--gline); }
+  .badge { width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: var(--ink); font-weight: 700; font-size: 12.5px;
+           display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; flex: none; }
+  .ptitle { color: var(--ink); font-weight: 600; font-size: 14.5px; letter-spacing: .07em; text-transform: uppercase; }
+  .pnote { margin-left: auto; font-size: 12px; color: var(--slate); }
+  .pb { padding: 12px 14px; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .lbl { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--slate); }
+  .t { color: var(--ink); font-weight: 600; font-size: 13.5px; }
+  .s { font-size: 12.5px; line-height: 1.35; color: var(--slate); }
+  .ink { color: var(--ink); }
+  .dg { color: var(--deep); }
+  .rule { background: var(--off); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; color: var(--ink); }
+  .rule b { color: var(--deep); font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--tint); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 12px; white-space: nowrap; }
+  .ochip { display: inline-flex; border: 1px solid var(--border); color: var(--slate); border-radius: 999px; padding: 2px 9px; font-size: 11.5px; }
+  .chev { color: var(--gline); flex: none; }
+  svg.ic { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .list { display: flex; flex-direction: column; gap: 7px; }
+  .li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); }
+  .li .ic { color: var(--slate); }
+  .num { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--green); color: var(--deep); font-size: 10.5px; font-weight: 700;
+         display: flex; align-items: center; justify-content: center; flex: none; }
+
+  /* Band */
+  .band { position: absolute; left: 44px; right: 44px; top: 970px; height: 52px; background: var(--tint); border-radius: 14px;
+          display: flex; align-items: center; padding: 0 22px; }
+  .band .bl { color: var(--deep); font-weight: 700; font-size: 18px; letter-spacing: .1em; padding-right: 22px; border-right: 1.5px solid var(--gline); }
+  .band .bi { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--ink); font-size: 15px; font-weight: 500; }
+  .band .bi + .bi { border-left: 1.5px solid var(--gline); }
+  .band .ic { width: 20px; height: 20px; color: var(--ink); }
+  .cell { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 0 6px; }
+  .cell + .cell { border-left: 1px solid var(--border); }
+  .ctitle { font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+  .tool { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .isq { width: 28px; height: 28px; border-radius: 7px; background: var(--green); color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; }
+  .tn { color: var(--ink); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .tr { font-size: 11px; color: var(--slate); white-space: nowrap; }
+  .fr { display: flex; align-items: center; gap: 12px; background: var(--off); border-radius: 10px; padding: 10px 12px; }
+  .fic { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+  .ft { display: flex; align-items: center; gap: 7px; color: var(--ink); font-weight: 600; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 3px; }
+  .fn { width: 18px; height: 18px; border-radius: 50%; background: var(--green); color: var(--ink); font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; letter-spacing: 0; }
+</style>
+</head>
+<body>
+<!-- shared symbols -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="7" height="7" fill="#F6E3E1"/><line x1="0" y1="0" x2="0" y2="7" stroke="#C8453B" stroke-width="1.6" opacity=".55"/>
+    </pattern>
+    <symbol id="drone" viewBox="-20 -20 40 40">
+      <line x1="-11" y1="-11" x2="11" y2="11" stroke="#4A524C" stroke-width="2.4"/>
+      <line x1="-11" y1="11" x2="11" y2="-11" stroke="#4A524C" stroke-width="2.4"/>
+      <circle cx="-11" cy="-11" r="6.5" fill="#fff" stroke="#4A524C" stroke-width="1.8"/>
+      <circle cx="11" cy="-11" r="6.5" fill="#fff" stroke="#4A524C" stroke-width="1.8"/>
+      <circle cx="-11" cy="11" r="6.5" fill="#fff" stroke="#4A524C" stroke-width="1.8"/>
+      <circle cx="11" cy="11" r="6.5" fill="#fff" stroke="#4A524C" stroke-width="1.8"/>
+      <rect x="-6.5" y="-6.5" width="13" height="13" rx="3.5" fill="#fff" stroke="#121614" stroke-width="1.8"/>
+      <circle cx="0" cy="0" r="2.8" style="fill: var(--light, #7DBF3A)"/>
+    </symbol>
+    <symbol id="depot" viewBox="0 0 48 38">
+      <polyline points="2,13 24,3 46,13" fill="none" stroke="#121614" stroke-width="1.8" stroke-linejoin="round"/>
+      <rect x="4" y="13" width="40" height="23" rx="2" fill="#fff" stroke="#121614" stroke-width="1.8"/>
+      <rect x="9" y="22" width="11" height="14" fill="#F4F6F2" stroke="#4A524C" stroke-width="1.4"/>
+      <rect x="28" y="22" width="11" height="14" fill="#F4F6F2" stroke="#4A524C" stroke-width="1.4"/>
+    </symbol>
+    <symbol id="parcel" viewBox="0 0 24 24">
+      <rect x="3" y="6" width="18" height="15" rx="2" fill="#EEF6E4" stroke="#2F6B1F" stroke-width="1.7"/>
+      <line x1="3" y1="11" x2="21" y2="11" stroke="#2F6B1F" stroke-width="1.5"/>
+      <line x1="12" y1="6" x2="12" y2="11" stroke="#2F6B1F" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="pin" viewBox="0 0 20 26">
+      <path d="M10 25 C10 25 2 15.5 2 9 a8 8 0 0 1 16 0 c0 6.5 -8 16 -8 16z" fill="#7DBF3A" stroke="#121614" stroke-width="1.4"/>
+      <circle cx="10" cy="9" r="3" fill="#fff"/>
+    </symbol>
+    <symbol id="chev" viewBox="0 0 16 16">
+      <polyline points="5,3 11,8 5,13" fill="none" stroke="#9FCB78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="slide">
+  <div class="hdr">
+    <span class="kpit">KPIT</span><span class="vdiv"></span><span class="spark">SPARKLE 2027</span>
+    <span class="vdiv"></span><span class="pact">PACT</span><span class="pact-sub">Partition-Aware Coordination for Transport</span>
+  </div>
+  <div class="tab">TECH STACK</div>
+
+  <div class="titles">
+    <div class="eyebrow">How it's built</div>
+    <h1>Technical approach: from order to recovery</h1>
+    <div class="sub">Every drone runs the same logic on its own copy of the order board. Nothing central decides.</div>
+  </div>
+
+  <div class="main">
+    <!-- ROW 1 -->
+    <div class="row1">
+      <!-- 01 -->
+      <div class="card">
+        <div class="ph"><span class="badge">01</span><span class="ptitle">Job intake</span></div>
+        <div class="pb">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px; width:80px;">
+              <svg width="72" height="58"><use href="#depot" width="72" height="58"/></svg>
+              <span class="t" style="font-size:12.5px">Depot D1</span>
+            </div>
+            <svg width="16" height="16"><use href="#chev" width="16" height="16"/></svg>
+            <div class="mono" style="flex:1; border:1px solid var(--border); background:var(--off); border-radius:10px; padding:9px 11px; font-size:12px; line-height:1.65;">
+              <div><span style="color:var(--grey)">JOB&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="ink">J-0142</span></div>
+              <div><span style="color:var(--grey)">PICKUP&nbsp;&nbsp;</span><span class="ink">Depot D1</span></div>
+              <div><span style="color:var(--grey)">DROP&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="ink">Point P7</span></div>
+              <div><span style="color:var(--grey)">PRIORITY</span><span class="dg" style="font-weight:600"> P1</span><span class="ink"> · deadline</span></div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="ochip">P1 urgent</span><span class="ochip">P2</span><span class="ochip">P3 low</span>
+          </div>
+          <div class="s">Only depots create jobs and hand off parcels. A new P1 job triggers an instant re-auction.</div>
+        </div>
+      </div>
+
+      <!-- 02 -->
+      <div class="card">
+        <div class="ph"><span class="badge">02</span><span class="ptitle">Onboard agent</span><span class="pnote">same code on every drone</span></div>
+        <div class="pb">
+          <div style="display:flex; align-items:center; gap:10px; flex:1;">
+            <div style="width:150px;">
+              <div class="lbl" style="margin-bottom:7px;">Inputs</div>
+              <div class="list">
+                <div class="li"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Position</div>
+                <div class="li"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/></svg>Battery</div>
+                <div class="li"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>Own board replica</div>
+                <div class="li"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>Neighbour heartbeats</div>
+              </div>
+            </div>
+            <svg width="16" height="16"><use href="#chev" width="16" height="16"/></svg>
+            <div style="width:108px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div style="width:86px; height:86px; border-radius:50%; background:var(--off); border:1px solid var(--border); display:flex; align-items:center; justify-content:center;">
+                <svg width="62" height="62"><use href="#drone" width="62" height="62"/></svg>
+              </div>
+              <span class="s" style="text-align:center; font-size:12px;">Local decision,<br>no controller</span>
+            </div>
+            <svg width="16" height="16"><use href="#chev" width="16" height="16"/></svg>
+            <div style="flex:1;">
+              <div class="lbl" style="margin-bottom:7px;">Decides</div>
+              <div class="list">
+                <div class="li"><span class="num">1</span>Score open jobs</div>
+                <div class="li"><span class="num">2</span>Check payload + energy</div>
+                <div class="li"><span class="num">3</span>Broadcast CLAIM</div>
+                <div class="li"><span class="num">4</span>Fly, deliver, recharge</div>
+              </div>
+            </div>
+          </div>
+          <div class="rule mono">claim only if&nbsp; E_job + E_to_pad + reserve <b>≤</b> battery</div>
+        </div>
+      </div>
+
+      <!-- 03 -->
+      <div class="card">
+        <div class="ph"><span class="badge">03</span><span class="ptitle">Path planning</span></div>
+        <div class="pb" style="flex-direction:row; gap:12px;">
+          <svg width="196" height="184" viewBox="0 0 196 184" style="flex:none; border-radius:10px; background:var(--off);">
+            <g fill="#DCE1D9">
+              <rect x="10" y="10" width="30" height="30" rx="3"/><rect x="54" y="10" width="30" height="30" rx="3"/><rect x="98" y="10" width="30" height="30" rx="3"/><rect x="142" y="10" width="30" height="30" rx="3"/>
+              <rect x="10" y="54" width="30" height="30" rx="3"/><rect x="142" y="54" width="30" height="30" rx="3"/>
+              <rect x="10" y="98" width="30" height="30" rx="3"/><rect x="142" y="98" width="30" height="30" rx="3"/>
+              <rect x="10" y="142" width="30" height="30" rx="3"/><rect x="54" y="142" width="30" height="30" rx="3"/><rect x="98" y="142" width="30" height="30" rx="3"/><rect x="142" y="142" width="30" height="30" rx="3"/>
+            </g>
+            <rect x="50" y="50" width="82" height="82" rx="6" fill="url(#hatch)" stroke="#C8453B" stroke-width="1.5"/>
+            <text x="91" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#C8453B" font-family="Work Sans">No-fly</text>
+            <line x1="47" y1="135" x2="184" y2="22" stroke="#9AA19A" stroke-width="1.8" stroke-dasharray="4 4"/>
+            <polyline points="47,176 47,135 184,135 184,24" fill="none" stroke="#7DBF3A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="40" y="170" width="14" height="10" rx="2" fill="#121614"/>
+            <use href="#pin" x="174" y="0" width="20" height="26"/>
+          </svg>
+          <div style="display:flex; flex-direction:column; gap:8px; flex:1;">
+            <div class="rule" style="background:#fff;"><div class="t">A* route</div><div class="s">Climb, cruise at one altitude around buildings and no-fly zones, then descend.</div></div>
+            <div class="rule" style="background:#fff;"><div class="t">Local avoidance</div><div class="s">Keeps separation from drones and obstacles; can always brake in time.</div></div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 -->
+      <div class="card">
+        <div class="ph"><span class="badge">04</span><span class="ptitle">P2P fleet network</span></div>
+        <div class="pb" style="flex-direction:row; gap:12px;">
+          <svg width="190" height="184" viewBox="0 0 190 184" style="flex:none;">
+            <g stroke="#7DBF3A" stroke-width="2.2">
+              <line x1="34" y1="36" x2="156" y2="36"/><line x1="34" y1="36" x2="95" y2="100"/><line x1="156" y1="36" x2="95" y2="100"/><line x1="95" y1="100" x2="95" y2="146"/>
+            </g>
+            <g fill="#2F6B1F"><circle cx="78" cy="36" r="3.2"/><circle cx="62" cy="66" r="3.2"/><circle cx="128" cy="66" r="3.2"/><circle cx="95" cy="124" r="3.2"/></g>
+            <circle cx="34" cy="36" r="27" fill="none" stroke="#CFE3BC" stroke-width="1.2" stroke-dasharray="3 3"/>
+            <use href="#drone" x="14" y="16" width="40" height="40"/>
+            <use href="#drone" x="136" y="16" width="40" height="40"/>
+            <use href="#drone" x="75" y="80" width="40" height="40"/>
+            <use href="#depot" x="73" y="140" width="44" height="35"/>
+            <g font-family="JetBrains Mono" font-size="10.5" font-weight="600" fill="#4A524C">
+              <text x="34" y="70" text-anchor="middle">A01</text><text x="156" y="70" text-anchor="middle">A02</text>
+              <text x="128" y="104">A03</text><text x="124" y="166">D1</text>
+            </g>
+          </svg>
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div class="lbl">Shared in heartbeats</div>
+            <div class="list">
+              <div class="li"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Position</div>
+              <div class="li"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19c4 0 4-7 8-7s4-7 8-7"/><circle cx="4" cy="19" r="1.5"/><circle cx="20" cy="5" r="1.5"/></svg>Intended path</div>
+              <div class="li"><svg class="ic" viewBox="0 0 24 24"><path d="M9 5h10v14H5V9z"/><path d="M9 5v4H5"/><line x1="9" y1="13" x2="15" y2="13"/></svg>Job status · epoch · lease</div>
+              <div class="li"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/></svg>Battery</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:5px; margin-top:auto; align-items:flex-start;">
+              <span class="chip">Own CRDT replica on every node</span>
+              <span class="chip">Synced by gossip over the radio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOWER -->
+    <div class="lower">
+      <!-- LEFT column -->
+      <div class="col">
+        <!-- 06 rerouting. Frame grid: streets y=9, y=56; x=13, 59, 107. Start (13,98), goal (107,30). -->
+        <div class="card" style="height:222px; flex:none;">
+          <div class="ph"><span class="badge">06</span><span class="ptitle">Dynamic re-routing</span></div>
+          <div class="pb" style="flex-direction:row; align-items:flex-start; justify-content:space-between; gap:4px;">
+            <div style="display:flex; flex-direction:column; gap:6px; width:120px;">
+              <svg width="120" height="106" viewBox="0 0 120 106" style="border-radius:8px; background:var(--off);">
+                <g fill="#DCE1D9"><rect x="24" y="20" width="26" height="24" rx="2"/><rect x="70" y="20" width="26" height="24" rx="2"/><rect x="24" y="68" width="26" height="24" rx="2"/><rect x="70" y="68" width="26" height="24" rx="2"/></g>
+                <polyline points="13,98 13,56 107,56 107,31" fill="none" stroke="#7DBF3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <use href="#pin" x="98" y="8" width="18" height="23"/>
+                <use href="#drone" x="1" y="80" width="24" height="24"/>
+              </svg>
+              <div class="s ink">Follow route</div>
+            </div>
+            <svg width="16" height="16" style="margin-top:45px"><use href="#chev" width="16" height="16"/></svg>
+            <div style="display:flex; flex-direction:column; gap:6px; width:120px;">
+              <svg width="120" height="106" viewBox="0 0 120 106" style="border-radius:8px; background:var(--off);">
+                <g fill="#DCE1D9"><rect x="24" y="20" width="26" height="24" rx="2"/><rect x="70" y="20" width="26" height="24" rx="2"/><rect x="24" y="68" width="26" height="24" rx="2"/><rect x="70" y="68" width="26" height="24" rx="2"/></g>
+                <polyline points="13,98 13,56 107,56 107,31" fill="none" stroke="#7DBF3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="59" cy="56" r="15" fill="url(#hatch)" stroke="#C8453B" stroke-width="1.5"/>
+                <use href="#pin" x="98" y="8" width="18" height="23"/>
+                <use href="#drone" x="1" y="62" width="24" height="24"/>
+              </svg>
+              <div class="s ink">Storm or zone closes</div>
+            </div>
+            <svg width="16" height="16" style="margin-top:45px"><use href="#chev" width="16" height="16"/></svg>
+            <div style="display:flex; flex-direction:column; gap:6px; width:120px;">
+              <svg width="120" height="106" viewBox="0 0 120 106" style="border-radius:8px; background:var(--off);">
+                <g fill="#DCE1D9"><rect x="24" y="20" width="26" height="24" rx="2"/><rect x="70" y="20" width="26" height="24" rx="2"/><rect x="24" y="68" width="26" height="24" rx="2"/><rect x="70" y="68" width="26" height="24" rx="2"/></g>
+                <polyline points="13,56 107,56 107,31" fill="none" stroke="#9AA19A" stroke-width="1.6" stroke-dasharray="4 3"/>
+                <circle cx="59" cy="56" r="15" fill="url(#hatch)" stroke="#C8453B" stroke-width="1.5"/>
+                <polyline points="13,74 13,9 107,9 107,31" fill="none" stroke="#7DBF3A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <use href="#pin" x="98" y="8" width="18" height="23"/>
+                <use href="#drone" x="1" y="62" width="24" height="24"/>
+              </svg>
+              <div class="s ink">A* replans around it</div>
+            </div>
+            <svg width="16" height="16" style="margin-top:45px"><use href="#chev" width="16" height="16"/></svg>
+            <div style="display:flex; flex-direction:column; gap:6px; width:120px;">
+              <svg width="120" height="106" viewBox="0 0 120 106" style="border-radius:8px; background:var(--off);">
+                <g fill="#DCE1D9"><rect x="24" y="20" width="26" height="24" rx="2"/><rect x="70" y="20" width="26" height="24" rx="2"/><rect x="24" y="68" width="26" height="24" rx="2"/><rect x="70" y="68" width="26" height="24" rx="2"/></g>
+                <circle cx="59" cy="56" r="15" fill="url(#hatch)" stroke="#C8453B" stroke-width="1.5" opacity=".5"/>
+                <polyline points="13,98 13,9 107,9 107,31" fill="none" stroke="#CFE3BC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <use href="#drone" x="95" y="19" width="24" height="24"/>
+                <circle cx="94" cy="80" r="11" fill="#7DBF3A"/><polyline points="89,80 93,84 100,76" fill="none" stroke="#121614" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="s ink">Delivered on time</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 07 dead zone -->
+        <div class="card" style="flex:1;">
+          <div class="ph"><span class="badge">07</span><span class="ptitle">Radio dead zone → link restored</span></div>
+          <div class="pb">
+            <div style="display:flex; flex:1;">
+              <div class="cell">
+                <div class="ctitle">Idle</div>
+                <svg width="70" height="62" viewBox="0 0 70 62"><use href="#drone" x="15" y="0" width="40" height="40"/>
+                  <rect x="17" y="47" width="34" height="11" rx="2.5" fill="#fff" stroke="#4A524C" stroke-width="1.6"/><rect x="19.5" y="49.5" width="29" height="6" rx="1" fill="#7DBF3A"/><rect x="51.5" y="50" width="3" height="5" rx="1" fill="#4A524C"/></svg>
+                <div class="s">Charged, waiting for work</div>
+              </div>
+              <div class="cell">
+                <div class="ctitle">Claimed</div>
+                <svg width="70" height="62" viewBox="0 0 70 62"><use href="#parcel" x="17" y="2" width="36" height="36"/>
+                  <rect x="9" y="42" width="52" height="17" rx="8.5" fill="#EEF6E4"/><text x="35" y="54.5" text-anchor="middle" font-family="JetBrains Mono" font-size="10.5" font-weight="600" fill="#2F6B1F">epoch 1</text></svg>
+                <div class="s">Wins the auction, lease starts</div>
+              </div>
+              <div class="cell">
+                <div class="ctitle" style="color:var(--red)">Dead zone</div>
+                <svg width="70" height="62" viewBox="0 0 70 62"><circle cx="35" cy="31" r="28" fill="#F6E3E1"/>
+                  <g fill="none" stroke="#C8453B" stroke-width="2.4" stroke-linecap="round"><path d="M21 30a20 20 0 0 1 28 0"/><path d="M26 36a12 12 0 0 1 18 0"/><line x1="22" y1="18" x2="48" y2="46"/></g><circle cx="35" cy="42" r="2.2" fill="#C8453B"/></svg>
+                <div class="s">Radio lost to the fleet</div>
+              </div>
+              <div class="cell">
+                <div class="ctitle">Works locally</div>
+                <svg width="70" height="62" viewBox="0 0 70 62"><use href="#drone" x="2" y="8" width="40" height="40"/>
+                  <rect x="44" y="16" width="22" height="24" rx="3" fill="#fff" stroke="#121614" stroke-width="1.6"/><g stroke="#7DBF3A" stroke-width="2"><line x1="48" y1="23" x2="62" y2="23"/><line x1="48" y1="28" x2="62" y2="28"/><line x1="48" y1="33" x2="57" y2="33"/></g></svg>
+                <div class="s">Keeps flying on its own replica</div>
+              </div>
+              <div class="cell">
+                <div class="ctitle dg">Link restored</div>
+                <svg width="70" height="62" viewBox="0 0 70 62"><circle cx="35" cy="31" r="28" fill="#EEF6E4"/>
+                  <g fill="none" stroke="#7DBF3A" stroke-width="2.6" stroke-linecap="round"><path d="M19 29a22 22 0 0 1 32 0"/><path d="M25 36a13 13 0 0 1 20 0"/></g><circle cx="35" cy="43" r="2.6" fill="#2F6B1F"/></svg>
+                <div class="s">Replicas merge and agree</div>
+              </div>
+            </div>
+            <div class="rule"><b>Partition policy</b> for cut-off drones: <span class="mono">STRICT · QUORUM · OPTIMISTIC_BOUNDED</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTRE column -->
+      <div class="col">
+        <div class="card" style="flex:1;">
+          <div class="ph"><span class="ptitle">Simulator view</span><span class="pnote">live 3D in the browser · headless for tests</span></div>
+          <div class="pb" style="padding:10px;">
+            <img src="../img/sim3d_slide.png" alt="" style="width:100%; height:100%; object-fit:cover; object-position:58% 50%; border-radius:8px; border:1px solid var(--border); display:block;">
+          </div>
+        </div>
+        <div class="card" style="height:132px; flex:none;">
+          <div class="ph"><span class="ptitle">Built with</span><span class="pnote">hardware-agnostic coordination logic</span></div>
+          <div class="pb" style="display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:1fr 1fr; gap:6px 10px; padding:9px 14px;">
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><polyline points="8,7 3,12 8,17"/><polyline points="16,7 21,12 16,17"/></svg></span><div><div class="tn">TypeScript</div><div class="tr">Language</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><polygon points="13,2 4,14 12,14 11,22 20,10 12,10"/></svg></span><div><div class="tn">Vite</div><div class="tr">Build</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/></svg></span><div><div class="tn">React 18</div><div class="tr">UI panels</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><polyline points="3,7 12,12 21,7"/><line x1="12" y1="12" x2="12" y2="22"/></svg></span><div><div class="tn">Three.js (R3F)</div><div class="tr">3D viewer</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg></span><div><div class="tn">vitest</div><div class="tr">Tests</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><polyline points="7,10 10,12 7,14"/><line x1="12" y1="15" x2="16" y2="15"/></svg></span><div><div class="tn">Node.js</div><div class="tr">Headless runs</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3H6v18h12V7z"/><polyline points="14,3 14,7 18,7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg></span><div><div class="tn">YAML</div><div class="tr">Maps + scenarios</div></div></div>
+            <div class="tool"><span class="isq"><svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg></span><div><div class="tn">JSONL log</div><div class="tr">Metrics source</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT column -->
+      <div class="col">
+        <!-- 05 conflict -->
+        <div class="card" style="height:226px; flex:none;">
+          <div class="ph"><span class="badge">05</span><span class="ptitle">Conflict resolution</span></div>
+          <div class="pb">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                <svg width="100%" height="104" viewBox="0 0 250 104" style="border-radius:8px; background:var(--off);">
+                  <line x1="14" y1="40" x2="236" y2="40" stroke="#4A524C" stroke-width="2" stroke-dasharray="5 4"/>
+                  <line x1="125" y1="100" x2="125" y2="6" stroke="#4A524C" stroke-width="2" stroke-dasharray="5 4"/>
+                  <use href="#drone" x="40" y="26" width="28" height="28"/>
+                  <use href="#drone" x="111" y="66" width="28" height="28"/>
+                  <polygon points="125,27 136,46 114,46" fill="#F6E3E1" stroke="#C8453B" stroke-width="1.8" stroke-linejoin="round"/>
+                  <line x1="125" y1="33" x2="125" y2="39" stroke="#C8453B" stroke-width="1.8" stroke-linecap="round"/>
+                  <g font-family="JetBrains Mono" font-size="10.5" font-weight="600" fill="#4A524C"><text x="40" y="22">A01</text><text x="143" y="84">A02</text></g>
+                </svg>
+                <div class="s ink">Paths conflict at a crossing</div>
+              </div>
+              <svg width="16" height="16"><use href="#chev" width="16" height="16"/></svg>
+              <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                <svg width="100%" height="104" viewBox="0 0 250 104" style="border-radius:8px; background:var(--off);">
+                  <line x1="125" y1="100" x2="125" y2="6" stroke="#9AA19A" stroke-width="2" stroke-dasharray="5 4"/>
+                  <line x1="14" y1="40" x2="236" y2="40" stroke="#7DBF3A" stroke-width="3.2" stroke-linecap="round"/>
+                  <use href="#drone" x="172" y="26" width="28" height="28"/>
+                  <circle cx="125" cy="80" r="19" fill="#fff" stroke="#9AA19A" stroke-width="1.4"/>
+                  <use href="#drone" x="111" y="66" width="28" height="28" style="--light:#9AA19A"/>
+                  <g font-family="JetBrains Mono" font-size="10.5" font-weight="600" fill="#4A524C"><text x="172" y="22">A01</text><text x="150" y="84">A02 holds</text></g>
+                </svg>
+                <div class="s ink">Lower priority yields, the other passes</div>
+              </div>
+            </div>
+            <div class="rule mono">conflict <b>→</b> lower fixed priority yields &nbsp;·&nbsp; same rule on every drone</div>
+          </div>
+        </div>
+
+        <!-- 08 failure and recovery -->
+        <div class="card" style="flex:1;">
+          <div class="ph"><span class="badge">08</span><span class="ptitle">Failure and recovery</span></div>
+          <div class="pb" style="display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px;">
+            <div class="fr"><span class="fic" style="background:var(--redtint)"><svg width="34" height="34" style="--light:#C8453B"><use href="#drone" width="34" height="34"/></svg></span>
+              <div><div class="ft"><span class="fn">1</span>Failure detected</div><div class="s">Peers that expected to hear it report silence</div></div></div>
+            <div class="fr"><span class="fic" style="background:var(--redtint)"><svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="none" stroke="#E3E7E0" stroke-width="3"/><path d="M15 4 A11 11 0 0 1 24.5 20.5" fill="none" stroke="#C8453B" stroke-width="3" stroke-linecap="round"/><line x1="15" y1="9" x2="15" y2="15" stroke="#121614" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="15" x2="19" y2="17" stroke="#121614" stroke-width="2" stroke-linecap="round"/></svg></span>
+              <div><div class="ft"><span class="fn">2</span>Lease expires</div><div class="s">Zombie-stop: the old owner must stop</div></div></div>
+            <div class="fr"><span class="fic" style="background:var(--tint)"><svg width="30" height="30"><use href="#parcel" width="30" height="30"/></svg></span>
+              <div><div class="ft"><span class="fn">3</span>Job reopens</div><div class="s"><span class="mono ink" style="font-size:12px">epoch 1 → 2</span>, re-auctioned among nearby drones</div></div></div>
+            <div class="fr"><span class="fic" style="background:var(--tint)"><svg width="34" height="28"><use href="#depot" width="34" height="28"/></svg></span>
+              <div><div class="ft"><span class="fn">4</span>Safe hand-off</div><div class="s">Depot releases the parcel only to the highest epoch</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">
+    <span class="bl">VERIFIED</span>
+    <span class="bi"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8,12 11,15 16,9"/></svg>300+ unit and property tests</span>
+    <span class="bi"><svg class="ic" viewBox="0 0 24 24"><line x1="5" y1="20" x2="5" y2="13"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="19" y1="20" x2="19" y2="10"/></svg>100-run bench vs 4 baselines</span>
+    <span class="bi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><polyline points="9,12 11,14 15,10"/></svg>240-run sweep: 0 double deliveries</span>
+    <span class="bi"><svg class="ic" viewBox="0 0 24 24"><line x1="9" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="15" y2="20"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>Same seed, same log hash</span>
+  </div>
+
+  <div class="foot"><span>KPIT Sparkle 2027 · Decentralized Multi-Agent Coordination for Autonomous Logistics</span><span>11 / 12</span></div>
+</div>
+</body>
+</html>

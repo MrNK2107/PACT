@@ -3,6 +3,7 @@ import { worldConfigFrom } from '../scenario/load';
 import { getScenario } from '../scenario/registry';
 import type { Scenario } from '../scenario/types';
 import { createWorld } from '../world/buildWorld';
+import { AgentCoordinator } from './AgentCoordinator';
 import { SimulationEngine } from './SimulationEngine';
 import { allocationOf, isFenced, SYSTEM_IDS } from './systems';
 import type { Task } from './Task';
@@ -115,5 +116,16 @@ describe('cbba_plain in the engine', () => {
     expect(eng.events.filter((e) => e.type === 'delivered').length).toBeGreaterThanOrEqual(3);
     expect(eng.events.some((e) => e.type === 'lease_expired')).toBe(false);
     expect(run(90).eventHash()).toBe(run(90).eventHash());
+  });
+});
+
+describe('auction against suspected peers (docs/P2P_DESIGN.md section 7: SUSPECT peers get no new work)', () => {
+  it('a better bid from a peer I suspect does not outbid me; one from a peer I trust does', () => {
+    const c = new AgentCoordinator('A02');
+    c.startClaim(mk('T1'), -3, 0);
+    c.ingest([{ type: 'CLAIM', from: 'A01', taskId: 'T1', cost: -5, t: 0 }], 0.1);
+    expect(c.outbid()).toBe(true);
+    expect(c.outbid((id) => id === 'A01')).toBe(false);
+    expect(c.outbid((id) => id === 'A03')).toBe(true);
   });
 });

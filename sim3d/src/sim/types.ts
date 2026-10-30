@@ -30,8 +30,8 @@ import type { Task } from './Task';
 import type { EnergyModel } from './Battery';
 
 /**
- * What an agent may do to the shared order board (an environment service standing in for the depot
- * nodes' replicated state, not a coordinator). Claims are epoch-fenced; pickups are arbitrated.
+ * What an agent may do to the order board: the shared global board (baselines) or, under `pact`, the drone's own
+ * replica (`src/p2p/ReplicaBoard.ts`). Claims are epoch-fenced; pickups are arbitrated by the origin depot.
  */
 export interface TaskBoardView {
   /** Bumps when a priority-1 task arrives (event-driven re-auction, REQ-AUC-003). */
@@ -39,14 +39,25 @@ export interface TaskBoardView {
   open(): readonly Task[];
   claim(taskId: string, droneId: string, bid: number, now: number): boolean;
   renew(taskId: string, droneId: string, now: number): void;
-  pickup(taskId: string, droneId: string, epoch: number, now: number): 'PICKUP_GRANT' | 'TASK_TAKEN';
+  /**
+   * Depot arbitration. `'PENDING'`: the answer is on its way (replica board: PICKUP_REQ sent to the origin depot);
+   * call again on a later tick. The global board answers synchronously and never returns it.
+   */
+  pickup(taskId: string, droneId: string, epoch: number, now: number): PickupVerdict;
   complete(taskId: string, droneId: string, time: number): void;
   release(taskId: string, droneId: string, now: number): void;
   /** Does the drone currently hold the task (owner, or co-claimant on an unfenced board)? */
   holds(taskId: string, droneId: string): boolean;
   /** `cbba_plain`: tasks the drone believes are free given which drones it can hear. */
   believedOpen(heard: ReadonlySet<string>, droneId: string): readonly Task[];
+  /**
+   * Replica board (pact): does this drone currently suspect `peer` (failure detector not ALIVE)? A suspect peer gets
+   * no new work by consensus: its CLAIM neither outbids me nor reserves a task (docs/P2P_DESIGN.md section 7).
+   */
+  suspected?(peer: string): boolean;
 }
+
+export type PickupVerdict = 'PICKUP_GRANT' | 'TASK_TAKEN' | 'PENDING';
 
 export interface AgentEvent {
   type: 'claimed' | 'picked_up' | 'delivered' | 'replanned' | 'plan_failed' | 'charging' | 'charged' | 'departed' | 'landed' | 'task_taken' | 'aborted' | 'zombie_stop' | 'pad_unavailable' | 'pad_changed';

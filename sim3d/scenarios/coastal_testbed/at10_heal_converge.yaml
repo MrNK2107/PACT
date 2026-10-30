@@ -1,0 +1,17 @@
+# AT-10 (PRD section 11): heal and converge. Two sides with a depot each work through a 2 min partition; after the
+# heal every live replica must hold the ledger state within T_converge = 10 s (replica_converged), never
+# replica_not_converged (src/scenario/acceptance.scenarios.ts).
+name: at10_heal_converge
+map: coastal_testbed
+tier: standard
+tags: [acceptance, partition]
+description: AT-10. QUORUM, 6 drones; partition {D1, A01, A04} | rest from 120 s to 240 s, then heal.
+seed: 20240611
+duration_s: 600
+fleet: { n_drones: 6, capacity_kg: 2.0, speed_mps: 15, battery_wh: 120 }
+world: { size_m: [2000, 2000], depots: 3, pads_per_depot: 2, no_fly: [auto], wind: { mean_mps: 3 } }
+workload: { arrival_rate_per_min: 4, priority_mix: [0.1, 0.3, 0.6] }
+network: { loss: 0.05, latency_ms: [50, 800], range_m: 1500 }
+policy: { partition: QUORUM }
+faults:
+  - { t: 120, type: partition, groups: [[D1, A01, A04], [D2, D3, A02, A03, A05, A06]], until: 240 }

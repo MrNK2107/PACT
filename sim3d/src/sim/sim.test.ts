@@ -4,7 +4,8 @@ import { getScenario } from '../scenario/registry';
 import { createWorld, inNoFly } from '../world/buildWorld';
 import { SimulationEngine } from './SimulationEngine';
 import { ObstacleManager } from './ObstacleManager';
-import { PathPlanner } from './PathPlanner';
+import { computeAvoidance, PathPlanner } from './PathPlanner';
+import { SIM } from './config';
 
 /** Small world for the simulation runs (fast); the default 4 km world is exercised in world.test.ts. */
 const SCN = getScenario('test_small');
@@ -49,6 +50,61 @@ describe('planner', () => {
       const sites = world.dropPoints.filter((s) => Math.hypot(s.pos.x - from.x, s.pos.z - from.z) < 900);
       expect(sites.length).toBeGreaterThan(5);
       for (const s of sites) expect(planner.plan(from, s.pos, 28), `${d.id}->${s.id}`).not.toBeNull();
+    }
+  });
+});
+
+describe('local avoidance', () => {
+  // dm_healthy (pact, t = 382.7 s): A05 climbed out past A07, which hovered waiting for a site and yielded. The old
+  // yield sidestepped to the right of the bearing to the priority holder, which here is towards the holder's track:
+  // 2.9 m at closest approach. The yielder now sidesteps perpendicular to the moving holder's track, away from it.
+  const om = new ObstacleManager(world);
+  const far = { x: world.bounds.minX + 40, y: 100, z: world.bounds.minZ + 40 };
+  function encounter(holderStart: { x: number; z: number }, holderVel: { x: number; z: number }) {
+    const y = { pos: { ...far }, vel: { x: 0, y: 0, z: 0 } };
+    const h = { pos: { x: far.x + holderStart.x, y: far.y, z: far.z + holderStart.z }, vel: { x: holderVel.x, y: 0, z: holderVel.z } };
+    let minD = Infinity;
+    let firstSide: number | null = null;
+    for (let i = 0; i < 20 * 5; i++) {
+      const res = computeAvoidance({ id: 'A07', pos: y.pos, priority: 1, terminal: false, desired: { x: 0, y: 0, z: 0 }, maxSpeed: SIM.cruiseSpeed, neighbors: [{ id: 'A05', pos: { ...h.pos }, vel: { ...h.vel }, priority: 2 }], obstacles: om });
+      if (firstSide === null && res.yielding) firstSide = res.velocity.x * -holderVel.z + res.velocity.z * holderVel.x;
+      // acceleration-limited like the engine
+      const dv = { x: res.velocity.x - y.vel.x, y: res.velocity.y - y.vel.y, z: res.velocity.z - y.vel.z };
+      const dl = Math.hypot(dv.x, dv.y, dv.z);
+      const k = dl > SIM.maxAccel * 0.05 ? (SIM.maxAccel * 0.05) / dl : 1;
+      y.vel = { x: y.vel.x + dv.x * k, y: y.vel.y + dv.y * k, z: y.vel.z + dv.z * k };
+      y.pos = { x: y.pos.x + y.vel.x * 0.05, y: y.pos.y + y.vel.y * 0.05, z: y.pos.z + y.vel.z * 0.05 };
+      h.pos = { x: h.pos.x + h.vel.x * 0.05, y: h.pos.y, z: h.pos.z + h.vel.z * 0.05 };
+      minD = Math.min(minD, Math.hypot(y.pos.x - h.pos.x, y.pos.y - h.pos.y, y.pos.z - h.pos.z));
+    }
+    return { minD, firstSide: firstSide ?? 0 };
+  }
+
+  it('a hovering yielder steps off a passing priority holder\'s track, away from it, on either side', () => {
+    for (const side of [-1, 1]) {
+      // the holder passes 3 m to one side of the yielder, moving along +x at 8 m/s
+      const r = encounter({ x: -12, z: 3 * side }, { x: 8, z: 0 });
+      // lateral velocity (left of the holder's track is +) points away from the holder's side
+      expect(Math.sign(r.firstSide), `side ${side}`).toBe(-side);
+      expect(r.minD, `side ${side}`).toBeGreaterThan(SIM.hardCollisionDist + 2);
+    }
+  });
+
+  // dm_healthy (pact, t = 639.6 s, after the TC-09 hardening): A04 (yielder) and A08 (priority holder) met nearly head
+  // on at cruise speed, A04 about 1.3 m left of A08's track. A04 stepped off the track to its own side (left), and A08
+  // shared the lateral burden "right of its bearing to A04", which in a near head-on pass is also left: 2.9 m. The
+  // holder now steps perpendicular to its own track, away from the yielder's side (3000 random two-drone encounters:
+  // same 16 losses of separation, near misses < 6 m down from 94 to 56).
+  it("a priority holder in a near head-on pass sidesteps away from the yielder's side of its track", () => {
+    for (const side of [-1, 1]) {
+      const h = { x: far.x, y: far.y, z: far.z };
+      const y = { x: far.x + 30, y: far.y, z: far.z + 3.5 * side };
+      const res = computeAvoidance({ id: 'A08', pos: h, priority: 2, terminal: false, desired: { x: 14.9, y: 0, z: 1.3 * side }, maxSpeed: SIM.cruiseSpeed, neighbors: [{ id: 'A04', pos: y, vel: { x: -15, y: 0, z: -1.2 * side }, priority: 1 }], obstacles: om });
+      expect(res.yielding).toBe(false);
+      expect(res.avoiding).toBe(true);
+      // lateral velocity relative to the holder's own track (left = +): away from the yielder's side
+      const lateral = (res.velocity.z * 14.9 - res.velocity.x * 1.3 * side) / Math.hypot(14.9, 1.3);
+      expect(Math.sign(lateral), `side ${side}`).toBe(-side);
     }
   });
 });

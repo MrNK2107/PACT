@@ -24,8 +24,6 @@ export const SIM: SimConfig = {
   senseRange: 45,
   heartbeatPeriod: 0.1,
   neighborTimeout: 0.8,
-  /** Probability a broadcast packet is lost (0 = ideal link). */
-  packetLoss: 0,
 
   // Avoidance
   separation: 10,
@@ -45,7 +43,10 @@ export const SIM: SimConfig = {
   // Tasks
   loadTime: 2.0,
   unloadTime: 2.0,
+  /** Minimum claim window (s): how long a bidder listens for better CLAIMs before taking the task. */
   claimWindow: 0.5,
+  /** Claim window in force: `claimWindow` stretched to cover the scenario's latency bound (see `claimWaitFor`). */
+  claimWait: 0.55,
   orderInterval: 7,
   maxOpenOrders: 14,
   initialOrders: 5,
@@ -74,7 +75,6 @@ export interface SimConfig {
   senseRange: number;
   heartbeatPeriod: number;
   neighborTimeout: number;
-  packetLoss: number;
   separation: number;
   horizon: number;
   obstacleRange: number;
@@ -89,6 +89,7 @@ export interface SimConfig {
   loadTime: number;
   unloadTime: number;
   claimWindow: number;
+  claimWait: number;
   orderInterval: number;
   maxOpenOrders: number;
   initialOrders: number;
@@ -98,11 +99,20 @@ export interface SimConfig {
   tFailed: number;
 }
 
+/**
+ * Effective claim window for a latency bound: at least `claimWindow`, and long enough (latency upper bound plus
+ * one tick) that a bidder always hears a rival CLAIM sent before its own one reached that rival, so the later of two
+ * concurrent bidders always learns of the earlier bid inside its window.
+ */
+export function claimWaitFor(latencyMs: readonly [number, number]): number {
+  return Math.max(SIM.claimWindow, latencyMs[1] / 1000 + SIM.dt);
+}
+
 /** Scenario-driven parameters (NFR-6: scenario files are the only way to change behaviour). */
-export function applyScenario(s: { fleet: { speed_mps: number; max_drones: number }; network: { range_m: number; loss: number }; workload: { arrival_rate_per_min: number } }): void {
+export function applyScenario(s: { fleet: { speed_mps: number; max_drones: number }; network: { range_m: number; latency_ms: [number, number] }; workload: { arrival_rate_per_min: number } }): void {
   SIM.cruiseSpeed = s.fleet.speed_mps;
   SIM.maxDrones = s.fleet.max_drones;
   SIM.commRange = s.network.range_m;
-  SIM.packetLoss = s.network.loss;
+  SIM.claimWait = claimWaitFor(s.network.latency_ms);
   SIM.orderInterval = s.workload.arrival_rate_per_min > 0 ? 60 / s.workload.arrival_rate_per_min : Infinity;
 }

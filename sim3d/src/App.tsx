@@ -2,12 +2,16 @@ import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useUI } from './app/uiStore';
 import { EnvironmentScene, HOME_CAMERA } from './render/EnvironmentScene';
+import { COMPONENT_PALETTE } from './app/netGraph';
 import { InspectorPanel } from './ui/InspectorPanel';
+import { NetworkPanel } from './ui/NetworkPanel';
 import { LayerPanel, SimulationControls } from './ui/SimulationControls';
 import { TaskBoardPanel } from './ui/TaskBoardPanel';
 import { EventLog, FleetPanel, TelemetryPanel } from './ui/TelemetryPanel';
 
 function Legend() {
+  const p2p = useUI((s) => s.showP2P);
+  const comms = useUI((s) => s.showComms);
   return (
     <div className="legend" aria-label="Map legend">
       <div>
@@ -30,6 +34,25 @@ function Legend() {
         <i className="sw delivery" /> Drop point
         <i className="sw pickup" /> Retail / event drop
       </div>
+      {(p2p || comms) && (
+        <div>
+          <i className="sw mast" /> Depot mast (+25 m network node)
+        </div>
+      )}
+      {p2p && (
+        <>
+          <div>
+            {COMPONENT_PALETTE.slice(0, 4).map((c) => (
+              <i key={c} className="sw comp" style={{ background: c }} />
+            ))}
+            Radio component (halo / link)
+          </div>
+          <div>
+            <i className="sw oneway" /> One-way link
+            <i className="sw owner" /> Drop ring: ledger owner (grey: unassigned)
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -71,6 +94,7 @@ export default function App() {
 
       <aside className="right">
         <TelemetryPanel />
+        <NetworkPanel />
         <InspectorPanel />
         <TaskBoardPanel />
         <FleetPanel />
