@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PACT Slide 9</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+<style>
+  .kpis { position: absolute; left: 44px; top: 268px; width: 620px; display: flex; flex-direction: column; gap: 20px; }
+  .kpi { padding: 24px 30px; border-left: 6px solid var(--green); border-radius: 0 18px 18px 0; }
+  .kpi.bad { border-left-color: var(--red); }
+  .kpi .n { font-size: 60px; font-weight: 600; color: var(--deep); letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .kpi.bad .n { color: var(--red); }
+  .kpi .t { font-size: 22px; color: var(--ink); margin-top: 6px; font-weight: 500; }
+  .kpi .s { font-size: 17px; color: var(--slate); margin-top: 4px; }
+  .chart { position: absolute; left: 690px; right: 44px; top: 268px; height: 652px; padding: 30px 40px; }
+  .rows { position: relative; margin-top: 30px; }
+  .row { display: grid; grid-template-columns: 280px 1fr; align-items: center; height: 92px; }
+  .row .name { font-size: 21px; color: var(--ink); }
+  .row .name.us { font-weight: 700; color: var(--deep); }
+  .track { position: relative; height: 40px; }
+  .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 8px 8px 0; background: var(--grey); }
+  .bar.us { background: var(--green); }
+  .bar.bad { background: var(--red); }
+  .val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 22px; font-weight: 600; color: var(--slate); padding-left: 14px; font-variant-numeric: tabular-nums; }
+  .val.us { color: var(--deep); font-weight: 700; }
+  .val.bad { color: var(--red); font-weight: 700; }
+  .grid { position: absolute; top: -10px; bottom: -10px; width: 1px; background: var(--border); z-index: 0; }
+  .bar, .val { z-index: 2; }
+  .gl { position: absolute; bottom: -36px; transform: translateX(-50%); font-size: 14px; color: var(--grey); }
+  .base { position: absolute; left: 280px; top: -10px; bottom: -10px; width: 2px; background: var(--slate); }
+  .note { position: absolute; left: 40px; right: 40px; bottom: 26px; font-size: 17px; color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hdr"><span class="kpit">KPIT</span><span class="vdiv"></span><span class="spark">SPARKLE 2027</span><span class="vdiv"></span><span class="pact">PACT</span><span class="pact-sub">Partition-Aware Coordination for Transport</span></div>
+  <div class="tab">RESULTS</div>
+  <div class="titles">
+    <div class="eyebrow">Result 1 · No single point of failure</div>
+    <h1>We killed the hub at t = 180 s</h1>
+    <div class="sub">Same maps, seeds and workload for every system. 5 seeds × 900 s simulated.</div>
+  </div>
+
+  <div class="kpis">
+    <div class="card kpi"><div class="n">86.3%</div><div class="t">PACT on time after hub loss</div><div class="s">Same as the healthy run: 0% drop</div></div>
+    <div class="card kpi bad"><div class="n">56.8%</div><div class="t">Central hub fleet after hub loss</div><div class="s">Down 34% from 86.3%</div></div>
+    <div class="card kpi bad"><div class="n">20.2 → 7.6</div><div class="t">Central deliveries per run</div><div class="s">PACT keeps 20.0 deliveries per run</div></div>
+  </div>
+
+  <div class="card chart">
+    <div class="lbl">On-time rate after hub loss (%)</div>
+    <div class="rows" id="rows"></div>
+    <div class="note">With nothing broken, PACT matches the central planner (86.3% vs 86.3%), with no central planner at all.</div>
+  </div>
+
+  <div class="band"><span class="bl">WHAT THIS PROVES</span><span class="bi">No single point of failure</span><span class="bi">Zero drop after hub loss</span><span class="bi">0 loss of separation</span></div>
+  <div class="foot"><span>KPIT Sparkle 2027 · Decentralized Multi-Agent Coordination for Autonomous Logistics</span><span>09 / 12</span></div>
+</div>
+<script>
+  // bars on an exact 0-100 scale (source: results/summary.md, s1_hub_loss)
+  const data = [['PACT (ours)', 86.3, 'us'], ['Central hub, never fails', 86.3, ''], ['Plain auction', 83.4, ''], ['Greedy nearest', 80.6, ''], ['Central hub, killed', 56.8, 'bad']];
+  const rows = document.getElementById('rows');
+  for (const [name, v, cls] of data) {
+    rows.insertAdjacentHTML('beforeend', `<div class="row"><div class="name ${cls}">${name}</div><div class="track"><div class="bar ${cls}" style="width:${v * 0.86}%"></div><div class="val ${cls}" style="left:${v * 0.86}%">${v.toFixed(1)}</div></div></div>`);
+  }
+  // gridlines at 50 and 100 on the same scale
+  const r = rows.getBoundingClientRect();
+  for (const g of [50, 100]) {
+    const x = 280 + (r.width - 280) * g * 0.0086;
+    rows.insertAdjacentHTML('beforeend', `<div class="grid" style="left:${x}px"><span class="gl">${g}</span></div>`);
+  }
+  rows.insertAdjacentHTML('beforeend', '<div class="base"></div>');
+</script>
+</body>
+</html>

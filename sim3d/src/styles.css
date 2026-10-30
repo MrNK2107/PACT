@@ -1056,3 +1056,7 @@ ul.comps .link.node:hover {
 .hud-row span.bad b {
   color: #f08a80;
 }
+/* offline rendering steps a virtual clock; CSS animations would run on the wall clock instead */
+.app.offline .caption {
+  animation: none;
+}

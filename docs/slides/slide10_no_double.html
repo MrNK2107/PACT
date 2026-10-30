@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PACT Slide 10</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+<style>
+  .stmts { position: absolute; left: 44px; right: 44px; top: 262px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .stmt { padding: 32px 34px; border-top: 6px solid var(--green); display: grid; grid-template-columns: auto 1fr; gap: 6px 30px; align-items: center; }
+  .stmt.bad { border-top-color: var(--red); }
+  .stmt .n { grid-row: span 2; font-size: 96px; font-weight: 600; color: var(--deep); letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stmt.bad .n { color: var(--red); }
+  .stmt .t { font-size: 24px; color: var(--ink); font-weight: 500; }
+  .stmt .s { font-size: 18px; color: var(--slate); }
+  .tbl { position: absolute; left: 44px; width: 1300px; top: 488px; padding: 20px 30px 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 23px; }
+  th { text-align: left; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 24px 12px; border-bottom: 1px solid var(--border); color: var(--ink); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  th.r, td.r { text-align: right; }
+  tr.us td { background: var(--tint); }
+  tr.us td.r { color: var(--deep); font-weight: 600; }
+  td.dup { color: var(--red); font-weight: 600; }
+  .tnote { font-size: 15px; color: var(--slate); margin-top: 12px; }
+  .side { position: absolute; left: 1368px; right: 44px; top: 488px; padding: 26px 28px; }
+  .side h3 { font-size: 22px; color: var(--ink); font-weight: 600; margin-bottom: 14px; }
+  .pol { padding: 12px 0; border-top: 1px solid var(--border); }
+  .pol b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--deep); margin-bottom: 4px; }
+  .pol span { font-size: 17px; color: var(--slate); line-height: 1.35; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hdr"><span class="kpit">KPIT</span><span class="vdiv"></span><span class="spark">SPARKLE 2027</span><span class="vdiv"></span><span class="pact">PACT</span><span class="pact-sub">Partition-Aware Coordination for Transport</span></div>
+  <div class="tab">RESULTS</div>
+  <div class="titles">
+    <div class="eyebrow">Result 2 · Never deliver twice</div>
+    <h1>Zero double deliveries when the radio splits the fleet</h1>
+    <div class="sub">Policy sweep: 5-minute radio partitions, 30 seeds × 900 s, 240 runs, all completed. Acceptance test AT-12: PASS.</div>
+  </div>
+
+  <div class="stmts">
+    <div class="card stmt"><div class="n">0</div><div class="t">duplicate deliveries by PACT in 240 runs</div><div class="s">0 zombie pickups · 0 refused pickups</div></div>
+    <div class="card stmt bad"><div class="n">17.8</div><div class="t">duplicate deliveries per run for the plain auction</div><div class="s">in downtown radio canyons</div></div>
+  </div>
+
+  <div class="card tbl">
+    <table>
+      <tr><th style="width:32%">Scenario</th><th style="width:22%">System</th><th class="r">On time</th><th class="r">Deliveries / run</th><th class="r">Duplicates / run</th></tr>
+      <tr class="us"><td>Downtown radio canyons</td><td>PACT</td><td class="r">82.1–88.6%</td><td class="r">26.4–34.6</td><td class="r">0</td></tr>
+      <tr><td>Downtown radio canyons</td><td>Plain auction</td><td class="r">98.5%</td><td class="r">23.9</td><td class="r dup">17.8</td></tr>
+      <tr class="us"><td>Coastal split brain</td><td>PACT</td><td class="r">76.9–80.9%</td><td class="r">28.8–31.4</td><td class="r">0</td></tr>
+      <tr><td>Coastal split brain</td><td>Plain auction</td><td class="r">84.1%</td><td class="r">28.8</td><td class="r dup">3.7</td></tr>
+    </table>
+    <div class="tnote">PACT ranges cover its three partition policies. The plain auction's higher on-time rate comes from flying the same parcels twice.</div>
+  </div>
+
+  <div class="card side">
+    <h3>Partition policies</h3>
+    <div class="pol"><b>STRICT</b><span>Claim only with a live shard lease on my side</span></div>
+    <div class="pol"><b>QUORUM</b><span>Claim only while a majority of the fleet is reachable</span></div>
+    <div class="pol"><b>OPTIMISTIC_BOUNDED</b><span>Limited low-priority claims, never urgent ones</span></div>
+  </div>
+
+  <div class="band"><span class="bl">WHY FENCING MATTERS</span><span class="bi">Up to 34.6 deliveries per run (PACT)</span><span class="bi">23.9 for the plain auction</span><span class="bi">Same auction, only fencing differs</span></div>
+  <div class="foot"><span>KPIT Sparkle 2027 · Decentralized Multi-Agent Coordination for Autonomous Logistics</span><span>10 / 12</span></div>
+</div>
+</body>
+</html>

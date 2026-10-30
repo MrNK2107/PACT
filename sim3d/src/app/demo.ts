@@ -1,3 +1,4 @@
+import { sleep as clockSleep, whileBusy } from './offline';
 import { seekEngine } from './replay';
 import { engine, map, scenario, world } from './simContext';
 import { useUI, type Caption, type ToggleKey } from './uiStore';
@@ -166,6 +167,7 @@ async function hubScene(c: SceneCtx, [before, after]: [Caption, Caption]): Promi
   // jump to the end of the 900 s benchmark window, where the gap is the bench result
   c.caption({ tag: 'Fast-forward', title: 'Nine minutes later', sub: 'The same 900 s window the benchmark scores.' });
   await c.skip(830);
+  c.caption(after);
   c.speed(4);
   await c.until(900);
   await c.wait(3);
@@ -174,7 +176,7 @@ async function hubScene(c: SceneCtx, [before, after]: [Caption, Caption]): Promi
 
 function context(): SceneCtx {
   const ui = () => useUI.getState();
-  const sleep = (s: number) => new Promise<void>((r) => setTimeout(r, s * 1000));
+  const sleep = clockSleep;
   return {
     caption: (cap) => ui().setCaption(cap),
     shot: (position, target, seconds = 4) => ui().playShot({ position, target, seconds }),
@@ -190,9 +192,9 @@ function context(): SceneCtx {
       if (engine.status !== 'running') engine.status === 'idle' ? engine.start() : engine.resume();
       while (engine.time < t) await sleep(0.1);
     },
-    seek: (t) => seekEngine(engine, t),
+    seek: (t) => whileBusy(() => seekEngine(engine, t)),
     skip: async (t) => {
-      await seekEngine(engine, t);
+      await whileBusy(() => seekEngine(engine, t));
       engine.resume();
     },
     speed: (x) => engine.setSpeed(x),
@@ -224,7 +226,7 @@ function sceneUrl(s: DemoScene, keep: URLSearchParams): string {
   if (s.system) u.searchParams.set('system', s.system);
   u.searchParams.set('demo', s.id);
   u.searchParams.set('film', '');
-  for (const k of ['once', 'nocaption']) if (keep.has(k)) u.searchParams.set(k, '');
+  for (const k of ['once', 'nocaption', 'offline']) if (keep.has(k)) u.searchParams.set(k, '');
   return u.toString();
 }
 
@@ -249,12 +251,12 @@ export function maybeRunDemo(): void {
   const ctx = context();
   if (params.has('nocaption')) ctx.caption = () => undefined;
   // let the first frame render before the scene starts moving
-  setTimeout(async () => {
+  void clockSleep(0.6).then(async () => {
     await scene.run(ctx);
     ctx.caption(null);
     w.__demoDone = true;
     const next = DEMO_SCENES[i + 1];
     if (next && !params.has('once')) location.replace(sceneUrl(next, params));
     else engine.pause();
-  }, 600);
+  });
 }

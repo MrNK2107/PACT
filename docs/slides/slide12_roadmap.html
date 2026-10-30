@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PACT Slide 12</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+<style>
+  .tl { position: absolute; left: 44px; right: 44px; top: 262px; }
+  .line { position: absolute; left: 30px; right: 30px; top: 24px; height: 3px; background: var(--gline); }
+  .stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; position: relative; }
+  .badge { width: 50px; height: 50px; border-radius: 50%; background: var(--green); color: var(--ink); font-weight: 700; font-size: 19px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; margin-bottom: 18px; }
+  .stage .card { padding: 22px 26px; min-height: 196px; }
+  .stage .card.done { border: 2px solid var(--green); }
+  .tag { font-size: 13px; font-weight: 700; letter-spacing: .16em; color: var(--deep); }
+  .tag.next { color: var(--slate); }
+  .st { font-size: 25px; font-weight: 600; color: var(--ink); margin: 6px 0 8px; }
+  .sd { font-size: 17px; line-height: 1.45; }
+  .mid { position: absolute; left: 44px; right: 44px; top: 572px; display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .mid .card { padding: 24px 30px; height: 220px; }
+  .mid h3 { font-size: 22px; color: var(--ink); font-weight: 600; margin-bottom: 18px; }
+  .users { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center; }
+  .sq { width: 60px; height: 60px; border-radius: 14px; background: var(--green); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
+  .sq svg { width: 30px; height: 30px; stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .users span { font-size: 16px; color: var(--ink); }
+  .st-row { display: grid; grid-template-columns: 220px 1fr 140px; align-items: center; gap: 18px; margin-bottom: 14px; font-size: 18px; color: var(--ink); }
+  .trk { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+  .trk i { display: block; height: 100%; background: var(--green); }
+  .st-row .v { color: var(--slate); font-size: 17px; }
+  .hn { font-size: 15px; color: var(--slate); }
+  .close { position: absolute; left: 44px; right: 44px; top: 818px; height: 196px; background: var(--ink); border-radius: 20px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; }
+  .close .big { font-size: 46px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+  .close .big b { color: var(--green); }
+  .close .who { color: var(--grey); font-size: 18px; margin-top: 10px; }
+  .qr { display: flex; align-items: center; gap: 22px; }
+  .qr .box { width: 140px; height: 140px; background: #fff; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--slate); font-size: 13px; }
+  .qr .url { font-family: 'JetBrains Mono', monospace; color: #fff; font-size: 20px; }
+  .qr .url small { display: block; font-family: 'Work Sans', sans-serif; color: var(--grey); font-size: 15px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hdr"><span class="kpit">KPIT</span><span class="vdiv"></span><span class="spark">SPARKLE 2027</span><span class="vdiv"></span><span class="pact">PACT</span><span class="pact-sub">Partition-Aware Coordination for Transport</span></div>
+  <div class="tab">ROADMAP &amp; IMPACT</div>
+  <div class="titles">
+    <div class="eyebrow">What's next</div>
+    <h1>Software done. Hardware next.</h1>
+    <div class="sub">The full decentralised system runs in simulation today. Real autopilots and hardware are the remaining step.</div>
+  </div>
+
+  <div class="tl">
+    <div class="line"></div>
+    <div class="stages">
+      <div class="stage"><div class="badge">01</div><div class="card done"><div class="tag">DONE</div><div class="st">Simulation prototype</div><div class="sd">Auction, fenced ownership, safety, energy, 4 baselines, 100-run bench, replay viewer.</div></div></div>
+      <div class="stage"><div class="badge">02</div><div class="card done"><div class="tag">DONE</div><div class="st">Truly shared state</div><div class="sd">Each drone and depot keeps its own copy of the order board (CRDT), synced by gossip. Tested under partitions, link loss and clock drift.</div></div></div>
+      <div class="stage"><div class="badge">03</div><div class="card"><div class="tag next">NEXT</div><div class="st">Real autopilots and hardware</div><div class="sd">ROS 2 + PX4 SITL in Gazebo already flies the protocol (AeroPACT). Next: a small indoor hardware trial.</div></div></div>
+    </div>
+  </div>
+
+  <div class="mid">
+    <div class="card">
+      <h3>Built for</h3>
+      <div class="users">
+        <div><div class="sq"><svg viewBox="0 0 24 24"><rect x="1" y="7" width="14" height="10" rx="1"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></div><span>Delivery firms</span></div>
+        <div><div class="sq"><svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg></div><span>Hospitals</span></div>
+        <div><div class="sq"><svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5"/><circle cx="12" cy="18" r=".5"/></svg></div><span>Disaster relief</span></div>
+        <div><div class="sq"><svg viewBox="0 0 24 24"><path d="M3 17l2 4h14l2-4z"/><path d="M5 17V9h14v8"/><path d="M12 3v6"/></svg></div><span>Ports</span></div>
+        <div><div class="sq"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/></svg></div><span>Campuses</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Honest status</h3>
+      <div class="st-row"><span>Software framework</span><div class="trk"><i style="width:90%"></i></div><span class="v">Almost done</span></div>
+      <div class="st-row"><span>Full decentralisation</span><div class="trk"><i style="width:90%"></i></div><span class="v">Almost done</span></div>
+      <div class="st-row"><span>Hardware</span><div class="trk"><i style="width:0%"></i></div><span class="v">Pending</span></div>
+      <div class="hn">Simulation only today. Not flight-ready.</div>
+    </div>
+  </div>
+
+  <div class="close">
+    <div><div class="big">No hub. No double delivery. <b>No stall.</b></div><div class="who">Team PANGnovates · Saveetha Engineering College</div></div>
+    <div class="qr"><div class="box">QR CODE</div><div class="url">github.com/MrNK2107/PACT<small>Scan for the repo</small></div></div>
+  </div>
+  <div class="foot"><span>KPIT Sparkle 2027 · Decentralized Multi-Agent Coordination for Autonomous Logistics</span><span>12 / 12</span></div>
+</div>
+</body>
+</html>

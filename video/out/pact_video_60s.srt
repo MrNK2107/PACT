@@ -1,0 +1,56 @@
+1
+00:00:00,800 --> 00:00:01,184
+PACT.
+
+2
+00:00:01,184 --> 00:00:04,483
+Partition-Aware Coordination for Transport.
+
+3
+00:00:04,483 --> 00:00:09,624
+A drone delivery fleet that keeps working when the brain goes dark.
+
+4
+00:00:11,000 --> 00:00:16,214
+Here is the same city, the same seed and the same orders, twice.
+
+5
+00:00:16,214 --> 00:00:19,879
+On the left, a central hub assigns every job.
+
+6
+00:00:19,879 --> 00:00:22,649
+At three minutes, we kill the hub.
+
+7
+00:00:22,649 --> 00:00:25,908
+The central fleet stops taking new work.
+
+8
+00:00:25,908 --> 00:00:30,551
+PACT has nothing central to lose, so it keeps delivering:
+
+9
+00:00:30,551 --> 00:00:35,520
+eighty-six percent on time, the same as with no fault at all.
+
+10
+00:00:39,967 --> 00:00:47,722
+And when the radio splits the fleet, across two hundred and forty runs, PACT made zero double deliveries.
+
+11
+00:00:54,567 --> 00:01:00,814
+PACT is a simulation prototype today, and real hardware is the next step.
+
+12
+00:01:00,814 --> 00:01:01,413
+No hub.
+
+13
+00:01:01,413 --> 00:01:03,038
+No double delivery.
+
+14
+00:01:03,038 --> 00:01:03,809
+No stall.
+

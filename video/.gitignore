@@ -1,0 +1,19 @@
+# Rendered media stays local (hundreds of MB); everything needed to re-render is committed.
+*.mp4
+*.mp3
+*.jpg
+*.png
+!cards/*.png
+raw/
+out/segments/
+tools/rec/node_modules/
+audio/vo/*.hash
+!cards/hero_city.jpg
+!cards/stall_strip.jpg
+raw/
+gazebo/probe*
+gazebo/run_probe.sh
+tools/*probe*
+tools/wsl_check_bridge.sh
+tools/wsl_status.sh
+tools/world_info.sh

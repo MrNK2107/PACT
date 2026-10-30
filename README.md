@@ -75,6 +75,7 @@ sim3d targets (the `gz-*` targets are listed above):
 - **Replay viewer** (`?replay`, or the toolbar's Replay button): a timeline over the scenario window with fault, failure, recovery and delivery markers. Click to seek, step 10 s, or jump to the next incident. Runs are deterministic, so seeking re-simulates instead of storing frames. **Save log** writes the run's JSONL event log; **Load log** replays a saved log and verifies it event by event ("Verified: N events identical", or the first event that differs).
 - **Film mode** (`?film`): the 3D view without panels, for recordings. `window.pact` scripts it: `shot(eye, target, seconds)`, `caption({tag, title, sub})`, `hud(true)` (system, sim time, deliveries since the first fault, duplicates), `layer`, `follow`, `speed`, `seek`, `skip`, `log()`, `hash()`.
 - **Demo** (`make demo`, `?demo`; `?demo=<scene>&once` plays one scene): `src/app/demo.ts`. Captions quote only the numbers in `results/`.
+- **Offline rendering** (`?offline`): the canvas stops its own loop and `window.pactRender.step(dt)` advances a virtual clock one video frame at a time, so recordings are smooth at any frame rate. `video/tools/rec/rec.mjs` uses it to record the demo scenes; `video/README.md` has the full render pipeline.
 
 The Gazebo stack has its own film mode, which records a run server-side from a scripted camera (`aeropact/README.md`).
 

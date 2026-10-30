@@ -1,0 +1,55 @@
+{
+  "batteries_depleted": 0,
+  "bytes_per_drone_min": 58786.799999999996,
+  "collisions": 0,
+  "completion_rate": null,
+  "duplicate_deliveries": 0,
+  "duplicate_dispatches": 4,
+  "duplicate_rate": 0.0,
+  "duplicates_resolved": 0,
+  "end_time_s": 405.0,
+  "failure_detection_s": [],
+  "geofence_violations": 0,
+  "invariants": {
+    "I1": [],
+    "I3": [],
+    "I5": [],
+    "M5": [],
+    "ok": true
+  },
+  "jobs_created": 28,
+  "jobs_delivered": 0,
+  "jobs_eligible": 0,
+  "lease_lapses": 1,
+  "median_lead_time_s": null,
+  "median_recovery_s": null,
+  "median_redispatch_s": null,
+  "msgs_per_drone_min": 134.1,
+  "nfz_violations": 0,
+  "on_time_by_priority": {
+    "1": {
+      "jobs": 0,
+      "on_time": 0,
+      "rate": null
+    },
+    "2": {
+      "jobs": 0,
+      "on_time": 0,
+      "rate": null
+    },
+    "3": {
+      "jobs": 0,
+      "on_time": 0,
+      "rate": null
+    }
+  },
+  "on_time_rate": null,
+  "recovery_times_s": [],
+  "redispatch_times_s": [],
+  "reopened_leases": 3,
+  "replacements_before_declaration": 0,
+  "safety_actions": {
+    "AVOID": 29,
+    "NOMINAL": 29
+  }
+}

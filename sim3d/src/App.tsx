@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSimSnapshot } from './app/hooks';
+import { offline } from './app/offline';
 import { deliveryCounts } from './app/replay';
 import { engine } from './app/simContext';
 import { useUI } from './app/uiStore';
@@ -122,7 +123,7 @@ export default function App() {
   const film = useUI((s) => s.film);
   const replay = useUI((s) => s.showReplay);
   return (
-    <div className={`app${film ? ' film' : ''}`}>
+    <div className={`app${film ? ' film' : ''}${offline ? ' offline' : ''}`}>
       <header className="topbar">
         <div className="brand">
           <b>PACT</b>
@@ -143,6 +144,7 @@ export default function App() {
 
       <main className={`stage${replay && !film ? ' has-replay' : ''}`}>
         <Canvas
+          frameloop={offline ? 'never' : 'always'}
           shadows
           dpr={[1, 1.75]}
           camera={{ position: HOME_CAMERA.position.toArray(), fov: 32, near: 1, far: 14000 }}

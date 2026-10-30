@@ -1,0 +1,47 @@
+{
+  "voice_id": "onwK4e9ZLuTAKqWW03F9",
+  "voice_name": "Daniel (ElevenLabs premade)",
+  "model_id": "eleven_multilingual_v2",
+  "segments": [
+    {
+      "id": "s0_title",
+      "text": "PACT. Partition-Aware Coordination for Transport. A drone delivery fleet that keeps working when the brain goes dark."
+    },
+    {
+      "id": "s1_problem",
+      "text": "Today's delivery fleets depend on one central controller and an unbroken radio link. Lose the hub, and every drone stops. Split the radio, and two groups of drones can claim the same parcel."
+    },
+    {
+      "id": "s2_intro",
+      "text": "In PACT, there is no central controller. Every drone runs the same logic, and talks only to the drones within radio range. Drones bid for jobs on priority, distance, deadline and energy. Each one keeps its own copy of the order board, and the copies merge by gossip."
+    },
+    {
+      "id": "s3_hub",
+      "text": "Here is the same city, the same seed and the same orders, twice. On the left, a central hub assigns every job. At three minutes, we kill the hub. The central fleet stops taking new work. PACT has nothing central to lose, so it keeps delivering: eighty-six percent on time, the same as with no fault at all."
+    },
+    {
+      "id": "s4_partition",
+      "text": "Now the radio splits the fleet in two for five minutes. Each side keeps working under a partition policy, and every claim carries an epoch and a lease. A depot hands a parcel only to the newest owner. Across two hundred and forty runs with radio splits, PACT made zero double deliveries. A plain auction made nearly eighteen per run."
+    },
+    {
+      "id": "s4b_short",
+      "text": "And when the radio splits the fleet, across two hundred and forty runs, PACT made zero double deliveries."
+    },
+    {
+      "id": "s5_failure",
+      "text": "When a drone fails in the middle of a delivery, it simply goes silent. The drones that expected to hear it report the silence, its depot declares it failed, and exactly one replacement job is auctioned to another drone."
+    },
+    {
+      "id": "s6_gazebo",
+      "text": "The same protocol also runs as real robotics software: ROS 2 lifecycle components, one container per drone, quadrotor physics in Gazebo, and PX4 autopilots in the loop, over an authenticated mesh radio."
+    },
+    {
+      "id": "s7_verify",
+      "text": "Every run is deterministic. The same seed gives the same event log, and the replay viewer verifies it event by event. Nearly a thousand automated tests pass across both simulators, with a public benchmark against three baselines."
+    },
+    {
+      "id": "s8_close",
+      "text": "PACT is a simulation prototype today, and real hardware is the next step. No hub. No double delivery. No stall."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PACT Slide 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="deck.css">
+<style>
+  .wrap { position: absolute; left: 44px; right: 44px; top: 262px; padding: 26px 40px 22px; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 26px; }
+  th { padding: 18px 16px 16px; font-size: 22px; font-weight: 600; color: var(--ink); text-align: center; vertical-align: bottom; }
+  th svg { display: block; margin: 0 auto 10px; width: 30px; height: 30px; stroke: var(--slate); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  td { padding: 31px 16px; border-top: 1px solid var(--border); text-align: center; color: var(--ink); }
+  td:first-child, th:first-child { text-align: left; width: 34%; }
+  .us { background: var(--tint); border-left: 2px solid var(--green); border-right: 2px solid var(--green); }
+  th.us { color: var(--deep); border-top: 2px solid var(--green); border-radius: 14px 14px 0 0; }
+  th.us svg { stroke: var(--deep); }
+  tr:last-child td.us { border-bottom: 2px solid var(--green); border-radius: 0 0 14px 14px; }
+  tr.big td { font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  tr.big td:first-child { font-size: 24px; }
+  .grey { color: var(--slate); }
+  .note { font-size: 17px; color: var(--slate); margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="hdr"><span class="kpit">KPIT</span><span class="vdiv"></span><span class="spark">SPARKLE 2027</span><span class="vdiv"></span><span class="pact">PACT</span><span class="pact-sub">Partition-Aware Coordination for Transport</span></div>
+  <div class="tab">BENCHMARK</div>
+  <div class="titles">
+    <div class="eyebrow">Uniqueness compared to the benchmark</div>
+    <h1>Same maps, same faults, four systems</h1>
+    <div class="sub">We built three baselines and ran them on the same seeds, worlds and workloads as PACT.</div>
+  </div>
+  <div class="card wrap">
+    <table>
+      <tr><th></th>
+        <th><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg>Central hub</th>
+        <th><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Greedy nearest</th>
+        <th><svg viewBox="0 0 24 24"><path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L4 14l3 3 7-7"/><path d="M3 21h10"/></svg>Plain auction</th>
+        <th class="us"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>PACT (ours)</th></tr>
+      <tr><td>Works with no central hub</td><td class="no">✗ No</td><td class="yes">✓ Yes</td><td class="yes">✓ Yes</td><td class="us yes">✓ Yes</td></tr>
+      <tr><td>Keeps delivering after hub loss</td><td class="no">✗ No</td><td class="yes">✓ Yes</td><td class="yes">✓ Yes</td><td class="us yes">✓ Yes</td></tr>
+      <tr><td>Never delivers a parcel twice</td><td class="yes">✓ Yes</td><td class="yes">✓ Yes</td><td class="no">✗ No</td><td class="us yes">✓ Yes</td></tr>
+      <tr><td>Respects priorities and deadlines</td><td class="yes">✓ Yes</td><td class="no">✗ No</td><td class="yes">✓ Yes</td><td class="us yes">✓ Yes</td></tr>
+      <tr class="big"><td>On-time rate after hub loss</td><td class="no">56.8%</td><td class="grey">80.6%</td><td class="grey">83.4%</td><td class="us yes" style="font-weight:700">86.3%</td></tr>
+    </table>
+    <div class="note">Plain auction = PACT's radio auction without epochs, leases or depot arbitration. 5 seeds × 900 s simulated per system.</div>
+  </div>
+  <div class="band"><span class="bl">WHAT'S NEW</span><span class="bi">No hub to lose</span><span class="bi">Fenced ownership</span><span class="bi">Zero double deliveries</span><span class="bi">Energy-aware bids</span></div>
+  <div class="foot"><span>KPIT Sparkle 2027 · Decentralized Multi-Agent Coordination for Autonomous Logistics</span><span>03 / 12</span></div>
+</div>
+</body>
+</html>
