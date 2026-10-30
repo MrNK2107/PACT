@@ -1,0 +1,36 @@
+# sim3d: TypeScript simulator and 3D viewer. Type check plus the unit and property tests; the scenario
+# acceptance suite (make scenarios, ~3 min) and the bench / sweep stay local.
+name: sim3d
+
+on:
+  push:
+    paths: ['sim3d/**', '.github/workflows/sim3d.yml']
+  pull_request:
+    paths: ['sim3d/**', '.github/workflows/sim3d.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sim3d-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: sim3d
+
+jobs:
+  test:
+    name: type check and unit / property tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: sim3d/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

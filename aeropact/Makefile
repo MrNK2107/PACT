@@ -15,6 +15,9 @@ VENV         ?= $(HOME)/.cache/aeropact/venv
 SCENARIO     ?= hub_loss_partition
 SEEDS        ?= 3
 PACKAGES     ?=
+# ROS 2 Jazzy's Python (catkin_pkg, empy). Pinned so a user-level python3 earlier on PATH cannot
+# take over a fresh CMake configure.
+ROS_PYTHON   ?= /usr/bin/python3
 
 ROS_SETUP    := source /opt/ros/$(ROS_DISTRO)/setup.bash
 PX4_ROOT     ?= $(HOME)/.cache/aeropact/px4
@@ -54,7 +57,8 @@ build:
 	@mkdir -p $(BUILD_ROOT)
 	$(ROS_SETUP) && MAKEFLAGS=-j$(JOBS) colcon $(COLCON_LOG) build $(COLCON_PATHS) $(SELECT) \
 	  --parallel-workers $(WORKERS) --symlink-install \
-	  --cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+	  --cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+	  -DPython3_EXECUTABLE=$(ROS_PYTHON)
 
 test-unit: build
 	$(WS_SETUP) && colcon $(COLCON_LOG) test $(COLCON_PATHS) $(SELECT) \

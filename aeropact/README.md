@@ -73,7 +73,7 @@ Every run writes `events.jsonl` (structured event log), `metrics.json` and the g
 
 The coordination algorithms live in `aeropact_core` (C++, no ROS headers) and the evaluation
 layer in `aeropact_eval` (Python, only the recorder and RViz monitor import `rclpy`). Both are
-testable on any machine, and this is what CI (`.github/workflows/ci.yml`) runs:
+testable on any machine, and this is what CI (`.github/workflows/aeropact.yml` at the repo root) runs:
 
 ```bash
 # Python: event log, metrics, invariants I1/I3/M5, world generator + hypothesis properties

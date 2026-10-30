@@ -1,18 +1,25 @@
-# ROS-free CI: everything here runs on a stock Ubuntu runner without ROS 2, colcon or Gazebo.
+# AeroPACT CI. ROS-free jobs: everything here runs on a stock Ubuntu runner without ROS 2, colcon or Gazebo.
 # The full ROS 2 build, ament linters and acceptance scenarios still need `make test` /
 # `make scenarios` in the devcontainer or docker/Dockerfile.
-name: ci
+name: aeropact
 
 on:
   push:
+    paths: ['aeropact/**', '.github/workflows/aeropact.yml']
   pull_request:
+    paths: ['aeropact/**', '.github/workflows/aeropact.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# The ROS 2 workspace lives in aeropact/ (the TypeScript simulator in sim3d/ has its own workflow).
+defaults:
+  run:
+    working-directory: aeropact
+
 concurrency:
-  group: ci-${{ github.ref }}
+  group: aeropact-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,7 +32,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements-dev.txt
+          cache-dependency-path: aeropact/requirements-dev.txt
       - run: pip install -r requirements-dev.txt ruff==0.6.9
       - name: ruff (new ROS-free test code)
         run: ruff check tests

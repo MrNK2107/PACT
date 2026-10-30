@@ -1,8 +1,13 @@
 # PACT: Partition-Aware Coordination for Transport
 
-A deterministic simulator for **decentralised drone logistics**. A fleet of virtual drones shares out delivery jobs, charges at scarce pads, keeps separation and carries on through faults (closed airspace, storms, radio dead zones, pad outages, drone loss, hub loss) **without a central controller**. A benchmark compares that against central and greedy baselines.
+Decentralised drone logistics: a fleet of delivery drones shares out jobs, charges at scarce pads, keeps separation and carries on through faults (closed airspace, storms, radio dead zones, pad outages, drone loss, hub loss) **without a central controller**, and never delivers a parcel twice when the radio splits the fleet. The repo holds the same protocol in two simulators:
 
-> **Simulation only.** Motion is simplified kinematics, the battery is an accelerated toy model, and nothing here is a flight-readiness model. PACT does not connect to real drones.
+| Simulator | Folder | Stack | Use it for |
+|---|---|---|---|
+| **sim3d** | `sim3d/` | TypeScript, Three.js (React Three Fiber), runs in the browser and headless in Node | Fast deterministic experiments: 8 city maps, ~30 fault scenarios, the benchmark against three baselines, the AT-12 policy sweep, the 3D viewer and the replay viewer. |
+| **AeroPACT** | `aeropact/` | ROS 2 Jazzy (C++ lifecycle components), Gazebo Harmonic, PX4 v1.16 SITL | The protocol as deployable robotics software: one component container per drone, quadrotor physics in Gazebo, real PX4 autopilots in the loop, an authenticated mesh radio transport, deployment launch files. |
+
+> **Simulation only.** Neither simulator is a flight-readiness model, and nothing here has flown. sim3d uses simplified kinematics and an accelerated battery model; AeroPACT runs real autopilot software, but only in simulation.
 
 ![The sim3d viewer: the coastal_metro map running s0_healthy, with telemetry, the order board and the fleet list](docs/img/sim3d.png)
 
@@ -10,15 +15,17 @@ A deterministic simulator for **decentralised drone logistics**. A fleet of virt
 
 | Path | What it is |
 |---|---|
-| `sim3d/` | The simulator and 3D viewer: TypeScript, Vite, React 18, React Three Fiber, vitest. Everything that runs lives here. |
+| `sim3d/` | The TypeScript simulator and 3D viewer: Vite, React 18, React Three Fiber, vitest. |
+| `aeropact/` | The ROS 2 / Gazebo / PX4 workspace (12 colcon packages), with its own README, docs, decisions log and results. |
+| `.github/workflows/` | CI for both: `sim3d.yml` (type check, tests) and `aeropact.yml` (ROS-free core, Python, ROS 2 build + linters). |
 | `sim3d/maps/`, `sim3d/scenarios/` | 8 maps (2 to 12 km) and about 30 YAML scenarios. Scenario files are the only way to change behaviour in experiments (NFR-6). |
 | `docs/` | Problem statement, assumptions, approach, the agent-first PRD (`04_agent_first_PRD.md`), evaluation plan, risks and `DECISIONS.md`. |
 | `results/` | Output of `make bench` (`summary.md`, `results.csv`, `bench.json`), `make sweep` (`sweep/sweep.md`, `.csv`, `.json`) and `make plots` (`plots/*.svg`). |
-| `Makefile` | `test`, `scenarios`, `lint`, `bench`, `sweep`, `plots`, `demo`. |
+| `Makefile` | sim3d: `test`, `scenarios`, `lint`, `bench`, `sweep`, `plots`, `demo`. AeroPACT: `gz-build`, `gz-test`, `gz-scenarios`, `gz-scenarios-px4`, `gz-demo`, `gz-bench`. |
 
-The PRD describes a Python package layout (`pact/…`). The implementation is the TypeScript simulator in `sim3d/`; `docs/DECISIONS.md` records where and why it departs from the PRD.
+The PRD describes a Python package layout (`pact/…`). It is implemented twice: the TypeScript simulator in `sim3d/` (`docs/DECISIONS.md` records where and why it departs from the PRD) and the ROS 2 workspace in `aeropact/` (`aeropact/docs/DECISIONS.md`).
 
-## Quick start
+## Quick start: sim3d (browser)
 
 You need Node 18 or newer.
 
@@ -32,7 +39,24 @@ URL options: `?map=<id>&scenario=<name>` picks a world and scenario, `?system=<i
 
 The toolbar has map and scenario pickers, pause/reset, sim speed (0.5x to 8x) and add/remove drone. The side panels show telemetry, the order board, the fleet and an inspector (click any drone, building, depot or drop point).
 
+## Quick start: AeroPACT (Gazebo)
+
+Ubuntu 24.04 (native or WSL2) with ROS 2 Jazzy desktop and `ros-jazzy-ros-gz`, or the image in `aeropact/docker/`.
+
+```bash
+make gz-build        # colcon build into ~/.cache/aeropact (out of tree)
+make gz-test         # unit, property and lint suites
+make gz-demo         # Gazebo + RViz: hub loss, partition, drone failure in flight
+make gz-scenarios    # acceptance AT-03..AT-10 on the full ROS 2 graph (~35 min)
+# PX4 autopilots in the loop (fetches and builds PX4 v1.16 SITL once, ~25 min):
+make -C aeropact px4-toolchain && make gz-build && make gz-scenarios-px4
+```
+
+`aeropact/README.md` covers the packages, launch arguments, deployment launches and its benchmark.
+
 ## Commands
+
+sim3d targets (the `gz-*` targets are listed above):
 
 | `make` target | npm equivalent (in `sim3d/`) | What it does |
 |---|---|---|

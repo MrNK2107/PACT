@@ -10,3 +10,7 @@ dist/
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+
+# Local tooling state
+.playwright-mcp/
+log/
