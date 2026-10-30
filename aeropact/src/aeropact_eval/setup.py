@@ -27,7 +27,7 @@ setup(
     zip_safe=True,
     maintainer='AeroPACT Maintainers',
     maintainer_email='venkat@proudindian.ngo',
-    description='AeroPACT evaluation: recorder, metrics, invariants, benchmark, monitor.',
+    description='AeroPACT evaluation: recorder, metrics, invariants, benchmark, monitor, film.',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
@@ -36,6 +36,7 @@ setup(
             'fleet_monitor = aeropact_eval.monitor:main',
             'metrics = aeropact_eval.metrics:main',
             'bench = aeropact_eval.bench:main',
+            'film_director = aeropact_eval.film:main',
         ],
     },
 )

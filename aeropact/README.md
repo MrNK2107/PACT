@@ -20,7 +20,7 @@ both deliver the same parcel:
 | Autopilot | PX4 over uXRCE-DDS: offboard arbitration that never contests the autopilot's failsafes | real flight-control software and estimator in the loop (PX4 SITL) |
 | Transport | mesh radio bridge: HMAC-SHA256 fleet authentication, replay window | forged, replayed or spoofed frames never reach the protocol |
 
-**Contents:** [Quick start](#quick-start) · [Testing without ROS](#testing-without-ros) ·
+**Contents:** [Quick start](#quick-start) · [Film mode](#film-mode) · [Testing without ROS](#testing-without-ros) ·
 [Workspace](#workspace) · [Verification](#verification) · [Results](#results) ·
 [Documentation](#documentation)
 
@@ -68,6 +68,23 @@ ros2 run aeropact_eval metrics ~/.aeropact/runs/s1_hub_loss__central__s42
 
 Every run writes `events.jsonl` (structured event log), `metrics.json` and the generated `world/`
 (SDF, planning map, bridge config, roster, resolved scenario) to its run directory.
+
+## Film mode
+
+Records a run to video from a scripted camera, rendered by Gazebo server-side in simulation time (no GUI, no
+dropped frames), for any scenario on the `gazebo` or `px4` backend:
+
+```bash
+ros2 launch aeropact_bringup scenario.launch.py scenario:=demo_hub_loss_partition \
+    film:=$(ros2 pkg prefix aeropact_bringup)/share/aeropact_bringup/config/film/demo_hub_loss_partition.yaml \
+    film_output:=$HOME/demo.mp4 duration:=405
+```
+
+The shot list (`aeropact_eval/shots.py`) keyframes the camera in simulation time: eased fixed shots
+(`eye`, `look`) or shots locked onto a drone (`follow`, `offset`). `film_director` moves the `film_camera`
+model once per frame through `/world/<name>/set_pose` and pipes the frames to ffmpeg (`ffmpeg:=` may point at a
+Windows `ffmpeg.exe` from WSL). `<output>.frames.csv` maps frames to simulation time for captioning against
+`events.jsonl`. The world's facades, roofs, sky, shadows and the drones' halo markers are visual only; see D-33.
 
 ## Testing without ROS
 

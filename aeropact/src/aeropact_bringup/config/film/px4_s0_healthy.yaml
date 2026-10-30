@@ -1,0 +1,13 @@
+# Film-mode shot list for px4_s0_healthy (test_field, 700 m; depots D1 at (-230, -220) and D2 at
+# (220, 210)); four PX4 x500 autopilots. The first order appears at about 85 s: A04 arms at D2
+# about 90 s, A01 at D1 about 94 s. Close shots: the x500 is about 0.5 m across.
+start_s: 84
+end_s: 160
+shots:
+  - {t: 84, eye: [330, 300, 60], look: [220, 190, 2]}
+  - {t: 89, follow: A04, offset: [9, 9, 4]}
+  - {t: 100, follow: A04, offset: [-10, -10, 5]}
+  - {t: 122, follow: A04, offset: [14, -9, 6]}
+  - {t: 130, follow: A01, offset: [-11, -11, 5]}
+  - {t: 150, follow: A01, offset: [-16, 9, 7]}
+  - {t: 160, eye: [-420, -420, 160], look: [-200, -200, 10]}

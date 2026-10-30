@@ -59,6 +59,10 @@ ARGS = {
               'UDP bridges, the deployed transport; radio faults unavailable)'),
     'fleet_key': ('', 'fleet key file for radio:=mesh (default: the repository TEST key)'),
     'log_level': ('info', 'ROS log level'),
+    'film': ('', 'film mode: a shot list YAML; records the run from a server-side camera '
+                 '(aeropact_eval/shots.py, gazebo or px4 backend)'),
+    'film_output': ('', 'film mode: output video (default <run_dir>/film.mp4)'),
+    'ffmpeg': ('ffmpeg', 'film mode: ffmpeg executable (a Windows ffmpeg.exe works from WSL)'),
 }
 
 
@@ -115,11 +119,15 @@ def _setup(context):
         '%s__%s__s%d' % (raw.get('name', cfg['scenario']), system or 'scenario', seed))
     world_dir = os.path.join(run_dir, 'world')
 
+    film = cfg['film']
+    if film and cfg['backend'] not in ('gazebo', 'px4'):
+        raise RuntimeError('film mode needs backend:=gazebo or px4 (it renders in Gazebo)')
     gen = _load_generator()
     info = gen.generate(scenario_path, os.path.join(get_package_share_directory('aeropact_sim'),
                                                     'maps'),
                         world_dir, backend=cfg['backend'], seed=seed,
-                        n_drones=int(cfg['drones']) if cfg['drones'] else None)
+                        n_drones=int(cfg['drones']) if cfg['drones'] else None,
+                        film={} if film else None)
     scenario = info['scenario']
     if system:
         with open(os.path.join(bringup, 'config', 'systems.yaml'), encoding='utf-8') as f:
@@ -387,6 +395,15 @@ def _setup(context):
         actions.append(Node(package='rviz2', executable='rviz2', name='rviz', output='log',
                             arguments=['-d', os.path.join(bringup, 'rviz', 'aeropact.rviz')],
                             parameters=[{'use_sim_time': True}]))
+    if film:
+        actions.append(Node(package='aeropact_eval', executable='film_director',
+                            name='film_director', output='log',
+                            parameters=[{'shots': os.path.abspath(film),
+                                         'output': cfg['film_output'] or
+                                         os.path.join(run_dir, 'film.mp4'),
+                                         'world': gz_world, 'ffmpeg': cfg['ffmpeg'],
+                                         'odom_topic': truth_odom,
+                                         'use_sim_time': True}]))
     if _truthy(cfg['record_bag']):
         topics = ['/fleet/events', '/airspace/restrictions', '/diagnostics']
         for did in drone_ids:

@@ -1,0 +1,32 @@
+# Film-mode shot list for scenario demo_hub_loss_partition (metro_district, 1.2 km; depots D1 at
+# (-420, -380) and D2 at (400, 360)). Hub killed at 90 s, partition 180-330 s, a carrying drone
+# killed at 360 s. Times are simulation seconds; see aeropact_eval/shots.py for the format.
+#   ros2 launch aeropact_bringup scenario.launch.py scenario:=demo_hub_loss_partition \
+#     film:=$(ros2 pkg prefix aeropact_bringup)/share/aeropact_bringup/config/film/demo_hub_loss_partition.yaml
+start_s: 18
+end_s: 400
+shots:
+  # establishing: the district from the south-west, easing in towards depot D1
+  - {t: 18, eye: [-1050, -950, 560], look: [0, 0, 30]}
+  - {t: 32, eye: [-760, -700, 300], look: [-200, -150, 20]}
+  - {t: 44, eye: [-520, -500, 70], look: [-420, -390, 8]}
+  # the first sorties leave D1: lock onto A01
+  - {t: 52, follow: A01, offset: [-22, -22, 10]}
+  - {t: 78, follow: A01, offset: [-30, 18, 12]}
+  # pull back over the city as the hub dies (90 s): the drones carry on
+  - {t: 96, follow: A01, offset: [-110, -110, 75]}
+  - {t: 120, eye: [-150, -900, 520], look: [0, -50, 20]}
+  # the other side of the district: A02 out of D2
+  - {t: 134, follow: A02, offset: [28, 28, 12]}
+  - {t: 168, follow: A02, offset: [90, -40, 45]}
+  # partition (180-330): one drone on each side, then the whole district
+  - {t: 186, eye: [0, -1100, 760], look: [0, 0, 0]}
+  - {t: 205, follow: A03, offset: [-26, -26, 12]}
+  - {t: 240, follow: A03, offset: [-60, 30, 30]}
+  - {t: 252, follow: A04, offset: [26, 26, 12]}
+  - {t: 290, follow: A04, offset: [70, -30, 32]}
+  - {t: 305, eye: [900, -700, 520], look: [0, 0, 20]}
+  - {t: 335, eye: [700, 900, 480], look: [0, 0, 20]}
+  # drone failure at 360 s and recovery: a slow wide orbit
+  - {t: 365, eye: [-700, 900, 500], look: [0, 0, 20]}
+  - {t: 400, eye: [-1050, -200, 620], look: [0, 0, 30]}

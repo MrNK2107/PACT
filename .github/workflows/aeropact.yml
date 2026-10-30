@@ -44,6 +44,7 @@ jobs:
           python -m pytest -q -p no:cacheprovider --rootdir=.
           tests
           src/aeropact_eval/test/test_metrics.py
+          src/aeropact_eval/test/test_shots.py
           src/aeropact_sim/test/test_world_generator.py
 
   core:

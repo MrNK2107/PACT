@@ -32,6 +32,7 @@ import os
 import random
 import sys
 from xml.sax.saxutils import escape
+import zlib
 
 import yaml
 
@@ -57,6 +58,12 @@ DROP_COLOURS = {
     'hospital': '0.9 0.1 0.1 1', 'clinic': '0.95 0.4 0.4 1', 'office': '0.2 0.4 0.9 1',
     'retail': '0.9 0.6 0.1 1', 'residential': '0.2 0.7 0.3 1', 'industrial': '0.5 0.5 0.5 1',
 }
+
+# Facade palette (visual only): warm and cool concretes, brick, and glass; picked per building by
+# a hash of its id, so the world stays a pure function of map + seed.
+FACADES = ['0.78 0.76 0.72 1', '0.70 0.72 0.75 1', '0.62 0.64 0.68 1', '0.74 0.66 0.58 1',
+           '0.58 0.47 0.40 1', '0.50 0.58 0.66 1', '0.82 0.80 0.76 1', '0.46 0.52 0.58 1']
+ROOF = '0.30 0.31 0.33 1'
 
 DRONE_COLOURS = ['0.85 0.2 0.2 1', '0.2 0.45 0.9 1', '0.15 0.7 0.3 1', '0.9 0.7 0.1 1',
                  '0.6 0.25 0.8 1', '0.1 0.75 0.75 1', '0.95 0.45 0.1 1', '0.4 0.4 0.4 1']
@@ -364,6 +371,48 @@ def sdf_box(name, pose, size, colour, collision=True):
             '</visual></link>' % (name, pose_s, col, name, size_s, colour, colour))
 
 
+def sdf_halo(colour):
+    """
+    Return the halo and marker visuals that keep a drone findable in a city-scale view.
+
+    Visual only: a translucent disc under the 0.5 m airframe and a lit sphere above it. No
+    collision, no inertia, so the dynamics are unchanged.
+    """
+    return ('<visual name="halo"><pose>0 0 -0.08 0 0 0</pose><cast_shadows>false</cast_shadows>'
+            '<transparency>0.45</transparency><geometry><cylinder><radius>2.6</radius>'
+            '<length>0.02</length></cylinder></geometry><material><ambient>{c}</ambient>'
+            '<diffuse>{c}</diffuse><emissive>{c}</emissive></material></visual>'
+            '<visual name="marker"><pose>0 0 1.4 0 0 0</pose><cast_shadows>false</cast_shadows>'
+            '<geometry><sphere><radius>0.75</radius></sphere></geometry><material><ambient>{c}'
+            '</ambient><diffuse>{c}</diffuse><emissive>{c}</emissive></material></visual>'
+            ).format(c=colour)
+
+
+FILM_DEFAULTS = {'width': 1920, 'height': 1080, 'fps': 25, 'hfov': 0.9}
+
+
+def sdf_film(film):
+    """
+    Return the Sensors system and the film-mode recording camera model.
+
+    The camera is rendered server-side and published on /film/image; the film director moves it
+    through /world/<name>/set_pose. Static and without collision, so it never touches the
+    physics or the fleet's sensing.
+    """
+    f = dict(FILM_DEFAULTS, **(film or {}))
+    system = ('<plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">'
+              '<render_engine>ogre2</render_engine></plugin>')
+    model = (
+        '<model name="film_camera"><static>true</static><pose>0 0 300 0 1.2 0</pose>'
+        '<link name="link"><sensor name="camera" type="camera"><topic>film/image</topic>'
+        '<update_rate>%d</update_rate><always_on>1</always_on><camera>'
+        '<horizontal_fov>%.3f</horizontal_fov><image><width>%d</width><height>%d</height>'
+        '<format>R8G8B8</format></image><clip><near>1</near><far>6000</far></clip>'
+        '<anti_aliasing>4</anti_aliasing></camera></sensor></link></model>'
+        % (int(f['fps']), float(f['hfov']), int(f['width']), int(f['height'])))
+    return system, model
+
+
 def sdf_quad(drone_id, pose, colour):
     """Quadrotor with Gazebo's motor-model and multicopter velocity-control systems."""
     x, y, z = pose
@@ -420,7 +469,7 @@ def sdf_quad(drone_id, pose, colour):
         '<visual name="beacon"><pose>0 0 0.06 0 0 0</pose><geometry><sphere><radius>0.04'
         '</radius></sphere></geometry><material><ambient>{c}</ambient><diffuse>{c}</diffuse>'
         '<emissive>{c}</emissive></material></visual>'
-        '</link>').format(c=colour)
+        '{halo}</link>').format(c=colour, halo=sdf_halo(colour))
     control = (
         '<plugin filename="gz-sim-multicopter-control-system" '
         'name="gz::sim::systems::MulticopterVelocityControl">'
@@ -463,7 +512,7 @@ def sdf_px4_environment(origin, magnetic_field):
            origin['lon_deg'], origin['alt_m']))
 
 
-def sdf_world(name, city, fleet, rtf, backend='gazebo'):
+def sdf_world(name, city, fleet, rtf, backend='gazebo', film=None):
     parts = []
     size = city.size + 400
     parts.append(
@@ -487,10 +536,14 @@ def sdf_world(name, city, fleet, rtf, backend='gazebo'):
     links = []
     for b in city.buildings:
         h = b['height_m']
-        shade = 0.45 + 0.35 * min(1.0, h / 70.0)
-        colour = '%.2f %.2f %.2f 1' % (shade * 0.85, shade * 0.88, shade)
+        colour = FACADES[zlib.crc32(b['id'].encode()) % len(FACADES)]
         links.append(sdf_box(b['id'], (b['center'][0], b['center'][1], h / 2, 0, 0, 0),
                              (b['size'][0], b['size'][1], h), colour))
+        # roof slab: visual only, so collision volumes and the planner map are unchanged
+        links.append(sdf_box(b['id'] + '_roof',
+                             (b['center'][0], b['center'][1], h + 0.15, 0, 0, 0),
+                             (b['size'][0] * 0.92, b['size'][1] * 0.92, 0.3), ROOF,
+                             collision=False))
     parts.append('<model name="city"><static>true</static>%s</model>' % ''.join(links))
     for d in city.depots:
         x, y, _ = d['position']
@@ -547,19 +600,23 @@ def sdf_world(name, city, fleet, rtf, backend='gazebo'):
             'name="gz::sim::systems::SceneBroadcaster"/>'
             '<plugin filename="gz-sim-user-commands-system" '
             'name="gz::sim::systems::UserCommands"/>')
+    if film is not None:
+        film_system, film_model = sdf_film(film)
+        environment += film_system
+        parts.append(film_model)
     return (
         '<?xml version="1.0" ?>\n<sdf version="1.9"><world name="%s">'
         '<physics name="4ms" type="ignored"><max_step_size>0.004</max_step_size>'
         '<real_time_factor>%.2f</real_time_factor></physics>%s'
-        '<scene><ambient>0.5 0.5 0.5 1</ambient><background>0.7 0.8 0.95 1</background>'
-        '<shadows>false</shadows></scene>'
-        '<light type="directional" name="sun"><cast_shadows>false</cast_shadows>'
-        '<pose>0 0 300 0 0 0</pose><diffuse>0.9 0.9 0.9 1</diffuse>'
-        '<specular>0.2 0.2 0.2 1</specular><direction>-0.4 0.2 -0.9</direction></light>'
+        '<scene><ambient>0.55 0.56 0.6 1</ambient><background>0.72 0.8 0.9 1</background>'
+        '<sky></sky><shadows>true</shadows><grid>false</grid></scene>'
+        '<light type="directional" name="sun"><cast_shadows>true</cast_shadows>'
+        '<pose>0 0 300 0 0 0</pose><diffuse>0.95 0.93 0.88 1</diffuse>'
+        '<specular>0.25 0.25 0.25 1</specular><direction>-0.45 0.3 -0.85</direction></light>'
         '%s</world></sdf>\n' % (escape(name), rtf, environment, ''.join(parts)))
 
 
-def bridge_yaml(fleet, backend='gazebo'):
+def bridge_yaml(fleet, backend='gazebo', film=None, world='map'):
     entries = [{'ros_topic_name': '/clock', 'gz_topic_name': '/clock',
                 'ros_type_name': 'rosgraph_msgs/msg/Clock', 'gz_type_name': 'gz.msgs.Clock',
                 'direction': 'GZ_TO_ROS'}]
@@ -583,6 +640,16 @@ def bridge_yaml(fleet, backend='gazebo'):
             {'ros_topic_name': '/%s/enable' % i, 'gz_topic_name': '/%s/enable' % i,
              'ros_type_name': 'std_msgs/msg/Bool', 'gz_type_name': 'gz.msgs.Boolean',
              'direction': 'ROS_TO_GZ'},
+        ]
+    if film is not None:
+        # film mode: the recording camera's frames, and the service that moves it
+        entries += [
+            {'ros_topic_name': '/film/image', 'gz_topic_name': '/film/image',
+             'ros_type_name': 'sensor_msgs/msg/Image', 'gz_type_name': 'gz.msgs.Image',
+             'direction': 'GZ_TO_ROS'},
+            {'service_name': '/world/%s/set_pose' % world,
+             'ros_type_name': 'ros_gz_interfaces/srv/SetEntityPose',
+             'gz_req_type_name': 'gz.msgs.Pose', 'gz_rep_type_name': 'gz.msgs.Boolean'},
         ]
     return entries
 
@@ -631,7 +698,8 @@ def load_scenario(path, maps_dir):
     return scenario, map_def
 
 
-def generate(scenario_path, maps_dir, out_dir, backend='gazebo', seed=None, n_drones=None):
+def generate(scenario_path, maps_dir, out_dir, backend='gazebo', seed=None, n_drones=None,
+             film=None):
     scenario, map_def = load_scenario(scenario_path, maps_dir)
     if seed is not None:
         scenario['seed'] = int(seed)
@@ -647,9 +715,10 @@ def generate(scenario_path, maps_dir, out_dir, backend='gazebo', seed=None, n_dr
         yaml.safe_dump(city.world_yaml(map_def.get('name', 'map')), f, sort_keys=False)
     with open(os.path.join(out_dir, 'world.sdf'), 'w', encoding='utf-8') as f:
         f.write(sdf_world(map_def.get('name', 'map'), city, fleet,
-                          float(scenario['sim'].get('real_time_factor', 1.0)), backend))
+                          float(scenario['sim'].get('real_time_factor', 1.0)), backend, film))
     with open(os.path.join(out_dir, 'bridge.yaml'), 'w', encoding='utf-8') as f:
-        yaml.safe_dump(bridge_yaml(fleet, backend), f, sort_keys=False)
+        yaml.safe_dump(bridge_yaml(fleet, backend, film, map_def.get('name', 'map')), f,
+                       sort_keys=False)
     with open(os.path.join(out_dir, 'fleet.yaml'), 'w', encoding='utf-8') as f:
         yaml.safe_dump(fleet, f, sort_keys=False)
     scenario['name'] = name
