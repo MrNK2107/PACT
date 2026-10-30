@@ -4,7 +4,7 @@ Decentralised drone logistics: a fleet of delivery drones shares out jobs, charg
 
 | Simulator | Folder | Stack | Use it for |
 |---|---|---|---|
-| **sim3d** | `sim3d/` | TypeScript, Three.js (React Three Fiber), runs in the browser and headless in Node | Fast deterministic experiments: 8 city maps, ~30 fault scenarios, the benchmark against three baselines, the AT-12 policy sweep, the 3D viewer and the replay viewer. |
+| **sim3d** | `sim3d/` | TypeScript, Three.js (React Three Fiber), runs in the browser and headless in Node | Fast deterministic experiments: 8 city maps, ~30 fault scenarios, the benchmark against three baselines, the AT-12 policy sweep, the 3D viewer, the replay viewer and the scripted demo. |
 | **AeroPACT** | `aeropact/` | ROS 2 Jazzy (C++ lifecycle components), Gazebo Harmonic, PX4 v1.16 SITL | The protocol as deployable robotics software: one component container per drone, quadrotor physics in Gazebo, real PX4 autopilots in the loop, an authenticated mesh radio transport, deployment launch files. |
 
 > **Simulation only.** Neither simulator is a flight-readiness model, and nothing here has flown. sim3d uses simplified kinematics and an accelerated battery model; AeroPACT runs real autopilot software, but only in simulation.
@@ -66,9 +66,17 @@ sim3d targets (the `gz-*` targets are listed above):
 | `make bench` | `npm run bench -- --seeds=5 --window=900` | Runs scenario x system x seed and writes `results/` (about 2 min with 5 seeds). Options: `SEEDS=30 WINDOW=900 SCENARIOS=a,b SYSTEMS=x,y`. Exits non-zero if a run breaks I1 or I3; add `--strict` to also fail on AT-05. |
 | `make sweep` | `npm run sweep -- --seeds=30 --window=900` | AT-12 policy sweep: partition policy (STRICT / QUORUM / OPTIMISTIC_BOUNDED) under `pact`, plus `cbba_plain` as the unfenced reference, per scenario and seed; writes `results/sweep/` (about 10 min for 240 runs). Options: `SWEEP_SEEDS`, `SWEEP_WINDOW`; `--scenarios=` / `--systems=` / `--references=` on the npm script. Exits non-zero if a run is missing (crashed) or a fenced system breaks I1 / I3. |
 | `make plots` | `npm run plots` | Renders `results/plots/bench_on_time.svg`, `message_load.svg`, `recovery_cdf.svg` and `sweep_pareto.svg` from the bench, recovery and sweep JSON (no plotting dependency). |
-| `make demo` | `npm run dev -- --open "/?scenario=s_scripted_demo&autostart"` | Opens the scripted demo scenario in the live viewer. |
+| `make demo` | `npm run dev -- --open "/?demo"` | Plays the scripted demo (about 5 min, six scenes): healthy fleet, hub loss under the central baseline and under PACT, a radio partition, a drone failure. |
 
 `npm run build` makes a production bundle in `sim3d/dist/`.
+
+## Replay, film mode and the demo (TC-13)
+
+- **Replay viewer** (`?replay`, or the toolbar's Replay button): a timeline over the scenario window with fault, failure, recovery and delivery markers. Click to seek, step 10 s, or jump to the next incident. Runs are deterministic, so seeking re-simulates instead of storing frames. **Save log** writes the run's JSONL event log; **Load log** replays a saved log and verifies it event by event ("Verified: N events identical", or the first event that differs).
+- **Film mode** (`?film`): the 3D view without panels, for recordings. `window.pact` scripts it: `shot(eye, target, seconds)`, `caption({tag, title, sub})`, `hud(true)` (system, sim time, deliveries since the first fault, duplicates), `layer`, `follow`, `speed`, `seek`, `skip`, `log()`, `hash()`.
+- **Demo** (`make demo`, `?demo`; `?demo=<scene>&once` plays one scene): `src/app/demo.ts`. Captions quote only the numbers in `results/`.
+
+The Gazebo stack has its own film mode, which records a run server-side from a scripted camera (`aeropact/README.md`).
 
 ## How coordination works
 
@@ -127,8 +135,7 @@ Supported faults include `urgent_job_burst`, `close_zone`, `radio_blackout`, `pa
 
 ## Status and known limits
 
-- Done: deterministic engine, procedural worlds and maps, workload generator, fault injector, energy model, path planner, decentralised allocation with epoch-fenced leases and depot arbitration, safety separation, the network model with partitions and gossip (TC-02/04), per-node CRDT replicas (TC-03), ownership and partition policies (TC-07), depot nodes (TC-08), the failure detector (TC-09), 3D viewer, scenario acceptance suite with the P2P acceptance checks, the baselines, bench runner and AT-12 sweep.
-- Not yet: the replay viewer (TC-13).
+- Done: deterministic engine, procedural worlds and maps, workload generator, fault injector, energy model, path planner, decentralised allocation with epoch-fenced leases and depot arbitration, safety separation, the network model with partitions and gossip (TC-02/04), per-node CRDT replicas (TC-03), ownership and partition policies (TC-07), depot nodes (TC-08), the failure detector (TC-09), 3D viewer, replay viewer, film mode and scripted demo (TC-13), scenario acceptance suite with the P2P acceptance checks, the baselines, bench runner and AT-12 sweep.
 - Depots are assumed to have a backhaul link to each other (`docs/02_assumptions.md` T12). With `network.backhaul.enabled: false`, QUORUM cannot start work on maps whose depots sit beyond radio range of each other (Decision 19).
 - The fleet is capped at one drone per charging pad. A scenario asking for more drones runs fewer and logs `fleet_capped`; for example, `s0_healthy` asks for 12 and runs 6.
 - The radio is a disc model with dead zones, and planning is 2.5D over altitude layers. Ground vehicles are decorative.

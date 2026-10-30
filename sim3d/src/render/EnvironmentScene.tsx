@@ -190,6 +190,22 @@ function CameraRig() {
   const resetNonce = useUI((s) => s.cameraResetNonce);
   const focusNonce = useUI((s) => s.focusNonce);
   const goal = useRef<{ target: THREE.Vector3; dist: number } | null>(null);
+  // scripted move (film mode / window.pact.shot): eased from the current view to the shot over `seconds`
+  const shot = useUI((s) => s.shot);
+  const move = useRef<{ p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3; dur: number; age: number } | null>(null);
+  useEffect(() => {
+    const c = controls.current;
+    if (!shot || !c) return;
+    goal.current = null;
+    move.current = {
+      p0: camera.position.clone(),
+      t0: c.target.clone(),
+      p1: new THREE.Vector3(...shot.position),
+      t1: new THREE.Vector3(...shot.target),
+      dur: Math.max(0, shot.seconds),
+      age: 0,
+    };
+  }, [shot, camera]);
 
   useEffect(() => {
     const c = controls.current;
@@ -264,6 +280,17 @@ function CameraRig() {
         c.target.z = cz;
       }
     }
+    const mv = move.current;
+    if (c && mv) {
+      mv.age += dt;
+      const u = mv.dur > 0 ? Math.min(1, mv.age / mv.dur) : 1;
+      const k = u * u * (3 - 2 * u); // smoothstep: ease in and out
+      camera.position.lerpVectors(mv.p0, mv.p1, k);
+      c.target.lerpVectors(mv.t0, mv.t1, k);
+      c.update();
+      if (u >= 1) move.current = null;
+      return;
+    }
     const g = goal.current;
     if (!c || !g) return;
     const id = useUI.getState().selection?.id;
@@ -292,6 +319,7 @@ function CameraRig() {
       touches={{ ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE }}
       onStart={() => {
         goal.current = null;
+        move.current = null;
       }}
     />
   );

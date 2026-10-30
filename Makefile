@@ -3,7 +3,8 @@
 #   aeropact/  ROS 2 Jazzy + Gazebo Harmonic + PX4 SITL workspace. The `gz-*` targets, run inside Ubuntu 24.04
 #              (native, WSL2 or aeropact/docker); they forward to aeropact/Makefile, see aeropact/README.md.
 # `bench` runs scenario x system x seed (TC-11 baselines, TC-12 runner) and writes results/; `demo` opens the
-# scripted-demo scenario in the live viewer.
+# scripted demo (src/app/demo.ts, ~5 min: healthy fleet, hub loss vs the central baseline, radio partition, drone
+# failure) in the live viewer; add ?replay to any viewer URL for the replay timeline.
 # bench options: make bench SEEDS=30 WINDOW=900 SCENARIOS=s0_healthy,s1_hub_loss SYSTEMS=pact,central_hub_loss
 # `sweep` is the AT-12 policy sweep (results/sweep/), `plots` renders results/plots/*.svg from bench + sweep output.
 # sweep options: make sweep SWEEP_SEEDS=30 SWEEP_WINDOW=900 (scenarios / systems via SWEEP_SCENARIOS / SWEEP_SYSTEMS)
@@ -35,7 +36,7 @@ plots:
 	cd sim3d && npm run plots
 
 demo:
-	cd sim3d && npm run dev -- --open "/?scenario=s_scripted_demo&autostart"
+	cd sim3d && npm run dev -- --open "/?demo"
 
 # ---- AeroPACT (ROS 2 + Gazebo + PX4), inside Ubuntu 24.04 ----
 gz-build:

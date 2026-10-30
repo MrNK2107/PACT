@@ -1,11 +1,15 @@
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useSimSnapshot } from './app/hooks';
+import { deliveryCounts } from './app/replay';
+import { engine } from './app/simContext';
 import { useUI } from './app/uiStore';
 import { EnvironmentScene, HOME_CAMERA } from './render/EnvironmentScene';
 import { COMPONENT_PALETTE } from './app/netGraph';
 import { InspectorPanel } from './ui/InspectorPanel';
 import { NetworkPanel } from './ui/NetworkPanel';
 import { LayerPanel, SimulationControls } from './ui/SimulationControls';
+import { ReplayBar } from './ui/ReplayBar';
 import { TaskBoardPanel } from './ui/TaskBoardPanel';
 import { EventLog, FleetPanel, TelemetryPanel } from './ui/TelemetryPanel';
 
@@ -57,10 +61,68 @@ function Legend() {
   );
 }
 
+/** Film mode lower third (set by `window.pact.caption`). */
+function CaptionOverlay() {
+  const c = useUI((s) => s.caption);
+  if (!c) return null;
+  return (
+    <div className="caption" key={`${c.tag}|${c.title}|${c.sub}`}>
+      {c.tag && <div className="caption-tag">{c.tag}</div>}
+      <div className="caption-title">{c.title}</div>
+      {c.sub && <div className="caption-sub">{c.sub}</div>}
+    </div>
+  );
+}
+
+const SYSTEM_NAMES: Record<string, string> = {
+  pact: 'PACT',
+  central_full: 'Central hub (never fails)',
+  central_hub_loss: 'Central hub',
+  greedy_nearest: 'Greedy nearest',
+  cbba_plain: 'Plain auction (unfenced)',
+};
+
+/** Film-mode scoreboard (`window.pact.hud(true)`): the numbers a viewer needs to read the shot. */
+function Hud() {
+  const on = useUI((s) => s.hud);
+  const s = useSimSnapshot();
+  if (!on) return null;
+  const firstFault = s.faultsFired.length ? s.faultsFired[0].t : Number.POSITIVE_INFINITY;
+  const c = deliveryCounts(engine.events, firstFault);
+  const mm = Math.floor(s.time / 60);
+  const ss = String(Math.floor(s.time % 60)).padStart(2, '0');
+  return (
+    <div className="hud">
+      <div className="hud-sys">{SYSTEM_NAMES[engine.system] ?? engine.system}</div>
+      <div className="hud-row">
+        <span>
+          <b className="mono">
+            {mm}:{ss}
+          </b>
+          sim time
+        </span>
+        <span>
+          <b className="mono">{c.delivered}</b>delivered
+        </span>
+        {isFinite(firstFault) && (
+          <span>
+            <b className="mono">{c.after}</b>since fault
+          </span>
+        )}
+        <span className={c.duplicates ? 'bad' : ''}>
+          <b className="mono">{c.duplicates}</b>duplicates
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const select = useUI((s) => s.select);
+  const film = useUI((s) => s.film);
+  const replay = useUI((s) => s.showReplay);
   return (
-    <div className="app">
+    <div className={`app${film ? ' film' : ''}`}>
       <header className="topbar">
         <div className="brand">
           <b>PACT</b>
@@ -79,7 +141,7 @@ export default function App() {
         </section>
       </aside>
 
-      <main className="stage">
+      <main className={`stage${replay && !film ? ' has-replay' : ''}`}>
         <Canvas
           shadows
           dpr={[1, 1.75]}
@@ -89,7 +151,10 @@ export default function App() {
         >
           <EnvironmentScene />
         </Canvas>
-        <Legend />
+        {!film && <Legend />}
+        <CaptionOverlay />
+        <Hud />
+        {replay && !film && <ReplayBar />}
       </main>
 
       <aside className="right">

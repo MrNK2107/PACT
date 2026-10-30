@@ -27,6 +27,8 @@ export function SimulationControls() {
   const focus = useUI((u) => u.focusSelection);
   const selection = useUI((u) => u.selection);
   const select = useUI((u) => u.select);
+  const replay = useUI((u) => u.showReplay);
+  const setReplay = useUI((u) => u.setReplay);
 
   const primaryLabel = s.status === 'idle' ? 'Start' : s.status === 'running' ? 'Pause' : 'Resume';
   const onPrimary = () => {
@@ -121,6 +123,9 @@ export function SimulationControls() {
         </button>
         <button className="btn" disabled={!selection} onClick={focus} title="Centre the camera on the selection">
           Focus
+        </button>
+        <button className={`btn ${replay ? 'on' : ''}`} onClick={() => setReplay(!replay)} title="Replay timeline: seek, jump to incidents, load / verify / save the event log">
+          Replay
         </button>
       </div>
     </div>

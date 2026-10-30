@@ -430,6 +430,22 @@ export class SimulationEngine {
     if (steps >= SIM.maxStepsPerFrame) this.acc = 0;
   }
 
+  /**
+   * Replay (TC-13): run the fixed step until `time` reaches `t`, at most `maxTicks` steps, regardless of status and
+   * wall clock. Returns true once `t` is reached. Because a run is a pure function of scenario + seed (AT-01), seeking
+   * backwards is `reset()`, `start()`, then `advanceTo(t)`; the replay viewer slices it with `maxTicks`.
+   */
+  advanceTo(t: number, maxTicks = Number.POSITIVE_INFINITY): boolean {
+    let n = 0;
+    while (this.time + 1e-9 < t && n < maxTicks) {
+      this.tick();
+      n++;
+    }
+    this.acc = 0;
+    if (n) this.emit();
+    return this.time + 1e-9 >= t;
+  }
+
   // ---- weather ---------------------------------------------------------------------------------------
 
   /** The wind field is rebuilt from the base field, the current parameters and the live storm boosts. */
