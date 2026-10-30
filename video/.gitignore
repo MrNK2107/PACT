@@ -17,3 +17,5 @@ tools/*probe*
 tools/wsl_check_bridge.sh
 tools/wsl_status.sh
 tools/world_info.sh
+out/*_concat.txt
+out/*_timeline.json
