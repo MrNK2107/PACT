@@ -21,6 +21,8 @@
   a.url { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 600; color: var(--deep);
           text-decoration: underline; text-decoration-color: var(--gline); text-decoration-thickness: 2px; text-underline-offset: 5px; }
   .full { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--slate); margin-top: 8px; word-break: break-all; }
+  /* link text is added in the deck tool: keep its space, show nothing */
+  a.url, .full, .dl .p, .gd { visibility: hidden; }
   .dl a .p { text-decoration: underline; text-decoration-color: var(--gline); text-decoration-thickness: 2px; text-underline-offset: 4px; }
   .what { font-size: 17px; line-height: 1.45; margin-top: 8px; }
   .docs { position: absolute; left: 44px; right: 44px; top: 764px; height: 226px; padding: 24px 30px; }
@@ -66,7 +68,7 @@
   </div>
 
   <div class="card docs">
-    <h2>Reviewer documents <span style="font-weight:400;color:var(--slate);font-size:18px">· in the <a href="https://drive.google.com/drive/folders/1-udBn0FYfy1-YIIxnf0yAcD5kpeAF4en?usp=sharing" style="color:var(--deep);text-decoration:underline;text-decoration-color:var(--gline)">Google Drive folder</a></span></h2>
+    <h2>Reviewer documents <span style="font-weight:400;color:var(--slate);font-size:18px"><span class="gd">· in the <a href="https://drive.google.com/drive/folders/1-udBn0FYfy1-YIIxnf0yAcD5kpeAF4en?usp=sharing" style="color:var(--deep);text-decoration:underline;text-decoration-color:var(--gline)">Google Drive folder</a></span></span></h2>
     <div class="dl">
       <a href="https://drive.google.com/drive/folders/1-udBn0FYfy1-YIIxnf0yAcD5kpeAF4en?usp=sharing"><div class="p">PACT_01_Project_Summary.docx</div><div class="d">Problem, solution, headline results, status. Read first</div></a>
       <a href="https://drive.google.com/drive/folders/1-udBn0FYfy1-YIIxnf0yAcD5kpeAF4en?usp=sharing"><div class="p">PACT_02_Technical_Design_Document.docx</div><div class="d">Architecture, protocol, shared state, safety, invariants</div></a>
