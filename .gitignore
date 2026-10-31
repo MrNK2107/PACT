@@ -25,3 +25,6 @@ video/README.md
 # Reviewer documents: build sources and PDF exports stay local
 docs/submission/src/
 docs/submission/pdf/
+
+# Slide PDF exports (shared directly, not from the repo)
+docs/img/*.pdf
