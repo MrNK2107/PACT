@@ -1,128 +1,116 @@
 1
-00:00:00,800 --> 00:00:01,184
-PACT.
+00:00:00,800 --> 00:00:01,477
+This is PACT.
 
 2
-00:00:01,184 --> 00:00:04,483
-Partition-Aware Coordination for Transport.
+00:00:01,477 --> 00:00:05,955
+It's a drone delivery fleet that keeps working, even when the central brain goes dark.
 
 3
-00:00:04,483 --> 00:00:09,624
-A drone delivery fleet that keeps working when the brain goes dark.
+00:00:11,100 --> 00:00:15,670
+Right now, most delivery fleets lean on one central controller and a solid radio link.
 
 4
-00:00:11,100 --> 00:00:17,864
-Today's delivery fleets depend on one central controller and an unbroken radio link.
+00:00:15,670 --> 00:00:17,795
+If you lose that hub, every drone stops.
 
 5
-00:00:17,864 --> 00:00:20,763
-Lose the hub, and every drone stops.
+00:00:17,795 --> 00:00:22,153
+And if the radio splits, two groups of drones can end up claiming the same parcel.
 
 6
-00:00:20,763 --> 00:00:26,239
-Split the radio, and two groups of drones can claim the same parcel.
+00:00:28,300 --> 00:00:30,788
+PACT gets rid of the central controller.
 
 7
-00:00:28,300 --> 00:00:31,563
-In PACT, there is no central controller.
+00:00:30,788 --> 00:00:36,758
+Every drone runs the same logic, and it only talks to the drones it can actually reach by radio.
 
 8
-00:00:31,563 --> 00:00:38,171
-Every drone runs the same logic, and talks only to the drones within radio range.
+00:00:36,758 --> 00:00:40,986
+They bid for jobs based on priority, distance, deadline and battery.
 
 9
-00:00:38,171 --> 00:00:43,311
-Drones bid for jobs on priority, distance, deadline and energy.
+00:00:40,986 --> 00:00:46,272
+Each drone keeps its own copy of the order board, and those copies sync up by gossip.
 
 10
-00:00:43,311 --> 00:00:49,755
-Each one keeps its own copy of the order board, and the copies merge by gossip.
+00:00:52,900 --> 00:00:57,671
+So here's the same city, the same seed and the same orders, run twice.
 
 11
-00:00:52,900 --> 00:00:58,114
-Here is the same city, the same seed and the same orders, twice.
+00:00:57,671 --> 00:01:00,874
+On the left, a central hub hands out every job.
 
 12
-00:00:58,114 --> 00:01:01,779
-On the left, a central hub assigns every job.
+00:01:00,874 --> 00:01:03,191
+Three minutes in, we kill the hub.
 
 13
-00:01:01,779 --> 00:01:04,549
-At three minutes, we kill the hub.
+00:01:03,191 --> 00:01:06,189
+The central fleet stops picking up new work.
 
 14
-00:01:04,549 --> 00:01:07,808
-The central fleet stops taking new work.
+00:01:06,189 --> 00:01:10,755
+PACT doesn't have anything central to lose, so it just keeps going:
 
 15
-00:01:07,808 --> 00:01:12,451
-PACT has nothing central to lose, so it keeps delivering:
-
-16
-00:01:12,451 --> 00:01:17,420
+00:01:10,755 --> 00:01:14,913
 eighty-six percent on time, the same as with no fault at all.
 
+16
+00:01:22,367 --> 00:01:26,706
+Now let's split the fleet in two over the radio, for five minutes.
+
 17
-00:01:22,367 --> 00:01:26,528
-Now the radio splits the fleet in two for five minutes.
+00:01:26,706 --> 00:01:34,792
+Both halves keep working, and every claim carries an epoch and a lease, so a depot only hands a parcel to its newest owner.
 
 18
-00:01:26,528 --> 00:01:33,716
-Each side keeps working under a partition policy, and every claim carries an epoch and a lease.
-
-19
-00:01:33,716 --> 00:01:37,347
-A depot hands a parcel only to the newest owner.
-
-20
-00:01:37,347 --> 00:01:43,854
+00:01:34,792 --> 00:01:40,446
 Across two hundred and forty runs with radio splits, PACT made zero double deliveries.
 
-21
-00:01:43,854 --> 00:01:47,259
+19
+00:01:40,446 --> 00:01:43,404
 A plain auction made nearly eighteen per run.
 
+20
+00:01:52,367 --> 00:01:55,284
+If a drone fails mid-delivery, it just goes quiet.
+
+21
+00:01:55,284 --> 00:02:03,977
+The drones that were expecting to hear from it report the silence, its depot marks it as failed, and exactly one replacement job goes out to auction.
+
 22
-00:01:52,367 --> 00:01:57,288
-When a drone fails in the middle of a delivery, it simply goes silent.
+00:02:13,733 --> 00:02:15,989
+And it's not just a browser demo.
 
 23
-00:01:57,288 --> 00:02:07,692
-The drones that expected to hear it report the silence, its depot declares it failed, and exactly one replacement job is auctioned to another drone.
+00:02:15,989 --> 00:02:19,339
+The same protocol runs as real robotics software:
 
 24
-00:02:13,734 --> 00:02:18,587
-The same protocol also runs as real robotics software:
+00:02:19,339 --> 00:02:29,662
+ROS 2 lifecycle components, one container per drone, quadrotor physics in Gazebo, and PX4 autopilots in the loop, all over an authenticated mesh radio.
 
 25
-00:02:18,587 --> 00:02:31,799
-ROS 2 lifecycle components, one container per drone, quadrotor physics in Gazebo, and PX4 autopilots in the loop, over an authenticated mesh radio.
-
-26
-00:02:39,301 --> 00:02:41,549
+00:02:39,300 --> 00:02:41,080
 Every run is deterministic.
 
+26
+00:02:41,080 --> 00:02:47,079
+The same seed gives you the same event log, and the replay viewer checks it event by event.
+
 27
-00:02:41,549 --> 00:02:48,960
-The same seed gives the same event log, and the replay viewer verifies it event by event.
+00:02:47,079 --> 00:02:54,857
+Nearly a thousand automated tests pass across both simulators, and there's a public benchmark against three baselines.
 
 28
-00:02:48,960 --> 00:02:58,202
-Nearly a thousand automated tests pass across both simulators, with a public benchmark against three baselines.
+00:02:59,900 --> 00:03:04,723
+Today, PACT is a simulation prototype, and real hardware is the next step.
 
 29
-00:02:59,901 --> 00:03:06,148
-PACT is a simulation prototype today, and real hardware is the next step.
-
-30
-00:03:06,148 --> 00:03:06,747
-No hub.
-
-31
-00:03:06,747 --> 00:03:08,372
-No double delivery.
-
-32
-00:03:08,372 --> 00:03:09,143
-No stall.
+00:03:04,723 --> 00:03:07,330
+No hub, no double deliveries, no stalls.
 
