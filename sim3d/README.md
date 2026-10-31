@@ -1,14 +1,14 @@
 # PACT — 3D logistics simulation environment
 
 Interactive Three.js world (React + TypeScript + Vite + React Three Fiber) for
-*Decentralized Multi-Agent Coordination for Autonomous Logistics* (see `../docs/`).
+*Decentralized Multi-Agent Coordination for Autonomous Logistics* (reviewer documents in `../docs/submission/`).
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173  (add ?map=<id>&scenario=<name> to pick a map and scenario)
-                   # other URL options: ?system=<pact|central_full|central_hub_loss|greedy_nearest>, ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart
+                   # other URL options: ?system=<pact|central_full|central_hub_loss|greedy_nearest|cbba_plain>, ?view=overview, ?cam=px,py,pz,tx,ty,tz, ?autostart, ?replay, ?demo, ?film
 npm test           # world, map, scenario, mechanics, planner and simulation tests (fast)
-npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate (about 1 min)
+npm run scenarios  # the scenario acceptance suite: every scenario against its tier gate, plus the P2P acceptance checks (about 17 min; AT-11 alone is ~16 min)
 npm run bench      # scenario x system x seed benchmark, writes ../results/ (--seeds=N --window=S --scenarios=a,b --systems=x,y)
 npm run build
 ```
@@ -25,7 +25,7 @@ filtered by map (`?map=<id>&scenario=<name>`; either alone also works). Switchin
 
 | Map | Size | Tier | Notes |
 |---|---|---|---|
-| `coastal_metro` | 4 km | standard | The PRD example world and the original scenarios |
+| `coastal_metro` | 4 km | standard | The reference example world and the original scenarios |
 | `harbour_metro_xl` | 12 km | stress | Airport, port and rail; scalability runs |
 | `dense_metro_core` | 2.5 km | hard | Downtown towers, rooftop-only drops, ring motorway, crowded low airspace |
 | `industrial_port` | 3 km | standard | Port, warehouses, cranes, tank farms; hub-and-spoke depots |
@@ -53,11 +53,11 @@ targets, every due fault fires, same event hash on two runs). `RUN_HEAVY=1` adds
 
 ## Scenarios drive everything (NFR-6)
 The world, fleet, workload, policy knobs and fault script come from one YAML file under
-`scenarios/<map>/`, mirroring `docs/04_agent_first_PRD.md` section 9.1:
+`scenarios/<map>/` (schema in `PACT_02_Technical_Design_Document.docx`, chapter 12):
 
 | File (`scenarios/<map>/`) | What it shows |
 |---|---|
-| `s0_healthy.yaml` | PRD example: 4 × 4 km city, 3 depots × 2 pads, 12 drones requested (6 fly: one per pad, `fleet_capped`), 2.5 orders/min, no faults |
+| `s0_healthy.yaml` | Reference example: 4 × 4 km city, 3 depots × 2 pads, 12 drones requested (6 fly: one per pad, `fleet_capped`), 2.5 orders/min, no faults |
 | `s1_hub_loss.yaml` | S0 plus `kill_service(central_hub)` at 180 s (AT-05; a no-op for PACT, stalls the `central_hub_loss` baseline) |
 | `s6_battery_crunch.yaml` | 1 pad per depot, 4 orders/min, `battery_drain ×1.5` |
 | `s7_urgent_burst.yaml` | 10 priority-1 hospital jobs inside 60 s at t = 600 s (event-driven re-auction) |
@@ -78,7 +78,7 @@ Scenarios added with the maps (names start with the map's prefix):
 
 Sample task lists live in `scenarios/tasks/` (`demo_tasks.yaml`, `burst_medical.yaml`). A scripted
 task is `{ t, task_id?, origin_depot?, drop_id | drop {x,y} | cluster_type, priority, deadline_offset_s?, weight_kg? }`;
-missing fields are filled from the generator's distributions. Ground coordinates in files are PRD
+missing fields are filled from the generator's distributions. Ground coordinates in files are plan-view
 `{x, y}`; `y` maps onto the world's `z` axis.
 
 Supported faults: `urgent_job_burst`, `close_zone` (by zone id, or a new circle/polygon), `radio_blackout` (switch a radio
@@ -88,7 +88,7 @@ optionally drifting circle with extra wind) and `altitude_cap` (a ceiling over t
 `kill_drone` (sudden death; under `pact` the in-flight parcel is re-ordered by its origin depot once the failure
 detector declares the drone failed, under the baselines after the `SIM.tFailed` stand-in; every system re-orders it
 as priority 1 with a fresh window), `kill_service` (`central_hub`: only the `central_hub_loss` baseline has a hub to
-lose), and the network faults (`src/net/`, docs/P2P_DESIGN.md): `partition { groups, until? }` (drones and depots;
+lose), and the network faults (`src/net/`): `partition { groups, until? }` (drones and depots;
 unlisted nodes join group 0; depots in different groups also lose their backhaul), `link_loss { id, until?, loss?, dir? }`
 (asymmetric per-node radio loss), `clock_drift { id, ppm }` (a node's local clock) and `backhaul_cut { depots?, until? }`
 (the depots' wired / cellular link, `network.backhaul`, default on, 10-40 ms).
@@ -135,8 +135,8 @@ Metres. `+X` east, `+Z` south, `+Y` up. Entity ids are stable: `D1..D8` depots, 
 | Module | Role |
 |---|---|
 | `world/*` | Seeded, pure-data world (no Three.js): layout, fillers, depots, drop points, no-fly, wind, shards, obstacles. |
-| `scenario/*` | YAML scenario loading, validation and defaults (PRD section 15). |
-| `sim/Task`, `sim/TaskBoard` | PRD task schema; shared board with epoch-fenced claims, lease expiry (zombie-stop), commit, depot pickup arbitration (`PICKUP_GRANT` / `TASK_TAKEN`), sticky ownership after pickup, re-orders. |
+| `scenario/*` | YAML scenario loading, validation and defaults. |
+| `sim/Task`, `sim/TaskBoard` | Task schema; shared board with epoch-fenced claims, lease expiry (zombie-stop), commit, depot pickup arbitration (`PICKUP_GRANT` / `TASK_TAKEN`), sticky ownership after pickup, re-orders. |
 | `sim/WorkloadGenerator` | Poisson arrivals, clustered demand, priority mix, deadline and weight distributions, scripted tasks, bursts. |
 | `sim/Faults` | Scripted fault injector. |
 | `sim/Battery` | Power model with wind, pessimistic estimator. |
@@ -166,9 +166,9 @@ worlds, workloads and faults. `central_full` / `central_hub_loss`: a hub with gl
 `auction_period_s` (greedy over all feasible drone-task pairs, same bid score and hard constraints as PACT); after
 `kill_service(central_hub)` the `central_hub_loss` hub hands out nothing and drones go home once their task is done.
 `greedy_nearest`: each idle drone claims the nearest feasible task at once (no priority, deadline or neighbour bids).
-All systems keep the board's epoch fencing and depot arbitration; `cbba_plain` (without them) is not implemented.
+`central_*` and `greedy_nearest` keep the board's epoch fencing and depot arbitration. `cbba_plain` runs the PACT radio auction on an unfenced board (no atomic claim, leases or depot arbitration), so its duplicates are expected and reported, not gated.
 
 ## Known limits
 Ground vehicles are decorative. The radio is a disc (`network.loss` and dead zones degrade it). Planning
-is 2.5D (altitude layers). Partition policies, shard leases, gossip and the failure detector are not
-implemented yet (fields exist in the task schema; see `docs/DECISIONS.md`).
+is 2.5D (altitude layers). The fleet is capped at one drone per charging pad (`fleet_capped`). Simulation only:
+nothing here is a flight-readiness model.

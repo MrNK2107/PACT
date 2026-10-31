@@ -26,7 +26,7 @@ both deliver the same parcel:
 
 > **Not certified for flight.** AeroPACT is research and evaluation software. It runs real PX4
 > autopilots in simulation and ships the deployment launch files and procedure
-> ([docs/HARDWARE_DEPLOYMENT.md](docs/HARDWARE_DEPLOYMENT.md)), but it makes no claim of flight
+> (summarised in `PACT_02_Technical_Design_Document.docx`, chapter 16), but it makes no claim of flight
 > readiness or regulatory compliance. A site needs the hardware-in-the-loop and flight-test
 > ladder in that document and an operational authorisation before any vehicle flies.
 
@@ -42,7 +42,7 @@ make scenarios # acceptance scenarios AT-03..AT-10 on the full ROS 2 stack (~35 
 make demo      # Gazebo + RViz: hub loss, partition, drone failure in flight
 make bench     # scenario x system x seed sweep -> results/summary.md and plots
 
-# Autopilot in the loop (PX4 v1.16 SITL, no root needed; see docs/PX4_SITL.md)
+# Autopilot in the loop (PX4 v1.16 SITL, no root needed; see `PACT_04_Setup_and_Reproduction_Guide.docx`, chapter 8)
 make px4-toolchain   # fetch + build PX4 SITL, the XRCE agent and px4_msgs (~25 min, once)
 make build           # rebuild: picks up px4_msgs, builds the PX4 vehicle interface
 make scenarios-px4   # acceptance with 4 PX4 autopilots: healthy, motor failure, mesh transport
@@ -159,7 +159,7 @@ rate with its 95 % CI. Differences inside the intervals are noise.
 | runs with every invariant held | 15/15 | 15/15 | 15/15 | 15/15 | 15/15 | 0/15 |
 
 - **Hub loss.** PACT keeps its healthy on-time rate when the hub dies, about 47 points above the
-  central planner (PRD M1 target: +40). With the hub alive it matches or beats the central
+  central planner (target: +40). With the hub alive it matches or beats the central
   planner (M2).
 - **Partition.** Plain CBBA has no ownership protocol and uses a naive 30 s failure timeout
   (D-22). It recovers slowly: 55 % on time and a median of 674 s to recover. All three PACT
@@ -201,13 +201,11 @@ only matplotlib; per-run `results/runs/*/events.jsonl` are kept out of git).
 
 ## Documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, processes, interfaces, protocol details
-- [docs/SCENARIOS.md](docs/SCENARIOS.md) — scenario format, fault catalogue, maps, systems
-- [docs/OPERATIONS.md](docs/OPERATIONS.md) — building, running, memory budget, troubleshooting
-- [docs/EVALUATION.md](docs/EVALUATION.md) — metrics, invariants, acceptance tests, benchmark
-- [docs/PX4_SITL.md](docs/PX4_SITL.md) — PX4 autopilots in the loop: toolchain, vehicle interface, rehearsal
-- [docs/HARDWARE_DEPLOYMENT.md](docs/HARDWARE_DEPLOYMENT.md) — from SITL to a site: computers, keys, parameters, verification ladder
-- [docs/DECISIONS.md](docs/DECISIONS.md) — design decisions and deviations from the PRD
+The reviewer documents in [`../docs/submission/`](../docs/submission/) cover AeroPACT alongside sim3d:
+
+- `PACT_02_Technical_Design_Document.docx`: architecture, processes, interfaces, protocol, design decisions, path to hardware
+- `PACT_03_Evaluation_and_Results_Report.docx`: metrics, invariants, acceptance tests, benchmark
+- `PACT_04_Setup_and_Reproduction_Guide.docx`: building, running, PX4 SITL, troubleshooting
 
 ## License
 
