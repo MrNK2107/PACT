@@ -4,13 +4,24 @@ node_modules/
 # Build output
 dist/
 
+# Python
+__pycache__/
+*.pyc
+
 # Logs
 *.log
+log/
 
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+~$*
 
-# Local tooling state
-.playwright-mcp/
-log/
+# Working documents kept locally, not published (the reviewer set is docs/submission/*.docx)
+docs/*.md
+aeropact/docs/*.md
+video/README.md
+
+# Reviewer documents: build sources and PDF exports stay local
+docs/submission/src/
+docs/submission/pdf/
