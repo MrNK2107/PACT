@@ -55,6 +55,11 @@ export interface TaskBoardView {
    * no new work by consensus: its CLAIM neither outbids me nor reserves a task (docs/P2P_DESIGN.md section 7).
    */
   suspected?(peer: string): boolean;
+  /**
+   * Replica board (pact, radio map on): bid penalty (score units) for the forecast radio-dark seconds on the way from
+   * `from` to the task's pickup (Decision 22). Absent or 0: no connectivity term.
+   */
+  connectivityCost?(task: Task, from: Vec3): number;
 }
 
 export type PickupVerdict = 'PICKUP_GRANT' | 'TASK_TAKEN' | 'PENDING';

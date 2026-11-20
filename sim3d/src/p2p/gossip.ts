@@ -58,6 +58,17 @@ export interface GossipOptions {
   accelerateOnAnswer?: boolean;
   /** Called after a received delta changed the replica (e.g. to invalidate views, resolve duplicates). */
   onMerged?: (res: DeltaMergeResult, from: NodeId) => void;
+  /**
+   * Piggyback (Decision 22): extra fields added to each broadcast push (`take`, called only when a push goes out, so
+   * it never causes a message by itself) and handed back from every received GOSSIP_DELTA (`accept`). Used for the
+   * radio map; absent, payloads are exactly the TC-04 ones.
+   */
+  piggyback?: GossipPiggyback;
+}
+
+export interface GossipPiggyback {
+  take(nowLocal: number): Record<string, unknown> | null;
+  accept(payload: Record<string, unknown>, from: NodeId): void;
 }
 
 export interface GossipCounters {
@@ -110,6 +121,7 @@ export class GossipEngine {
   private readonly peers = new Map<NodeId, { last: number; since: number; asked: number }>();
   private rr = 0;
   private readonly onMerged?: (res: DeltaMergeResult, from: NodeId) => void;
+  private readonly piggyback?: GossipPiggyback;
 
   constructor(
     readonly id: NodeId,
@@ -126,6 +138,7 @@ export class GossipEngine {
     this.periodS = this.basePeriodS;
     this.phaseS = opts.phaseS ?? idFraction(id) * this.basePeriodS;
     this.onMerged = opts.onMerged;
+    this.piggyback = opts.piggyback;
     this.digestOpts = { settleS: opts.settleS ?? 0, status: opts.digestStatus ?? true };
     this.askPeers = opts.askPeers ?? 0;
     this.accelerateOnAnswer = opts.accelerateOnAnswer ?? true;
@@ -188,6 +201,7 @@ export class GossipEngine {
     this.heard(env.src, now);
 
     if (env.type === 'GOSSIP_DELTA') {
+      this.piggyback?.accept(payload, env.src);
       const res = this.replica.mergeDelta(payload as Partial<ReplicaDelta>, now);
       if (res.tasks.length + res.status.length + res.shards.length > 0) {
         // relay soon: epidemic spread across hops
@@ -261,7 +275,8 @@ export class GossipEngine {
     if (!this.replica.hasDirty()) return false;
     const d = this.replica.takeDelta(now);
     if (isEmptyDelta(d)) return false;
-    this.sendMsg('GOSSIP_DELTA', '*', now, d);
+    const extra = this.piggyback?.take(now);
+    this.sendMsg('GOSSIP_DELTA', '*', now, extra ? { ...d, ...extra } : d);
     this.counters.pushes++;
     return true;
   }

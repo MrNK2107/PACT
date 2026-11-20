@@ -47,6 +47,7 @@ import {
   ShardLeaseHolder,
 } from './ownership';
 import { isShardLeaseRecord, isTaskRecord, Replica, type DeltaMergeResult } from './replica';
+import { plannedLeaseS, RadioMap, radioPiggyback, type XZ } from './radiomap';
 import { byId, expectsToHear, type DepotInfo, type NodeEventSink, type P2PConfig, type WriteHook } from './node';
 import type { Vec3 } from '../world/types';
 
@@ -68,6 +69,11 @@ export interface DroneBodyView {
   charging?: boolean;
   /** Shard of the current position: a holder outside its home catchment hands its leases back. */
   shard?: string;
+  /**
+   * Remaining planned waypoints of the leg to the pickup of the task this drone holds (pre-pickup only; absent
+   * otherwise). The drone's own flight plan: the planned-silence forecast walks it (Decision 22).
+   */
+  route?: readonly XZ[];
 }
 
 export interface P2PNodeOptions {
@@ -98,6 +104,8 @@ export class P2PNode {
   readonly fd: FailureDetector;
   readonly policy: PartitionPolicy;
   readonly view: FleetView;
+  /** Learned radio shadow map (Decision 22); null when `cfg.radioMap.enabled` is off. */
+  readonly radioMap: RadioMap | null;
   /** Bumps when a priority-1 task is first seen (event-driven re-auction, REQ-AUC-003). */
   urgentCount = 0;
 
@@ -128,6 +136,9 @@ export class P2PNode {
   private reachCache: { at: number; ids: NodeId[] } | null = null;
   /** Last known location of each peer (beacon or gossiped status) and the local time it was learned. */
   private readonly located = new Map<NodeId, { pos: Vec3; at: number }>();
+  private lastRadioSample = -Infinity;
+  /** Planned-silence episodes started (owner wrote a lease above the base one after writing the base one). */
+  plannedSilences = 0;
 
   constructor(o: P2PNodeOptions) {
     this.id = o.id;
@@ -141,7 +152,13 @@ export class P2PNode {
     this.onWrite = o.onWrite ?? (() => {});
     this.roster = o.roster ?? null;
     this.replica = new Replica(o.id);
-    this.gossip = new GossipEngine(o.id, this.replica, o.clock, (env) => this.port.send(env), { ...o.cfg.gossip, onMerged: (res) => this.onMerged(res) });
+    this.radioMap = o.cfg.radioMap.enabled ? new RadioMap(o.id, o.cfg.radioMap) : null;
+    const rm = this.radioMap;
+    this.gossip = new GossipEngine(o.id, this.replica, o.clock, (env) => this.port.send(env), {
+      ...o.cfg.gossip,
+      onMerged: (res) => this.onMerged(res),
+      ...(rm ? { piggyback: radioPiggyback(rm) } : {}),
+    });
     this.tracker = new OwnerLeaseTracker(o.cfg.lease);
     this.shards = new ShardLeaseHolder(o.id);
     this.fd = new FailureDetector(o.id, o.cfg.failure.params, o.cfg.failure.opts);
@@ -244,6 +261,7 @@ export class P2PNode {
   /** After the controller ran: owner writes (commit, renew), pickup resends, shard leases, status, health, gossip. */
   step(): void {
     const now = this.now;
+    this.sampleRadio(now);
     for (const id of this.tracker.held()) {
       const rec = this.replica.getTask(id);
       if (!rec || rec.owner !== this.id || !isPrePickup(rec)) continue;
@@ -254,8 +272,13 @@ export class P2PNode {
           this.emit({ type: 'board_committed', agent: this.id, data: { task: id, epoch: c.epoch, node: this.id } });
         }
       } else if (this.tracker.renewDue(id, now)) {
-        const r = renewRecord(rec, this.id);
-        if (r && this.write(r)) this.tracker.renewed(id, r.renew, now);
+        const prev = this.tracker.leaseOf(id) ?? rec.lease_s;
+        const plan = this.planLease(rec, now);
+        const r = renewRecord(rec, this.id, plan.leaseS);
+        if (r && this.write(r)) {
+          this.tracker.renewed(id, r.renew, now, r.lease_s);
+          this.notePlannedSilence(r, prev, plan.darkS, 'renew');
+        }
       }
     }
     for (const id of [...this.pickups.keys()].sort(byId)) {
@@ -295,10 +318,13 @@ export class P2PNode {
     if (!this.depotInContact(rec.origin_depot)) return false;
     const d = claimDecision(this.policy, rec, this.view);
     if (!d.allowed) return false;
-    const c = claimRecord(rec, this.id, bid, this.cfg.lease.leaseTtlS);
-    if (!c || !this.write(c)) return false;
     const now = this.now;
-    this.tracker.track(c, now);
+    const plan = this.planLease(rec, now);
+    const c = claimRecord(rec, this.id, bid, plan.leaseS);
+    if (!c || !this.write(c)) return false;
+    // renew cadence stays base / 4 whatever the planned lease (renewals keep confirming while in coverage)
+    this.tracker.track(c, now, this.cfg.lease.leaseTtlS / 4);
+    this.notePlannedSilence(c, this.cfg.lease.leaseTtlS, plan.darkS, 'claim');
     if (d.optimistic) this.optimistic.add(taskId);
     this.pickups.delete(taskId);
     this.gossip.urgent();
@@ -353,7 +379,7 @@ export class P2PNode {
       this.sendPickupReq(taskId, n, now);
       return 'PENDING';
     }
-    if (now - pp.firstAt > rec.lease_s) {
+    if (now - pp.firstAt > Math.min(rec.lease_s, this.cfg.lease.leaseTtlS)) {
       this.pickups.delete(taskId);
       this.emit({ type: 'pickup_timeout', agent: this.id, data: { task: taskId, node: this.id, waitedS: now - pp.firstAt } });
       return 'TASK_TAKEN';
@@ -405,7 +431,69 @@ export class P2PNode {
     return this.health.get(peer) ?? 'ALIVE';
   }
 
+  /**
+   * Connectivity term of the bid (Decision 22): score penalty for the forecast dark seconds on the straight leg from
+   * `from` to the task's pickup, per minute, heavier for priority 1 (an urgent job should go to a drone that stays in
+   * coverage). 0 without a radio map.
+   */
+  connectivityCost(task: { pickup: XZ; priority: number }, from: XZ): number {
+    const rm = this.radioMap;
+    if (!rm) return 0;
+    const darkS = rm.predictedDarkS([from, task.pickup]);
+    if (!(darkS > 0)) return 0;
+    const w = task.priority === 1 ? this.cfg.radioMap.bidWeightP1 : this.cfg.radioMap.bidWeight;
+    return (w * darkS) / 60;
+  }
+
+  /**
+   * Planned silence (Decision 22): the lease to write for `rec` now. Forecast the longest dark stretch on the way to the
+   * pickup (my remaining planned route when I fly one, else the straight line) and cover it plus one renew period and
+   * a margin, clamped to [base, cap]. Never announces less than what is left of my newest write, so a later renewal
+   * does not pull my own zombie-stop forward. The fixed base lease without a radio map.
+   */
+  planLease(rec: TaskRecord, now = this.now): { leaseS: number; darkS: number } {
+    const base = this.cfg.lease.leaseTtlS;
+    const rm = this.radioMap;
+    if (!rm) return { leaseS: base, darkS: 0 };
+    const p = this.cfg.radioMap;
+    const path: XZ[] = [{ x: this.body.pos.x, z: this.body.pos.z }];
+    if (this.body.route) for (const w of this.body.route) path.push({ x: w.x, z: w.z });
+    path.push({ x: rec.pickup.x, z: rec.pickup.z });
+    const darkS = rm.predictedDarkS(path) * p.slack;
+    let leaseS = plannedLeaseS(base, p.leaseCapS, darkS, base / 4, p.marginS);
+    const residual = this.tracker.has(rec.task_id) ? this.tracker.newestWriteResidual(rec.task_id, now) : undefined;
+    if (residual !== undefined && residual > leaseS) leaseS = Math.min(residual, Math.max(base, p.leaseCapS));
+    return { leaseS: Math.round(leaseS * 1000) / 1000, darkS: Math.round(darkS * 10) / 10 };
+  }
+
   // ---- internals --------------------------------------------------------------------------------------------
+
+  /** One radio-map observation per sample period: dark when no depot status reached me within the window. */
+  private sampleRadio(now: number): void {
+    const rm = this.radioMap;
+    if (!rm || now - this.lastRadioSample < this.cfg.radioMap.samplePeriodS) return;
+    let heardEver = false;
+    let lit = false;
+    for (const d of [...this.depotIds].sort(byId)) {
+      const t = this.replica.statusSeenAt(d);
+      if (t === undefined) continue;
+      heardEver = true;
+      if (now - t <= this.cfg.radioMap.darkWindowS) {
+        lit = true;
+        break;
+      }
+    }
+    if (!heardEver) return; // booting: no reference yet
+    this.lastRadioSample = now;
+    rm.observe(this.body.pos.x, this.body.pos.z, !lit);
+  }
+
+  private notePlannedSilence(rec: TaskRecord, prevLeaseS: number, darkS: number, at: 'claim' | 'renew'): void {
+    const base = this.cfg.lease.leaseTtlS;
+    if (!this.radioMap || rec.lease_s <= base || prevLeaseS > base) return;
+    this.plannedSilences++;
+    this.emit({ type: 'planned_silence', agent: this.id, data: { task: rec.task_id, epoch: rec.epoch, leaseS: rec.lease_s, predictedDarkS: darkS, at, node: this.id } });
+  }
 
   private forget(taskId: string): void {
     this.tracker.drop(taskId);

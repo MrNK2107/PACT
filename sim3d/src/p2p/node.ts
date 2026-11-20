@@ -9,6 +9,7 @@ import {
   type LeaseParams,
   type NodeId,
   type PartitionPolicyName,
+  type RadioMapParams,
   type ShardLeaseParams,
   type TaskRecord,
 } from './contracts';
@@ -74,6 +75,8 @@ export interface P2PConfig {
    * that misses a peer votes (TC-09 unit behaviour).
    */
   expect?: LinkExpectation;
+  /** Radio-shadow-aware ownership (Decision 22): learned radio map, planned-silence leases, connectivity bid term. */
+  radioMap: RadioMapParams;
 }
 
 /**
@@ -84,7 +87,7 @@ export interface P2PConfig {
  * - failure detector: acceptable pause 0.5 s (TC-09 measured 136 false SUSPECT / peer-hour at 40 % loss with the
  *   pure phi 5 / 9, about 2 with 0.5 s), probes at most every 5 s per target.
  */
-export function defaultP2PConfig(over: { leaseTtlS?: number; tCommitS?: number; policy?: PartitionPolicyName; gossipPeriodS?: number } = {}): P2PConfig {
+export function defaultP2PConfig(over: { leaseTtlS?: number; tCommitS?: number; policy?: PartitionPolicyName; gossipPeriodS?: number; radioMap?: Partial<RadioMapParams> } = {}): P2PConfig {
   const base = over.gossipPeriodS ?? 1;
   return {
     lease: { ...DEFAULT_LEASE_PARAMS, leaseTtlS: over.leaseTtlS ?? DEFAULT_LEASE_PARAMS.leaseTtlS, tCommitS: over.tCommitS ?? DEFAULT_LEASE_PARAMS.tCommitS },
@@ -95,6 +98,7 @@ export function defaultP2PConfig(over: { leaseTtlS?: number; tCommitS?: number; 
     failure: { params: { ...P2P_DEFAULTS.failure }, opts: { acceptablePauseS: 0.5, probeIntervalS: 5 } },
     shardLease: { ...DEFAULT_SHARD_LEASE_PARAMS },
     pickupRetryS: P2P_DEFAULTS.pickupRetryS,
+    radioMap: { ...P2P_DEFAULTS.radioMap, ...over.radioMap },
   };
 }
 

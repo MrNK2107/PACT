@@ -1,5 +1,5 @@
 import { SimulationEngine } from '../sim/SimulationEngine';
-import { isFenced, SYSTEM_IDS, type SystemId } from '../sim/systems';
+import { isFenced, isP2P, SYSTEM_IDS, type SystemId } from '../sim/systems';
 import type { Scenario } from '../scenario/types';
 import { worldConfigFrom } from '../scenario/load';
 import { createWorld } from '../world/buildWorld';
@@ -36,9 +36,16 @@ export interface BenchRow extends RunMetrics {
   backhaulPerDepotMin: number;
   /** Backhaul payload bytes per depot per second, mean over depots. */
   backhaulBytesPerDepotS: number;
+  /** Radio payload bytes sent per drone per second, beacons (HEARTBEAT) excluded: gossip and protocol overhead. */
+  bytesPerDroneS: number;
 }
 
 export function runOne(scn: Scenario, system: SystemId, seed: number, windowS: number): BenchRow {
+  return runOneWith(scn, system, seed, windowS).row;
+}
+
+/** `runOne`, also handing back the engine (event log, nodes) for experiment-specific measures. */
+export function runOneWith(scn: Scenario, system: SystemId, seed: number, windowS: number): { row: BenchRow; eng: SimulationEngine } {
   const s: Scenario = { ...scn, seed, system };
   const eng = new SimulationEngine(createWorld(worldConfigFrom(s)), s);
   eng.start();
@@ -51,7 +58,8 @@ export function runOne(scn: Scenario, system: SystemId, seed: number, windowS: n
   }
   times.sort((a, b) => a - b);
   const m = computeMetrics(eng.events, windowS);
-  return { scenario: scn.name, map: scn.map, system, seed, windowS, ...m, eventHash: eng.eventHash(), events: eng.events.length, tickP95Ms: Math.round((times[Math.floor(steps * 0.95)] ?? 0) * 100) / 100, msgsPerDroneMin: msgsPerDroneMin(eng, windowS), ...backhaulLoad(eng, windowS) };
+  const row: BenchRow = { scenario: scn.name, map: scn.map, system, seed, windowS, ...m, eventHash: eng.eventHash(), events: eng.events.length, tickP95Ms: Math.round((times[Math.floor(steps * 0.95)] ?? 0) * 100) / 100, msgsPerDroneMin: msgsPerDroneMin(eng, windowS), bytesPerDroneS: bytesPerDroneS(eng, windowS), ...backhaulLoad(eng, windowS) };
+  return { row, eng };
 }
 
 /** Mean backhaul load per depot: copies per minute and payload bytes per second (Decision 20). */
@@ -74,6 +82,14 @@ export function msgsPerDroneMin(eng: SimulationEngine, seconds: number): number 
   let n = 0;
   for (const a of eng.agents) for (const [type, v] of Object.entries(eng.net.stats(a.id).byType)) if (type !== 'HEARTBEAT') n += v?.sent ?? 0;
   return Math.round((10 * n) / eng.agents.length / (seconds / 60)) / 10;
+}
+
+/** Radio payload bytes sent per live drone per second, beacons excluded. */
+export function bytesPerDroneS(eng: SimulationEngine, seconds: number): number {
+  if (!eng.agents.length || seconds <= 0) return 0;
+  let n = 0;
+  for (const a of eng.agents) for (const [type, v] of Object.entries(eng.net.stats(a.id).byType)) if (type !== 'HEARTBEAT') n += v?.bytes ?? 0;
+  return Math.round(n / eng.agents.length / seconds);
 }
 
 // ---- AT-06-style recovery experiment (REQ-EVAL-004 recovery-time CDF) -------------------------------------------
@@ -118,7 +134,7 @@ export function runRecovery(scn: Scenario, systems: readonly SystemId[], seeds: 
       const tKill = Math.round((pick.t + 10) * 20) / 20;
       const ev = runFor({ ...scn, seed, system, faults: [{ t: tKill, type: 'kill_drone', id: pick.agent }] }, tKill + tailS);
       const re = ev.find((e) => e.type === 'task_reordered' && e.data.of === task);
-      const decl = re && system === 'pact' ? ev.find((e) => e.type === 'peer_failed' && e.data.peer === pick.agent && e.data.node === task.split(':')[0]) : re;
+      const decl = re && isP2P(system) ? ev.find((e) => e.type === 'peer_failed' && e.data.peer === pick.agent && e.data.node === task.split(':')[0]) : re;
       const declT = decl ? decl.t : null;
       const claim = re ? ev.find((e) => e.type === 'claimed' && taskOf(e) === re.data.task && e.agent !== pick.agent) : undefined;
       const r1 = (x: number) => Math.round(x * 10) / 10;
@@ -226,11 +242,12 @@ export function acceptanceChecks(rows: readonly BenchRow[], healthy = 's0_health
 
 // ---- outputs --------------------------------------------------------------------------------------------
 
-const CSV_COLS: (keyof BenchRow)[] = ['scenario', 'map', 'system', 'seed', 'windowS', 'released', 'due', 'delivered', 'onTime', 'onTimeRate', 'onTimePctOfDelivered', 'meanLatenessS', 'deliveredAfterFirstFault', 'duplicateDeliveries', 'zombiePickups', 'leaseExpiries', 'depotRefusals', 'lossOfSeparation', 'batteryDepleted', 'msgsPerDroneMin', 'backhaulPerDepotMin', 'backhaulBytesPerDepotS', 'events', 'eventHash', 'tickP95Ms'];
+const CSV_COLS: (keyof BenchRow)[] = ['scenario', 'map', 'system', 'seed', 'windowS', 'released', 'due', 'delivered', 'onTime', 'onTimeRate', 'onTimePctOfDelivered', 'meanLatenessS', 'deliveredAfterFirstFault', 'duplicateDeliveries', 'zombiePickups', 'leaseExpiries', 'depotRefusals', 'lossOfSeparation', 'batteryDepleted', 'msgsPerDroneMin', 'backhaulPerDepotMin', 'backhaulBytesPerDepotS', 'events', 'eventHash', 'tickP95Ms', 'falseReopens', 'plannedSilences', 'bytesPerDroneS'];
 
-export function toCsv(rows: readonly BenchRow[]): string {
-  const lines = [CSV_COLS.join(',')];
-  for (const r of rows) lines.push(CSV_COLS.map((c) => (r[c] === null ? '' : String(r[c]))).join(','));
+export function toCsv(rows: readonly BenchRow[], extra: readonly string[] = []): string {
+  const cols: string[] = [...CSV_COLS, ...extra];
+  const lines = [cols.join(',')];
+  for (const r of rows) lines.push(cols.map((c) => { const v = (r as unknown as Record<string, unknown>)[c]; return v === null || v === undefined ? '' : String(v); }).join(','));
   return lines.join('\n') + '\n';
 }
 

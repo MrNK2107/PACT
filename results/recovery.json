@@ -1,6 +1,6 @@
 {
   "scenario": "at06_drone_failure",
-  "seeds": 8,
+  "seeds": 30,
   "rows": [
     {
       "system": "pact",
@@ -83,6 +83,526 @@
       "totalS": 42.4
     },
     {
+      "system": "pact",
+      "seed": 20240619,
+      "victim": "A07",
+      "task": "D1:00167040:ce21",
+      "tKill": 212.4,
+      "detectS": 4,
+      "recoveryS": 19.5,
+      "totalS": 23.5
+    },
+    {
+      "system": "pact",
+      "seed": 20240620,
+      "victim": "A06",
+      "task": "D1:00066642:ea33",
+      "tKill": 167.55,
+      "detectS": 3.7,
+      "recoveryS": 1.3,
+      "totalS": 5
+    },
+    {
+      "system": "pact",
+      "seed": 20240621,
+      "victim": "A03",
+      "task": "D2:00007387:ce09",
+      "tKill": 134.7,
+      "detectS": 3.6,
+      "recoveryS": 1.4,
+      "totalS": 5
+    },
+    {
+      "system": "pact",
+      "seed": 20240622,
+      "victim": "A08",
+      "task": "D1:00083696:9ab4",
+      "tKill": 142.7,
+      "detectS": 3.7,
+      "recoveryS": 20.3,
+      "totalS": 24
+    },
+    {
+      "system": "pact",
+      "seed": 20240623,
+      "victim": "A05",
+      "task": "D1:00088490:2e81",
+      "tKill": 152.2,
+      "detectS": 4.5,
+      "recoveryS": 1,
+      "totalS": 5.5
+    },
+    {
+      "system": "pact",
+      "seed": 20240624,
+      "victim": "A08",
+      "task": "D1:00019892:7015",
+      "tKill": 146.65,
+      "detectS": 3.7,
+      "recoveryS": 8.8,
+      "totalS": 12.5
+    },
+    {
+      "system": "pact",
+      "seed": 20240625,
+      "victim": "A04",
+      "task": "D2:00012881:c899",
+      "tKill": 132.45,
+      "detectS": 4.1,
+      "recoveryS": 28.7,
+      "totalS": 32.8
+    },
+    {
+      "system": "pact",
+      "seed": 20240626,
+      "victim": "A05",
+      "task": "D2:00162153:7c4f",
+      "tKill": 197.75,
+      "detectS": 3.6,
+      "recoveryS": 1.4,
+      "totalS": 4.9
+    },
+    {
+      "system": "pact",
+      "seed": 20240627,
+      "victim": "A01",
+      "task": "D2:00000000:b458",
+      "tKill": 148.05,
+      "detectS": 3.5,
+      "recoveryS": 9.2,
+      "totalS": 12.7
+    },
+    {
+      "system": "pact",
+      "seed": 20240628,
+      "victim": "A02",
+      "task": "D2:00076941:7507",
+      "tKill": 151.5,
+      "detectS": 4.1,
+      "recoveryS": 5.6,
+      "totalS": 9.7
+    },
+    {
+      "system": "pact",
+      "seed": 20240629,
+      "victim": "A01",
+      "task": "D1:00093969:e6b5",
+      "tKill": 188.45,
+      "detectS": 3.9,
+      "recoveryS": 6.7,
+      "totalS": 10.6
+    },
+    {
+      "system": "pact",
+      "seed": 20240630,
+      "victim": "A06",
+      "task": "D3:00000000:82b0",
+      "tKill": 139.9,
+      "detectS": 3.6,
+      "recoveryS": 1.2,
+      "totalS": 4.7
+    },
+    {
+      "system": "pact",
+      "seed": 20240631,
+      "victim": "A01",
+      "task": "D1:00081554:004e",
+      "tKill": 151.85,
+      "detectS": 3.7,
+      "recoveryS": 4.1,
+      "totalS": 7.7
+    },
+    {
+      "system": "pact",
+      "seed": 20240632,
+      "victim": "A06",
+      "task": "D2:00010826:ef13",
+      "tKill": 159.25,
+      "detectS": 4.1,
+      "recoveryS": 1,
+      "totalS": 5.1
+    },
+    {
+      "system": "pact",
+      "seed": 20240633,
+      "victim": "A04",
+      "task": "D3:00000000:1618",
+      "tKill": 146.75,
+      "detectS": 3.6,
+      "recoveryS": 1.2,
+      "totalS": 4.9
+    },
+    {
+      "system": "pact",
+      "seed": 20240634,
+      "victim": "A05",
+      "task": "D1:00176652:9930",
+      "tKill": 259.8,
+      "detectS": 3.5,
+      "recoveryS": 38,
+      "totalS": 41.5
+    },
+    {
+      "system": "pact",
+      "seed": 20240635,
+      "victim": "A01",
+      "task": "D1:00078626:4daa",
+      "tKill": 161.3,
+      "detectS": 4.2,
+      "recoveryS": 1.3,
+      "totalS": 5.5
+    },
+    {
+      "system": "pact",
+      "seed": 20240636,
+      "victim": "A02",
+      "task": "D1:00063299:0a47",
+      "tKill": 148.9,
+      "detectS": 3.7,
+      "recoveryS": 4.4,
+      "totalS": 8
+    },
+    {
+      "system": "pact",
+      "seed": 20240637,
+      "victim": "A04",
+      "task": "D1:00160046:225b",
+      "tKill": 209.05,
+      "detectS": 3.3,
+      "recoveryS": 1.6,
+      "totalS": 4.8
+    },
+    {
+      "system": "pact",
+      "seed": 20240638,
+      "victim": "A06",
+      "task": "D2:00031591:284a",
+      "tKill": 133.65,
+      "detectS": 3.6,
+      "recoveryS": 9.7,
+      "totalS": 13.3
+    },
+    {
+      "system": "pact",
+      "seed": 20240639,
+      "victim": "A02",
+      "task": "D2:00078221:b4d1",
+      "tKill": 138.8,
+      "detectS": 3.5,
+      "recoveryS": 16.8,
+      "totalS": 20.3
+    },
+    {
+      "system": "pact",
+      "seed": 20240640,
+      "victim": "A08",
+      "task": "D1:00019531:f4aa",
+      "tKill": 141.4,
+      "detectS": 4,
+      "recoveryS": 5.7,
+      "totalS": 9.7
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240611,
+      "victim": "A01",
+      "task": "D1:00122724:9f3e",
+      "tKill": 158.1,
+      "detectS": 3.2,
+      "recoveryS": 1,
+      "totalS": 4.2
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240612,
+      "victim": "A03",
+      "task": "D2:00054920:40c0",
+      "tKill": 169,
+      "detectS": 3.4,
+      "recoveryS": 1.5,
+      "totalS": 4.9
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240613,
+      "victim": "A06",
+      "task": "D3:00073802:0c38",
+      "tKill": 134.45,
+      "detectS": 3.9,
+      "recoveryS": 27.1,
+      "totalS": 31
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240614,
+      "victim": "A04",
+      "task": "D1:00026368:2935",
+      "tKill": 137.55,
+      "detectS": 3.7,
+      "recoveryS": 6.2,
+      "totalS": 9.9
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240615,
+      "victim": "A03",
+      "task": "D2:00000000:a9c7",
+      "tKill": 160.95,
+      "detectS": 3.5,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240616,
+      "victim": "A02",
+      "task": "D3:00000000:bcd5",
+      "tKill": 149.6,
+      "detectS": 3.9,
+      "recoveryS": 11.9,
+      "totalS": 15.8
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240617,
+      "victim": "A07",
+      "task": "D3:00059346:89cb",
+      "tKill": 185.75,
+      "detectS": 3.6,
+      "recoveryS": 1.4,
+      "totalS": 5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240618,
+      "victim": "A01",
+      "task": "D2:00000000:7c04",
+      "tKill": 138.2,
+      "detectS": 4.1,
+      "recoveryS": 38.3,
+      "totalS": 42.4
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240619,
+      "victim": "A07",
+      "task": "D1:00167040:ce21",
+      "tKill": 212.4,
+      "detectS": 4,
+      "recoveryS": 19.5,
+      "totalS": 23.5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240620,
+      "victim": "A06",
+      "task": "D1:00066642:ea33",
+      "tKill": 167.55,
+      "detectS": 3.7,
+      "recoveryS": 1.3,
+      "totalS": 5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240621,
+      "victim": "A03",
+      "task": "D2:00007387:ce09",
+      "tKill": 134.7,
+      "detectS": 3.6,
+      "recoveryS": 1.4,
+      "totalS": 5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240622,
+      "victim": "A08",
+      "task": "D1:00083696:9ab4",
+      "tKill": 142.7,
+      "detectS": 3.7,
+      "recoveryS": 20.3,
+      "totalS": 24
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240623,
+      "victim": "A05",
+      "task": "D1:00088490:2e81",
+      "tKill": 152.2,
+      "detectS": 4.5,
+      "recoveryS": 1,
+      "totalS": 5.5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240624,
+      "victim": "A08",
+      "task": "D1:00019892:7015",
+      "tKill": 146.65,
+      "detectS": 3.7,
+      "recoveryS": 8.8,
+      "totalS": 12.5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240625,
+      "victim": "A04",
+      "task": "D2:00012881:c899",
+      "tKill": 132.45,
+      "detectS": 4.1,
+      "recoveryS": 28.7,
+      "totalS": 32.8
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240626,
+      "victim": "A05",
+      "task": "D2:00162153:7c4f",
+      "tKill": 197.75,
+      "detectS": 3.6,
+      "recoveryS": 1.4,
+      "totalS": 4.9
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240627,
+      "victim": "A01",
+      "task": "D2:00000000:b458",
+      "tKill": 148.05,
+      "detectS": 3.5,
+      "recoveryS": 9.2,
+      "totalS": 12.7
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240628,
+      "victim": "A02",
+      "task": "D2:00076941:7507",
+      "tKill": 151.5,
+      "detectS": 4.1,
+      "recoveryS": 5.6,
+      "totalS": 9.7
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240629,
+      "victim": "A01",
+      "task": "D1:00093969:e6b5",
+      "tKill": 188.45,
+      "detectS": 3.9,
+      "recoveryS": 6.7,
+      "totalS": 10.6
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240630,
+      "victim": "A06",
+      "task": "D3:00000000:82b0",
+      "tKill": 139.9,
+      "detectS": 3.6,
+      "recoveryS": 1.2,
+      "totalS": 4.7
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240631,
+      "victim": "A01",
+      "task": "D1:00081554:004e",
+      "tKill": 151.85,
+      "detectS": 3.7,
+      "recoveryS": 4.1,
+      "totalS": 7.7
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240632,
+      "victim": "A06",
+      "task": "D2:00010826:ef13",
+      "tKill": 159.25,
+      "detectS": 4.1,
+      "recoveryS": 1,
+      "totalS": 5.1
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240633,
+      "victim": "A04",
+      "task": "D3:00000000:1618",
+      "tKill": 146.75,
+      "detectS": 3.6,
+      "recoveryS": 1.2,
+      "totalS": 4.9
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240634,
+      "victim": "A05",
+      "task": "D1:00176652:9930",
+      "tKill": 259.8,
+      "detectS": 3.5,
+      "recoveryS": 38,
+      "totalS": 41.5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240635,
+      "victim": "A01",
+      "task": "D1:00078626:4daa",
+      "tKill": 161.3,
+      "detectS": 4.2,
+      "recoveryS": 1.3,
+      "totalS": 5.5
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240636,
+      "victim": "A02",
+      "task": "D1:00063299:0a47",
+      "tKill": 148.9,
+      "detectS": 3.7,
+      "recoveryS": 4.4,
+      "totalS": 8
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240637,
+      "victim": "A04",
+      "task": "D1:00160046:225b",
+      "tKill": 209.05,
+      "detectS": 3.3,
+      "recoveryS": 1.6,
+      "totalS": 4.8
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240638,
+      "victim": "A06",
+      "task": "D2:00031591:284a",
+      "tKill": 133.65,
+      "detectS": 3.6,
+      "recoveryS": 9.7,
+      "totalS": 13.3
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240639,
+      "victim": "A02",
+      "task": "D2:00078221:b4d1",
+      "tKill": 138.8,
+      "detectS": 3.5,
+      "recoveryS": 16.8,
+      "totalS": 20.3
+    },
+    {
+      "system": "pact_fixed_lease",
+      "seed": 20240640,
+      "victim": "A08",
+      "task": "D1:00019531:f4aa",
+      "tKill": 141.4,
+      "detectS": 4,
+      "recoveryS": 5.7,
+      "totalS": 9.7
+    },
+    {
       "system": "central_full",
       "seed": 20240611,
       "victim": "A01",
@@ -163,6 +683,226 @@
       "totalS": 87.3
     },
     {
+      "system": "central_full",
+      "seed": 20240619,
+      "victim": "A06",
+      "task": "D3:00187429:d1e4",
+      "tKill": 225.9,
+      "detectS": 60,
+      "recoveryS": 0.3,
+      "totalS": 60.3
+    },
+    {
+      "system": "central_full",
+      "seed": 20240620,
+      "victim": "A03",
+      "task": "D3:00158646:86b1",
+      "tKill": 202.6,
+      "detectS": 60,
+      "recoveryS": 1.5,
+      "totalS": 61.5
+    },
+    {
+      "system": "central_full",
+      "seed": 20240621,
+      "victim": "A07",
+      "task": "D1:00000000:bd19",
+      "tKill": 153.2,
+      "detectS": 60,
+      "recoveryS": 13,
+      "totalS": 73
+    },
+    {
+      "system": "central_full",
+      "seed": 20240622,
+      "victim": "A06",
+      "task": "D1:00083696:9ab4",
+      "tKill": 145.6,
+      "detectS": 60.1,
+      "recoveryS": 120.4,
+      "totalS": 180.4
+    },
+    {
+      "system": "central_full",
+      "seed": 20240623,
+      "victim": "A03",
+      "task": "D1:00088490:2e81",
+      "tKill": 178.75,
+      "detectS": 60,
+      "recoveryS": 1.5,
+      "totalS": 61.5
+    },
+    {
+      "system": "central_full",
+      "seed": 20240624,
+      "victim": "A08",
+      "task": "D1:00008676:0c14",
+      "tKill": 154.7,
+      "detectS": 60,
+      "recoveryS": 3.5,
+      "totalS": 63.5
+    },
+    {
+      "system": "central_full",
+      "seed": 20240625,
+      "victim": "A04",
+      "task": "D1:00000000:eb29",
+      "tKill": 153.5,
+      "detectS": 60,
+      "recoveryS": 52.6,
+      "totalS": 112.6
+    },
+    {
+      "system": "central_full",
+      "seed": 20240626,
+      "victim": "A05",
+      "task": "D2:00162153:7c4f",
+      "tKill": 197.1,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "central_full",
+      "seed": 20240627,
+      "victim": "A06",
+      "task": "D2:00012137:5c59",
+      "tKill": 176,
+      "detectS": 60,
+      "recoveryS": 24,
+      "totalS": 84
+    },
+    {
+      "system": "central_full",
+      "seed": 20240628,
+      "victim": "A02",
+      "task": "D2:00076941:7507",
+      "tKill": 147.75,
+      "detectS": 60.1,
+      "recoveryS": 2.4,
+      "totalS": 62.4
+    },
+    {
+      "system": "central_full",
+      "seed": 20240629,
+      "victim": "A01",
+      "task": "D1:00093969:e6b5",
+      "tKill": 184.25,
+      "detectS": 60,
+      "recoveryS": 13.8,
+      "totalS": 73.8
+    },
+    {
+      "system": "central_full",
+      "seed": 20240630,
+      "victim": "A01",
+      "task": "D1:00133336:7c24",
+      "tKill": 167.05,
+      "detectS": 60,
+      "recoveryS": 1.2,
+      "totalS": 61.2
+    },
+    {
+      "system": "central_full",
+      "seed": 20240631,
+      "victim": "A06",
+      "task": "D1:00081554:004e",
+      "tKill": 131.35,
+      "detectS": 60.1,
+      "recoveryS": 36.8,
+      "totalS": 96.8
+    },
+    {
+      "system": "central_full",
+      "seed": 20240632,
+      "victim": "A08",
+      "task": "D2:00116125:c239",
+      "tKill": 166.15,
+      "detectS": 60,
+      "recoveryS": 2.1,
+      "totalS": 62.1
+    },
+    {
+      "system": "central_full",
+      "seed": 20240633,
+      "victim": "A04",
+      "task": "D3:00053026:7d50",
+      "tKill": 196.9,
+      "detectS": 60,
+      "recoveryS": 17.4,
+      "totalS": 77.4
+    },
+    {
+      "system": "central_full",
+      "seed": 20240634,
+      "victim": "A02",
+      "task": "D1:00069251:5c75",
+      "tKill": 156.75,
+      "detectS": 60,
+      "recoveryS": 69.5,
+      "totalS": 129.5
+    },
+    {
+      "system": "central_full",
+      "seed": 20240635,
+      "victim": "A06",
+      "task": "D1:00070286:711f",
+      "tKill": 157.6,
+      "detectS": 60,
+      "recoveryS": 8.7,
+      "totalS": 68.7
+    },
+    {
+      "system": "central_full",
+      "seed": 20240636,
+      "victim": "A05",
+      "task": "D1:00063299:0a47",
+      "tKill": 141.9,
+      "detectS": 60.1,
+      "recoveryS": 44.2,
+      "totalS": 104.2
+    },
+    {
+      "system": "central_full",
+      "seed": 20240637,
+      "victim": "A06",
+      "task": "D2:00037977:b6b1",
+      "tKill": 159.95,
+      "detectS": 60,
+      "recoveryS": 0.3,
+      "totalS": 60.3
+    },
+    {
+      "system": "central_full",
+      "seed": 20240638,
+      "victim": "A06",
+      "task": "D2:00031591:284a",
+      "tKill": 131.25,
+      "detectS": 60.1,
+      "recoveryS": 0.9,
+      "totalS": 61
+    },
+    {
+      "system": "central_full",
+      "seed": 20240639,
+      "victim": "A02",
+      "task": "D2:00138457:68dc",
+      "tKill": 180.55,
+      "detectS": 60,
+      "recoveryS": 11.6,
+      "totalS": 71.6
+    },
+    {
+      "system": "central_full",
+      "seed": 20240640,
+      "victim": "A06",
+      "task": "D1:00019531:f4aa",
+      "tKill": 137.55,
+      "detectS": 60.1,
+      "recoveryS": 14.5,
+      "totalS": 74.5
+    },
+    {
       "system": "central_hub_loss",
       "seed": 20240611,
       "victim": "A01",
@@ -241,6 +981,226 @@
       "detectS": 60.1,
       "recoveryS": 27.2,
       "totalS": 87.3
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240619,
+      "victim": "A06",
+      "task": "D3:00187429:d1e4",
+      "tKill": 225.9,
+      "detectS": 60,
+      "recoveryS": 0.3,
+      "totalS": 60.3
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240620,
+      "victim": "A03",
+      "task": "D3:00158646:86b1",
+      "tKill": 202.6,
+      "detectS": 60,
+      "recoveryS": 1.5,
+      "totalS": 61.5
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240621,
+      "victim": "A07",
+      "task": "D1:00000000:bd19",
+      "tKill": 153.2,
+      "detectS": 60,
+      "recoveryS": 13,
+      "totalS": 73
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240622,
+      "victim": "A06",
+      "task": "D1:00083696:9ab4",
+      "tKill": 145.6,
+      "detectS": 60.1,
+      "recoveryS": 120.4,
+      "totalS": 180.4
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240623,
+      "victim": "A03",
+      "task": "D1:00088490:2e81",
+      "tKill": 178.75,
+      "detectS": 60,
+      "recoveryS": 1.5,
+      "totalS": 61.5
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240624,
+      "victim": "A08",
+      "task": "D1:00008676:0c14",
+      "tKill": 154.7,
+      "detectS": 60,
+      "recoveryS": 3.5,
+      "totalS": 63.5
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240625,
+      "victim": "A04",
+      "task": "D1:00000000:eb29",
+      "tKill": 153.5,
+      "detectS": 60,
+      "recoveryS": 52.6,
+      "totalS": 112.6
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240626,
+      "victim": "A05",
+      "task": "D2:00162153:7c4f",
+      "tKill": 197.1,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240627,
+      "victim": "A06",
+      "task": "D2:00012137:5c59",
+      "tKill": 176,
+      "detectS": 60,
+      "recoveryS": 24,
+      "totalS": 84
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240628,
+      "victim": "A02",
+      "task": "D2:00076941:7507",
+      "tKill": 147.75,
+      "detectS": 60.1,
+      "recoveryS": 2.4,
+      "totalS": 62.4
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240629,
+      "victim": "A01",
+      "task": "D1:00093969:e6b5",
+      "tKill": 184.25,
+      "detectS": 60,
+      "recoveryS": 13.8,
+      "totalS": 73.8
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240630,
+      "victim": "A01",
+      "task": "D1:00133336:7c24",
+      "tKill": 167.05,
+      "detectS": 60,
+      "recoveryS": 1.2,
+      "totalS": 61.2
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240631,
+      "victim": "A06",
+      "task": "D1:00081554:004e",
+      "tKill": 131.35,
+      "detectS": 60.1,
+      "recoveryS": 36.8,
+      "totalS": 96.8
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240632,
+      "victim": "A08",
+      "task": "D2:00116125:c239",
+      "tKill": 166.15,
+      "detectS": 60,
+      "recoveryS": 2.1,
+      "totalS": 62.1
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240633,
+      "victim": "A04",
+      "task": "D3:00053026:7d50",
+      "tKill": 196.9,
+      "detectS": 60,
+      "recoveryS": 17.4,
+      "totalS": 77.4
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240634,
+      "victim": "A02",
+      "task": "D1:00069251:5c75",
+      "tKill": 156.75,
+      "detectS": 60,
+      "recoveryS": 69.5,
+      "totalS": 129.5
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240635,
+      "victim": "A06",
+      "task": "D1:00070286:711f",
+      "tKill": 157.6,
+      "detectS": 60,
+      "recoveryS": 8.7,
+      "totalS": 68.7
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240636,
+      "victim": "A05",
+      "task": "D1:00063299:0a47",
+      "tKill": 141.9,
+      "detectS": 60.1,
+      "recoveryS": 44.2,
+      "totalS": 104.2
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240637,
+      "victim": "A06",
+      "task": "D2:00037977:b6b1",
+      "tKill": 159.95,
+      "detectS": 60,
+      "recoveryS": 0.3,
+      "totalS": 60.3
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240638,
+      "victim": "A06",
+      "task": "D2:00031591:284a",
+      "tKill": 131.25,
+      "detectS": 60.1,
+      "recoveryS": 0.9,
+      "totalS": 61
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240639,
+      "victim": "A02",
+      "task": "D2:00138457:68dc",
+      "tKill": 180.55,
+      "detectS": 60,
+      "recoveryS": 11.6,
+      "totalS": 71.6
+    },
+    {
+      "system": "central_hub_loss",
+      "seed": 20240640,
+      "victim": "A06",
+      "task": "D1:00019531:f4aa",
+      "tKill": 137.55,
+      "detectS": 60.1,
+      "recoveryS": 14.5,
+      "totalS": 74.5
     },
     {
       "system": "greedy_nearest",
@@ -323,6 +1283,226 @@
       "totalS": 75.9
     },
     {
+      "system": "greedy_nearest",
+      "seed": 20240619,
+      "victim": "A06",
+      "task": "D1:00075633:6c36",
+      "tKill": 134.15,
+      "detectS": 60.1,
+      "recoveryS": 0,
+      "totalS": 60.1
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240620,
+      "victim": "A01",
+      "task": "D3:00158646:86b1",
+      "tKill": 253.15,
+      "detectS": 60,
+      "recoveryS": 2.9,
+      "totalS": 62.9
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240621,
+      "victim": "A01",
+      "task": "D3:00052094:8b2c",
+      "tKill": 132.9,
+      "detectS": 60.1,
+      "recoveryS": 85.3,
+      "totalS": 145.3
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240622,
+      "victim": "A08",
+      "task": "D1:00108337:91a1",
+      "tKill": 165.1,
+      "detectS": 60,
+      "recoveryS": 10,
+      "totalS": 70
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240623,
+      "victim": "A08",
+      "task": "D1:00088490:2e81",
+      "tKill": 164.4,
+      "detectS": 60,
+      "recoveryS": 0,
+      "totalS": 60
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240624,
+      "victim": "A06",
+      "task": "D1:00008676:0c14",
+      "tKill": 137.9,
+      "detectS": 60.1,
+      "recoveryS": 3.2,
+      "totalS": 63.2
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240625,
+      "victim": "A07",
+      "task": "D1:00019670:0fba",
+      "tKill": 136.7,
+      "detectS": 60.1,
+      "recoveryS": 32.7,
+      "totalS": 92.7
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240626,
+      "victim": "A06",
+      "task": "D2:00162153:7c4f",
+      "tKill": 255.1,
+      "detectS": 60,
+      "recoveryS": 0,
+      "totalS": 60
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240627,
+      "victim": "A04",
+      "task": "D2:00000000:b458",
+      "tKill": 158.75,
+      "detectS": 60,
+      "recoveryS": 18,
+      "totalS": 78
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240628,
+      "victim": "A01",
+      "task": "D2:00076941:7507",
+      "tKill": 130.3,
+      "detectS": 60.1,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240629,
+      "victim": "A02",
+      "task": "D3:00054449:6cf4",
+      "tKill": 182.85,
+      "detectS": 60,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240630,
+      "victim": "A07",
+      "task": "D2:00077235:bd3c",
+      "tKill": 215.05,
+      "detectS": 60,
+      "recoveryS": 70.8,
+      "totalS": 130.8
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240631,
+      "victim": "A08",
+      "task": "D1:00081554:004e",
+      "tKill": 139.25,
+      "detectS": 60.1,
+      "recoveryS": 32,
+      "totalS": 92.1
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240632,
+      "victim": "A06",
+      "task": "D2:00010826:ef13",
+      "tKill": 156.35,
+      "detectS": 60,
+      "recoveryS": 13.1,
+      "totalS": 73.1
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240633,
+      "victim": "A05",
+      "task": "D3:00000000:1618",
+      "tKill": 146.4,
+      "detectS": 60.1,
+      "recoveryS": 0,
+      "totalS": 60.1
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240634,
+      "victim": "A01",
+      "task": "D1:00098732:fa0d",
+      "tKill": 132.6,
+      "detectS": 60.1,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240635,
+      "victim": "A06",
+      "task": "D1:00070286:711f",
+      "tKill": 156.2,
+      "detectS": 60,
+      "recoveryS": 49.8,
+      "totalS": 109.8
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240636,
+      "victim": "A02",
+      "task": "D1:00044328:1cfb",
+      "tKill": 205,
+      "detectS": 60,
+      "recoveryS": 0,
+      "totalS": 60
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240637,
+      "victim": "A07",
+      "task": "D2:00037977:b6b1",
+      "tKill": 140.3,
+      "detectS": 60.1,
+      "recoveryS": 32,
+      "totalS": 92.1
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240638,
+      "victim": "A01",
+      "task": "D3:00062585:c7f5",
+      "tKill": 190.65,
+      "detectS": 60,
+      "recoveryS": 0,
+      "totalS": 60
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240639,
+      "victim": "A05",
+      "task": "D2:00078221:b4d1",
+      "tKill": 162.1,
+      "detectS": 60,
+      "recoveryS": 30.7,
+      "totalS": 90.7
+    },
+    {
+      "system": "greedy_nearest",
+      "seed": 20240640,
+      "victim": "A06",
+      "task": "D1:00000138:a290",
+      "tKill": 151.2,
+      "detectS": 60,
+      "recoveryS": 39,
+      "totalS": 99
+    },
+    {
       "system": "cbba_plain",
       "seed": 20240611,
       "victim": "A06",
@@ -401,6 +1581,226 @@
       "detectS": 60.1,
       "recoveryS": 35.3,
       "totalS": 95.3
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240619,
+      "victim": "A03",
+      "task": "D1:00075633:6c36",
+      "tKill": 139.6,
+      "detectS": 60.1,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240620,
+      "victim": "A06",
+      "task": "D3:00158646:86b1",
+      "tKill": 197.85,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240621,
+      "victim": "A01",
+      "task": "D3:00052094:8b2c",
+      "tKill": 135.5,
+      "detectS": 60.1,
+      "recoveryS": 28.6,
+      "totalS": 88.6
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240622,
+      "victim": "A03",
+      "task": "D1:00083696:9ab4",
+      "tKill": 151,
+      "detectS": 60,
+      "recoveryS": 81.2,
+      "totalS": 141.2
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240623,
+      "victim": "A03",
+      "task": "D1:00088490:2e81",
+      "tKill": 178.1,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240624,
+      "victim": "A07",
+      "task": "D1:00000000:3543",
+      "tKill": 154.75,
+      "detectS": 60,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240625,
+      "victim": "A02",
+      "task": "D3:00000000:5088",
+      "tKill": 147.8,
+      "detectS": null,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240626,
+      "victim": "A05",
+      "task": "D2:00162153:7c4f",
+      "tKill": 196.15,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240627,
+      "victim": "A02",
+      "task": "D2:00040602:e0ad",
+      "tKill": 163.4,
+      "detectS": 60,
+      "recoveryS": 38.8,
+      "totalS": 98.8
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240628,
+      "victim": "A05",
+      "task": "D3:00000000:309e",
+      "tKill": 164.1,
+      "detectS": 60,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240629,
+      "victim": "A01",
+      "task": "D1:00093969:e6b5",
+      "tKill": 185.8,
+      "detectS": 60,
+      "recoveryS": 15.2,
+      "totalS": 75.2
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240630,
+      "victim": "A01",
+      "task": "D1:00133336:7c24",
+      "tKill": 167.25,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240631,
+      "victim": "A06",
+      "task": "D1:00081554:004e",
+      "tKill": 131.9,
+      "detectS": 60.1,
+      "recoveryS": 37,
+      "totalS": 97
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240632,
+      "victim": "A05",
+      "task": "D3:00000000:6154",
+      "tKill": 141.2,
+      "detectS": null,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240633,
+      "victim": "A02",
+      "task": "D3:00000000:30ab",
+      "tKill": 152.65,
+      "detectS": null,
+      "recoveryS": null,
+      "totalS": null
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240634,
+      "victim": "A05",
+      "task": "D1:00069251:5c75",
+      "tKill": 151.3,
+      "detectS": 60,
+      "recoveryS": 34.2,
+      "totalS": 94.2
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240635,
+      "victim": "A01",
+      "task": "D1:00075732:a20d",
+      "tKill": 144.8,
+      "detectS": 60.1,
+      "recoveryS": 19,
+      "totalS": 79.1
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240636,
+      "victim": "A05",
+      "task": "D1:00063299:0a47",
+      "tKill": 145.15,
+      "detectS": 60.1,
+      "recoveryS": 43.7,
+      "totalS": 103.8
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240637,
+      "victim": "A06",
+      "task": "D2:00037977:b6b1",
+      "tKill": 160.8,
+      "detectS": 60,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240638,
+      "victim": "A06",
+      "task": "D2:00031591:284a",
+      "tKill": 131.75,
+      "detectS": 60.1,
+      "recoveryS": 0.9,
+      "totalS": 60.9
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240639,
+      "victim": "A02",
+      "task": "D2:00049935:0945",
+      "tKill": 135.2,
+      "detectS": 60.1,
+      "recoveryS": 50.8,
+      "totalS": 110.8
+    },
+    {
+      "system": "cbba_plain",
+      "seed": 20240640,
+      "victim": "A08",
+      "task": "D1:00019531:f4aa",
+      "tKill": 139.45,
+      "detectS": 60.1,
+      "recoveryS": 2.7,
+      "totalS": 62.7
     }
   ]
 }

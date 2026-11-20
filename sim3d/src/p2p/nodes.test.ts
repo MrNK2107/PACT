@@ -705,3 +705,121 @@ describe('Shard-lease delegation (REQ-OWN-005, design section 6)', () => {
     });
   }
 });
+
+describe('planned silence: radio-shadow-aware leases (Decision 22)', () => {
+  /** A drone at x = 0 with a pickup at x = 900; the map it learned says x in [200, 600) is dark (4 cells, 400 m). */
+  function shadowed(enabled: boolean) {
+    const h = new Harness('QUORUM', { radioMap: { ...defaultP2PConfig().radioMap, enabled } });
+    const d1 = h.depot('D1');
+    const a = h.drone('A01');
+    h.drone('A02');
+    // dark cells 2..5 (x in [200, 600)), every other cell on the way sampled lit
+    a.node.radioMap?.merge([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ix) => [`${ix},0`, 'A02', 10, ix >= 2 && ix <= 5 ? 10 : 0]));
+    d1.intake(task('T1', { pickup: { x: 900, y: 0, z: 50 } }));
+    h.run(3);
+    h.bodyOf('A01').pos = { x: 0, y: 40, z: 50 };
+    expect(a.board.claim('T1', 'A01', -1, h.now)).toBe(true);
+    h.run(2); // claim reaches the depot and its ack comes back
+    return { h, d1, a };
+  }
+  const p = defaultP2PConfig().radioMap;
+  // 400 m at the cruise speed, times the slack, plus one renew period and the margin
+  const expected = (400 / p.cruiseSpeedMps) * p.slack + 20 / 4 + p.marginS;
+
+  it('the claim announces a lease covering the forecast dark stretch; the depot uses it and the owner keeps the job', () => {
+    const { h, d1, a } = shadowed(true);
+    const rec = d1.replica.getTask('T1')!;
+    expect(rec.lease_s).toBeCloseTo(expected, 2);
+    expect(rec.lease_s).toBeGreaterThan(h.cfg.lease.leaseTtlS);
+    expect(rec.lease_s).toBeLessThanOrEqual(p.leaseCapS);
+    const ps = h.ev('planned_silence');
+    expect(ps).toHaveLength(1);
+    expect(ps[0].data).toMatchObject({ task: 'T1', at: 'claim', node: 'A01' });
+    // radio silence of 35 s (longer than the 20 s base lease): nobody re-opens, the owner still holds
+    h.net.partition([['D1', 'A02'], ['A01']]);
+    h.run(35);
+    expect(a.board.holds('T1', 'A01')).toBe(true);
+    expect(h.ev('lease_expired')).toEqual([]);
+    expect(h.ev('lease_lapsed')).toEqual([]);
+    h.net.partition(null);
+    h.run(10);
+    expect(a.board.holds('T1', 'A01')).toBe(true);
+    expect(d1.replica.getTask('T1')!).toMatchObject({ owner: 'A01', epoch: 1 });
+    expect(h.ev('lease_expired')).toEqual([]);
+  });
+
+  it('flag off (pact_fixed_lease): the same silence makes the owner stop and the depot re-open (today\'s behaviour)', () => {
+    const { h, d1, a } = shadowed(false);
+    expect(a.node.radioMap).toBeNull();
+    expect(d1.replica.getTask('T1')!.lease_s).toBe(h.cfg.lease.leaseTtlS);
+    h.net.partition([['D1', 'A02'], ['A01']]);
+    h.run(35);
+    expect(a.board.holds('T1', 'A01')).toBe(false);
+    expect(h.ev('lease_expired')).toHaveLength(1);
+    expect(h.ev('planned_silence')).toEqual([]);
+  });
+
+  it('a silence longer than planned: the owner stops strictly before the depot re-opens (I3 holds with planned leases)', () => {
+    const { h, d1, a } = shadowed(true);
+    const lease = d1.replica.getTask('T1')!.lease_s;
+    h.net.partition([['D1', 'A02'], ['A01']]);
+    let stopAt = -1;
+    h.run(lease + 20, () => {
+      if (stopAt < 0 && !a.board.holds('T1', 'A01')) stopAt = h.now;
+    });
+    const reopen = h.ev('lease_expired');
+    expect(stopAt).toBeGreaterThan(0);
+    expect(reopen).toHaveLength(1);
+    expect(stopAt).toBeLessThan(reopen[0].t);
+    expect(reopen[0].t - stopAt).toBeGreaterThan(h.cfg.lease.graceS * 0.9);
+    expect(d1.replica.getTask('T1')!).toMatchObject({ state: 'UNASSIGNED', epoch: 2 });
+  });
+
+  it('renewals re-plan the lease from the remaining route and never pull the owner deadline forward', () => {
+    const { h, d1, a } = shadowed(true);
+    // the drone flew past the shadow: the forecast is now 0, but the lease written before does not shrink at once
+    h.bodyOf('A01').pos = { x: 700, y: 40, z: 50 };
+    const before = a.node.tracker.deadline('T1')!;
+    h.run(6); // one renewal
+    expect(a.node.tracker.deadline('T1')!).toBeGreaterThanOrEqual(before - 1e-9);
+    h.run(60);
+    const rec = d1.replica.getTask('T1')!;
+    expect(rec.renew).toBeGreaterThan(5);
+    expect(rec.lease_s).toBe(h.cfg.lease.leaseTtlS); // back to the base lease once the planned silence is behind
+    expect(a.board.holds('T1', 'A01')).toBe(true);
+  });
+
+  it('connectivity term of the bid: a pickup across the shadow costs more, heavier for priority 1; 0 with the flag off', () => {
+    const { a } = shadowed(true);
+    const across = a.node.connectivityCost({ pickup: { x: 900, z: 50 }, priority: 2 }, { x: 0, z: 50 });
+    const urgent = a.node.connectivityCost({ pickup: { x: 900, z: 50 }, priority: 1 }, { x: 0, z: 50 });
+    const clear = a.node.connectivityCost({ pickup: { x: 150, z: 50 }, priority: 1 }, { x: 0, z: 50 });
+    expect(across).toBeCloseTo((p.bidWeight * 400) / p.cruiseSpeedMps / 60, 6);
+    expect(urgent).toBeCloseTo((p.bidWeightP1 * 400) / p.cruiseSpeedMps / 60, 6);
+    expect(clear).toBe(0);
+    expect(shadowed(false).a.node.connectivityCost({ pickup: { x: 900, z: 50 }, priority: 1 }, { x: 0, z: 50 })).toBe(0);
+  });
+
+  it('drones learn the map from their own silence: a partitioned drone records dark samples, a connected one lit', () => {
+    const h = new Harness();
+    h.depot('D1');
+    const a = h.drone('A01');
+    const b = h.drone('A02');
+    h.bodyOf('A01').pos = { x: 250, y: 40, z: 50 };
+    h.bodyOf('A02').pos = { x: -250, y: 40, z: 50 };
+    h.run(3);
+    h.net.partition([['D1', 'A02'], ['A01']]);
+    h.run(20);
+    const dark = a.node.radioMap!.cellStats('2,0');
+    expect(dark.samples).toBeGreaterThan(20);
+    expect(dark.dark / dark.samples).toBeGreaterThan(0.6);
+    const lit = b.node.radioMap!.cellStats('-3,0');
+    expect(lit.samples).toBeGreaterThan(20);
+    expect(lit.dark).toBe(0);
+    h.net.partition(null);
+    h.bodyOf('A01').pos = { x: -250, y: 40, z: 50 }; // flew back into coverage
+    h.run(15); // gossip spreads A01's observations
+    expect(b.node.radioMap!.cellStats('2,0').samples).toBeGreaterThanOrEqual(dark.samples);
+    expect(b.node.radioMap!.isDark(250, 50)).toBe(true);
+  });
+});

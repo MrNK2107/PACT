@@ -85,6 +85,11 @@ export class ReplicaBoard implements TaskBoardView {
     return this.node.suspected(peer);
   }
 
+  /** Bid penalty for the forecast radio-dark seconds to the pickup (Decision 22; 0 without a radio map). */
+  connectivityCost(task: Task, from: { x: number; z: number }): number {
+    return this.node.connectivityCost(task, from);
+  }
+
   /** Stable controller object for a task, refreshed from the replica. */
   private obj(taskId: string): Task | undefined {
     const fresh = this.node.taskOf(taskId);

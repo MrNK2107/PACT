@@ -16,7 +16,7 @@ import { compareTaskKey, compareTaskRecord, isTerminalState, normTask, recordFro
 import { Rng } from '../world/rng';
 import type { DropType, NoFlyShape, NoFlyZone, PadData, RadioZone, Vec3, WindField, WorldData } from '../world/types';
 import { CentralHub, type HubDrone } from './CentralHub';
-import { allocationOf, isFenced, SERVICES, type SystemId } from './systems';
+import { allocationOf, isFenced, isP2P, SERVICES, usesRadioMap, type SystemId } from './systems';
 import { drainPct, enduranceBoundS, makeEnergyModel, type EnergyModel } from './Battery';
 import { applyScenario, SIM } from './config';
 import { DRONE_COLORS, DroneAgent } from './DroneAgent';
@@ -232,7 +232,7 @@ export class SimulationEngine {
   ) {
     applyScenario(scenario);
     this.system = scenario.system ?? 'pact';
-    this.p2p = this.system === 'pact';
+    this.p2p = isP2P(this.system);
     this.energy = makeEnergyModel(scenario);
     this.initialDrones = scenario.fleet.n_drones;
     this.obstacles = new ObstacleManager(world);
@@ -320,7 +320,14 @@ export class SimulationEngine {
     this.replicaBoards = new Map();
     this.depotNodes = new Map();
     const p = this.scenario.policy;
-    this.p2pCfg = defaultP2PConfig({ leaseTtlS: p.lease_ttl_s, tCommitS: p.t_commit_s, policy: p.partition, gossipPeriodS: p.gossip_period_s });
+    this.p2pCfg = defaultP2PConfig({
+      leaseTtlS: p.lease_ttl_s,
+      tCommitS: p.t_commit_s,
+      policy: p.partition,
+      gossipPeriodS: p.gossip_period_s,
+      // Decision 22: radio-shadow-aware ownership under `pact`; `pact_fixed_lease` is the ablation without it
+      radioMap: { enabled: usesRadioMap(this.system), cruiseSpeedMps: this.scenario.fleet.speed_mps },
+    });
     // TC-09 physical evidence: quorum votes only from observers that expected to hear the drone (nominal range x the
     // map's static radio zones, its position bounded by 1.5 x cruise speed since last located), and silence only past
     // the drone's endurance bound (full battery for a drone never heard from).
@@ -890,7 +897,9 @@ export class SimulationEngine {
         for (const e of inbox) if (e.type === 'HEARTBEAT') node.onBeacon(e.src, (e.payload as Extract<Message, { type: 'HEARTBEAT' }>).pos);
         for (const e of this.net.take(a.id)) node.onEnvelope(e);
         const b = a.body;
-        node.preStep({ pos: b.pos, battery: b.battery, enduranceS: enduranceBoundS(this.energy, b.battery), charging: a.controller.phase === 'charging', shard: shardOf(this.world.shards, b.pos.x, b.pos.z) });
+        // the drone's own plan to its pickup (planned-silence forecast, Decision 22)
+        const route = a.controller.phase === 'to_pickup' ? a.controller.route.slice(a.controller.routeIndex).map((w) => w.pos) : undefined;
+        node.preStep({ pos: b.pos, battery: b.battery, enduranceS: enduranceBoundS(this.energy, b.battery), charging: a.controller.phase === 'charging', shard: shardOf(this.world.shards, b.pos.x, b.pos.z), route });
       }
       const cmd = a.controller.update({
         time: this.time,

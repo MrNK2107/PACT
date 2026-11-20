@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getScenario } from '../scenario/registry';
 import { acceptanceChecks, bootstrapMean, runBench, summaryMarkdown, toCsv, type BenchRow } from './bench';
 import { computeMetrics, type LogEvent } from './metrics';
+import { median, pairedCells, radiomapMarkdown, recoverySummary } from './radiomap';
 
 /** TC-12: metrics from the event log, bootstrap statistics, acceptance checks and a tiny end-to-end bench. */
 
@@ -109,5 +110,50 @@ describe('runBench (end to end, tiny matrix)', () => {
     const md = summaryMarkdown(rows, { seeds: 2, windowS: 60 });
     expect(md).toContain('## test_small');
     expect(md).toContain('`central_hub_loss`');
+  });
+});
+
+describe('radio-shadow-aware ownership metrics and summary (Decision 22)', () => {
+  it('false re-opens exclude owners that were killed or removed before; planned silences are counted', () => {
+    const m = computeMetrics(
+      [
+        ev(5, 'planned_silence', { task: 'T1', leaseS: 40 }, 'A01'),
+        ev(10, 'lease_expired', { task: 'T1', owner: 'A01' }),
+        ev(20, 'fault_kill_drone', { id: 'A02' }),
+        ev(40, 'lease_expired', { task: 'T2', owner: 'A02' }),
+        ev(50, 'drone_removed', {}, 'A03'),
+        ev(60, 'lease_expired', { task: 'T3', owner: 'A03' }),
+        ev(70, 'lease_expired', { task: 'T4', owner: 'A04' }),
+      ],
+      100,
+    );
+    expect(m.leaseExpiries).toBe(4);
+    expect(m.falseReopens).toBe(2); // A01 and A04 were alive
+    expect(m.plannedSilences).toBe(1);
+  });
+
+  it('paired cells: per-seed differences on shared seeds; recovery medians per system', () => {
+    const r = (system: BenchRow['system'], seed: number, leaseExpiries: number, onTimeRate: number | null): BenchRow =>
+      ({ scenario: 'S', system, seed, leaseExpiries, onTimeRate, duplicateDeliveries: 0, zombiePickups: 0, lossOfSeparation: 0 }) as BenchRow;
+    const rows = [r('pact_fixed_lease', 1, 10, 90), r('pact', 1, 4, 95), r('pact_fixed_lease', 2, 12, 80), r('pact', 2, 5, null), r('pact', 3, 1, 100)];
+    const cells = pairedCells(rows);
+    const exp = cells.find((c) => c.metric === 'leaseExpiries')!;
+    expect(exp.base!.mean).toBe(11);
+    expect(exp.treat!.mean).toBeCloseTo(10 / 3);
+    expect(exp.diff!.mean).toBe(-6.5); // seeds 1 and 2 only
+    expect(exp.diff!.n).toBe(2);
+    expect(cells.find((c) => c.metric === 'onTimeRate')!.diff!.n).toBe(1);
+    const rec = recoverySummary([
+      { system: 'pact', seed: 1, victim: 'A', task: 'T', tKill: 0, detectS: 2, recoveryS: 1, totalS: 3 },
+      { system: 'pact', seed: 2, victim: 'A', task: 'T', tKill: 0, detectS: 4, recoveryS: 3, totalS: 7 },
+      { system: 'pact', seed: 3, victim: 'A', task: 'T', tKill: 0, detectS: null, recoveryS: null, totalS: null },
+      { system: 'pact_fixed_lease', seed: 1, victim: 'A', task: 'T', tKill: 0, detectS: 2, recoveryS: null, totalS: null },
+    ]);
+    expect(rec.find((x) => x.system === 'pact')).toMatchObject({ runs: 2, detectMedianS: 3, totalMedianS: 5, notRecovered: 0 });
+    expect(rec.find((x) => x.system === 'pact_fixed_lease')).toMatchObject({ runs: 1, totalMedianS: null, notRecovered: 1 });
+    expect(median([3, 1, 2])).toBe(2);
+    const md = radiomapMarkdown(rows, [], { seeds: 3, windowS: 900, recoverySeeds: 0, recoveryScenario: 'at06_drone_failure' });
+    expect(md).toContain('| Lease expiries (re-opens) | 11.00');
+    expect(md).toContain('duplicate deliveries + zombie pickups = **0**');
   });
 });

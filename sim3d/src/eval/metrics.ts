@@ -33,6 +33,13 @@ export interface RunMetrics {
   /** I3: pickups by a drone after it lost that task's lease (without re-claiming it). */
   zombiePickups: number;
   leaseExpiries: number;
+  /**
+   * Lease expiries (depot re-opens) whose owner was still alive: not killed, removed or lost before the re-open (ground
+   * truth from the event log; the protocol never sees it). With no drone lost these are all false failovers.
+   */
+  falseReopens: number;
+  /** Planned-silence episodes: an owner announced a lease above the base one ahead of a forecast radio shadow (Decision 22). */
+  plannedSilences: number;
   /** Depot refusals of a stale-epoch pickup (`TASK_TAKEN`). */
   depotRefusals: number;
   lossOfSeparation: number;
@@ -50,6 +57,9 @@ export function computeMetrics(events: readonly LogEvent[], windowS: number): Ru
   let duplicateDeliveries = 0;
   let zombiePickups = 0;
   let leaseExpiries = 0;
+  let falseReopens = 0;
+  let plannedSilences = 0;
+  const gone = new Set<string>();
   let depotRefusals = 0;
   let lossOfSeparation = 0;
   let batteryDepleted = 0;
@@ -91,6 +101,17 @@ export function computeMetrics(events: readonly LogEvent[], windowS: number): Ru
         break;
       case 'lease_expired':
         leaseExpiries++;
+        if (typeof e.data.owner === 'string' && !gone.has(e.data.owner)) falseReopens++;
+        break;
+      case 'planned_silence':
+        plannedSilences++;
+        break;
+      case 'fault_kill_drone':
+        if (typeof e.data.id === 'string') gone.add(e.data.id);
+        break;
+      case 'drone_removed':
+      case 'drone_lost_in_flight':
+        if (e.agent) gone.add(e.agent);
         break;
       case 'task_taken':
         depotRefusals++;
@@ -124,6 +145,8 @@ export function computeMetrics(events: readonly LogEvent[], windowS: number): Ru
     duplicateDeliveries,
     zombiePickups,
     leaseExpiries,
+    falseReopens,
+    plannedSilences,
     depotRefusals,
     lossOfSeparation,
     batteryDepleted,

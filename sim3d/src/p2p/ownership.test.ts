@@ -300,6 +300,7 @@ describe('lease timing', () => {
     expect(t.lastAck(c.task_id)).toBe(1005);
     t.confirm(c.task_id, c.epoch, 9); // covers renew 2 (the newest written)
     expect(t.lastAck(c.task_id)).toBe(1010);
+    expect(t.deadline(c.task_id)).toBe(1030);
     expect(t.lapsed(c.task_id, 1030)).toBe(false);
     expect(t.expire(1030.01)).toEqual([c.task_id]);
     expect(t.has(c.task_id)).toBe(false);
@@ -307,6 +308,37 @@ describe('lease timing', () => {
     t.markPickedUp(c.task_id);
     expect(t.lapsed(c.task_id, 9999)).toBe(false);
     expect(t.renewDue(c.task_id, 9999)).toBe(false);
+  });
+
+  it('OwnerLeaseTracker with per-write leases: lapse at the earliest write + lease since the confirmed renewal', () => {
+    const t = new OwnerLeaseTracker(P);
+    const c = claimRecord(rec(), 'A01', -1, 60)!;
+    t.track(c, 0, 5);
+    expect(t.renewDue(c.task_id, 4.9)).toBe(false); // cadence fixed by the caller (base / 4), not lease / 4
+    expect(t.renewDue(c.task_id, 5)).toBe(true);
+    expect(t.deadline(c.task_id)).toBe(60);
+    t.renewed(c.task_id, 1, 5, 20); // a shorter lease written later: an observer may hold it, so stop by 25
+    expect(t.deadline(c.task_id)).toBe(25);
+    expect(t.lapsed(c.task_id, 25)).toBe(false);
+    expect(t.lapsed(c.task_id, 25.01)).toBe(true);
+    t.renewed(c.task_id, 2, 10, 90);
+    t.confirm(c.task_id, c.epoch, 2); // renewal 2 confirmed: older writes no longer bound the lapse
+    expect(t.deadline(c.task_id)).toBe(100);
+    expect(t.leaseOf(c.task_id)).toBe(90);
+    expect(t.newestWriteResidual(c.task_id, 40)).toBe(60);
+    t.renewed(c.task_id, 3, 15, 20); // an unconfirmed shorter write bounds it again
+    expect(t.deadline(c.task_id)).toBe(35);
+    expect(t.expire(35.01)).toEqual([c.task_id]);
+  });
+
+  it('renewRecord re-states the lease and keeps the merge order (renew + 1 wins whatever the lease)', () => {
+    const c = claimRecord(rec(), 'A01', -1, 20)!;
+    const r = renewRecord(c, 'A01', 75)!;
+    expect(r).toMatchObject({ renew: 1, lease_s: 75, epoch: c.epoch, owner: 'A01' });
+    expect(compareTaskRecords(r, c)).toBeGreaterThan(0);
+    const r2 = renewRecord(r, 'A01', 20)!;
+    expect(compareTaskRecords(r2, r)).toBeGreaterThan(0);
+    expect(renewRecord(c, 'A01')!.lease_s).toBe(20);
   });
 });
 
@@ -319,6 +351,13 @@ interface I3Opts {
   lossMax: number;
   delayMax: number;
   isolate: boolean;
+  /**
+   * Planned silence: every renewal carries a lease drawn from [lo, hi] (up or down; the claim keeps `p.leaseTtlS`).
+   * Absent: one fixed lease, today's rule.
+   */
+  leaseRange?: [number, number];
+  /** Broken owner rule for the load-bearing check: lapse at `lastAck + newest written lease`. */
+  naiveVariableOwner?: boolean;
 }
 interface I3Result {
   reopens: number;
@@ -343,28 +382,28 @@ function runI3Trial(rng: Rng, o: I3Opts): I3Result {
     return (t: number) => off + t * (1 + d);
   };
   const ownerClock = mkClock();
-  const obs = Array.from({ length: o.nObs }, () => ({ clock: mkClock(), seen: -1, seenAt: 0, reopenAt: -1 }));
+  const obs = Array.from({ length: o.nObs }, () => ({ clock: mkClock(), seen: -1, seenAt: 0, seenLease: o.p.leaseTtlS, reopenAt: -1 }));
   const loss = rng.range(0, o.lossMax);
   const delayMax = rng.range(0, o.delayMax);
   const tIso = o.isolate ? rng.range(0, 60) : Infinity;
-  type Msg = { at: number; seq: number; to: number; renew: number }; // to = -1: ack to owner
+  type Msg = { at: number; seq: number; to: number; renew: number; lease: number }; // to = -1: ack to owner
   const q: Msg[] = [];
   let seq = 0;
-  const send = (tNow: number, to: number, renew: number) => {
+  const send = (tNow: number, to: number, renew: number, lease = o.p.leaseTtlS) => {
     if (to >= 0 && tNow >= tIso) return; // owner tx cut
     if (rng.chance(loss)) return;
     const at = tNow + rng.range(0, delayMax);
     if (to < 0 && at >= tIso) return; // owner rx cut
-    q.push({ at, seq: seq++, to, renew });
+    q.push({ at, seq: seq++, to, renew, lease });
   };
 
   const tracker = new OwnerLeaseTracker(o.p);
   let r = claimRecord(rec(), 'OWN', -1, o.p.leaseTtlS)!;
-  tracker.track(r, ownerClock(0));
+  tracker.track(r, ownerClock(0), o.p.leaseTtlS / 4);
   for (let i = 0; i < o.nObs; i++) send(0, i, 0);
   let ownerStop = -1;
   const res: I3Result = { reopens: 0, covered: 0, stale: 0, unsafe: 0, minMarginS: Infinity };
-  const tEnd = (o.isolate ? tIso : 200) + 80;
+  const tEnd = (o.isolate ? tIso : 200) + 80 + (o.leaseRange ? o.leaseRange[1] * 1.1 : 0);
   for (let k = 1; k * dt <= tEnd; k++) {
     const t = k * dt;
     // deliver in (at, seq) order
@@ -379,24 +418,27 @@ function runI3Trial(rng: Rng, o: I3Opts): I3Result {
         if (m.renew > x.seen) {
           x.seen = m.renew;
           x.seenAt = x.clock(t);
+          x.seenLease = m.lease;
         }
         send(t, -1, x.seen);
       }
     }
     if (ownerStop < 0) {
       const now = ownerClock(t);
-      if (tracker.lapsed(r.task_id, now)) {
+      const lapsed = o.naiveVariableOwner ? now - tracker.lastAck(r.task_id)! > tracker.leaseOf(r.task_id)! : tracker.lapsed(r.task_id, now);
+      if (lapsed) {
         ownerStop = t;
         tracker.expire(now);
       } else if (tracker.renewDue(r.task_id, now)) {
-        r = renewRecord(r, 'OWN')!;
-        tracker.renewed(r.task_id, r.renew, now);
-        for (let i = 0; i < o.nObs; i++) send(t, i, r.renew);
+        const lease = o.leaseRange ? rng.range(o.leaseRange[0], o.leaseRange[1]) : r.lease_s;
+        r = renewRecord(r, 'OWN', lease)!;
+        tracker.renewed(r.task_id, r.renew, now, r.lease_s);
+        for (let i = 0; i < o.nObs; i++) send(t, i, r.renew, r.lease_s);
       }
     }
     for (const x of obs) {
       if (x.reopenAt >= 0 || x.seen < 0) continue;
-      if (!observerLeaseExpired(x.seenAt, x.clock(t), o.p)) continue;
+      if (!observerLeaseExpired(x.seenAt, x.clock(t), o.p, x.seenLease)) continue;
       x.reopenAt = t;
       res.reopens++;
       if (ownerStop >= 0 && ownerStop < t) {
@@ -449,6 +491,26 @@ describe('I3 / AT-09: owner zombie-stop strictly precedes any re-open (property,
     expect(t.covered).toBeGreaterThan(3000);
     // stale observers exist under loss: the timing alone cannot protect them, depot fencing does (see depot tests)
     expect(t.covered + t.stale).toBe(t.reopens);
+  });
+
+  it('planned silence: renewals carry leases in [20, 90] s going up and down; owner lapse = min(write + lease) keeps I3', () => {
+    const t = runI3(0xa713, 2000, { p: P, driftMax: 0.02, nObs: 1, lossMax: 0.4, delayMax: 3, isolate: true, leaseRange: [20, 90] });
+    expect(t.unsafe).toBe(0);
+    expect(t.stale).toBe(0);
+    expect(t.covered).toBe(t.reopens);
+    expect(t.reopens).toBeGreaterThan(1900);
+    expect(t.minMarginS).toBeGreaterThan(0);
+  });
+
+  it('planned silence with several observers: no unsafe re-open', () => {
+    const t = runI3(0xa714, 1000, { p: P, driftMax: 0.01, nObs: 4, lossMax: 0.3, delayMax: 2, isolate: true, leaseRange: [20, 90] });
+    expect(t.unsafe).toBe(0);
+    expect(t.covered + t.stale).toBe(t.reopens);
+  });
+
+  it('planned silence: the min(write + lease) owner rule is load-bearing (lapsing on the newest lease breaks I3)', () => {
+    const t = runI3(0xa715, 2000, { p: P, driftMax: 0.01, nObs: 1, lossMax: 0.2, delayMax: 1, isolate: true, leaseRange: [20, 90], naiveVariableOwner: true });
+    expect(t.unsafeTrials).toBeGreaterThan(50);
   });
 
   it('the margin + grace asymmetry is load-bearing: the naive symmetric rule breaks I3', () => {

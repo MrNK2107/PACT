@@ -3,8 +3,8 @@
 <style>
 svg{background:#fcfcfb;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 .t1{fill:#0b0b0b}.t2{fill:#52514e}.grid{stroke:#e4e3df;stroke-width:1}.axis{stroke:#9a9993;stroke-width:1}.pf{fill:none;stroke:#52514e;stroke-width:1.5}.ring{stroke:#fcfcfb}.legend-mark{fill:#52514e;stroke:none}
-.ci{stroke-width:2;fill:none;stroke:#0b0b0b}.s-pact{fill:#2a78d6;stroke:#2a78d6}.s-central_full{fill:#eb6834;stroke:#eb6834}.s-central_hub_loss{fill:#1baf7a;stroke:#1baf7a}.s-greedy_nearest{fill:#eda100;stroke:#eda100}.s-cbba_plain{fill:#e87ba4;stroke:#e87ba4}
-@media (prefers-color-scheme: dark){svg{background:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.grid{stroke:#33332f}.axis{stroke:#6b6a64}.pf{stroke:#c3c2b7}.ring{stroke:#1a1a19}.legend-mark{fill:#c3c2b7}.ci{stroke:#f0efec}.s-pact{fill:#3987e5;stroke:#3987e5}.s-central_full{fill:#d95926;stroke:#d95926}.s-central_hub_loss{fill:#199e70;stroke:#199e70}.s-greedy_nearest{fill:#c98500;stroke:#c98500}.s-cbba_plain{fill:#d55181;stroke:#d55181}}
+.ci{stroke-width:2;fill:none;stroke:#0b0b0b}.s-pact{fill:#2a78d6;stroke:#2a78d6}.s-pact_fixed_lease{fill:#7a5fc4;stroke:#7a5fc4}.s-central_full{fill:#eb6834;stroke:#eb6834}.s-central_hub_loss{fill:#1baf7a;stroke:#1baf7a}.s-greedy_nearest{fill:#eda100;stroke:#eda100}.s-cbba_plain{fill:#e87ba4;stroke:#e87ba4}
+@media (prefers-color-scheme: dark){svg{background:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.grid{stroke:#33332f}.axis{stroke:#6b6a64}.pf{stroke:#c3c2b7}.ring{stroke:#1a1a19}.legend-mark{fill:#c3c2b7}.ci{stroke:#f0efec}.s-pact{fill:#3987e5;stroke:#3987e5}.s-pact_fixed_lease{fill:#9a7fe0;stroke:#9a7fe0}.s-central_full{fill:#d95926;stroke:#d95926}.s-central_hub_loss{fill:#199e70;stroke:#199e70}.s-greedy_nearest{fill:#c98500;stroke:#c98500}.s-cbba_plain{fill:#d55181;stroke:#d55181}}
 </style>
 <text x="16" y="26" class="t1" font-size="16" font-weight="600">AT-12 policy sweep: on-time rate vs ownership violations</text>
 <text x="16" y="46" class="t2" font-size="12">One mark per system x partition policy, mean of 30 seeds x 900 s. Violations = duplicate deliveries + zombie pickups per run. Ringed = Pareto-optimal.</text>

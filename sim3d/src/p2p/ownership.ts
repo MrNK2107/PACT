@@ -99,10 +99,13 @@ export function commitRecord(rec: TaskRecord, me: NodeId, claimedAtLocal: number
   return { ...rec, state: 'COMMITTED' };
 }
 
-/** Owner renewal: renew + 1, pre-pickup only (post-pickup leases are sticky, REQ-OWN-002). */
-export function renewRecord(rec: TaskRecord, me: NodeId): TaskRecord | null {
+/**
+ * Owner renewal: renew + 1, pre-pickup only (post-pickup leases are sticky, REQ-OWN-002). `leaseS` (planned silence)
+ * re-states the lease length for this renewal; the owner must report it to its `OwnerLeaseTracker` (`renewed`).
+ */
+export function renewRecord(rec: TaskRecord, me: NodeId, leaseS: number = rec.lease_s): TaskRecord | null {
   if (!isPrePickup(rec) || rec.owner !== me) return null;
-  return { ...rec, renew: rec.renew + 1 };
+  return { ...rec, renew: rec.renew + 1, lease_s: leaseS };
 }
 
 /** Re-open a pre-pickup record: UNASSIGNED, epoch + 1, owner null, bid null, renew 0. Concurrent re-opens are equal. */
@@ -229,12 +232,22 @@ export function depotPickup(req: PickupRequest): PickupDecision {
 
 // ---- owner-side lease bookkeeping -----------------------------------------------------------------------------
 
+interface HeldWrite {
+  /** Owner-local write time. */
+  t: number;
+  /** `lease_s` the write carried. */
+  leaseS: number;
+}
+
 interface HeldLease {
   epoch: number;
+  /** `lease_s` of the newest write (claim or renewal). */
   leaseS: number;
+  /** Renewal cadence (local s): `lease / 4` of the claim unless the caller fixes it (planned silence keeps base / 4). */
+  renewEveryS: number;
   claimedAt: number;
-  /** Local write time per renew number of this epoch. */
-  writes: Map<number, number>;
+  /** Local write time and lease per renew number of this epoch (the claim is renew 0). */
+  writes: Map<number, HeldWrite>;
   lastWrite: number;
   confirmedRenew: number;
   lastAck: number;
@@ -243,21 +256,31 @@ interface HeldLease {
 }
 
 /**
- * Per held task, on the owner's local clock: when it claimed, when it wrote each renewal, the last renewal confirmed
- * back (gossip carrying `renew >=` its own, at its epoch), renew cadence `lease / 4`, commit due after `tCommitS`, and
- * the zombie-stop check (I3). After pickup the lease is sticky and never lapses.
+ * Per held task, on the owner's local clock: when it claimed, when it wrote each renewal and with which `lease_s`,
+ * the last renewal confirmed back (gossip carrying `renew >=` its own, at its epoch), renew cadence `lease / 4`, commit
+ * due after `tCommitS`, and the zombie-stop check (I3). After pickup the lease is sticky and never lapses.
+ *
+ * Variable leases (planned silence, docs/DECISIONS.md Decision 22): each write may carry its own `lease_s`. An observer
+ * holds some write `r >= confirmedRenew` and re-opens no earlier than `seen(r) + lease(r) * (1 + margin) + grace`, with
+ * `seen(r)` no earlier than the owner's write time of `r`. The owner therefore lapses at the earliest of
+ * `write(r) + lease(r)` over every write it made at or after its last confirmed renewal (every write when none is
+ * confirmed yet). With one lease length this is exactly `lastAck + lease`, the fixed-lease rule.
  */
 export class OwnerLeaseTracker {
   private leases = new Map<string, HeldLease>();
   constructor(readonly p: LeaseParams = DEFAULT_LEASE_PARAMS) {}
 
-  /** Start tracking right after writing a claim (`rec` = the CLAIMED record). The claim is the initial ack base. */
-  track(rec: TaskRecord, nowLocal: number): void {
+  /**
+   * Start tracking right after writing a claim (`rec` = the CLAIMED record). The claim is the initial ack base.
+   * `renewEveryS` defaults to `rec.lease_s / 4`.
+   */
+  track(rec: TaskRecord, nowLocal: number, renewEveryS = rec.lease_s / 4): void {
     this.leases.set(rec.task_id, {
       epoch: rec.epoch,
       leaseS: rec.lease_s,
+      renewEveryS,
       claimedAt: nowLocal,
-      writes: new Map([[rec.renew, nowLocal]]),
+      writes: new Map([[rec.renew, { t: nowLocal, leaseS: rec.lease_s }]]),
       lastWrite: nowLocal,
       confirmedRenew: -1,
       lastAck: nowLocal,
@@ -266,17 +289,20 @@ export class OwnerLeaseTracker {
     });
   }
 
-  /** Record that the owner wrote renewal `renew` (from `renewRecord`) at `nowLocal`. */
-  renewed(taskId: string, renew: number, nowLocal: number): void {
+  /** Record that the owner wrote renewal `renew` (from `renewRecord`) at `nowLocal`, carrying `leaseS` (default: unchanged). */
+  renewed(taskId: string, renew: number, nowLocal: number, leaseS?: number): void {
     const l = this.leases.get(taskId);
     if (!l) return;
-    l.writes.set(renew, nowLocal);
+    const ls = leaseS ?? l.leaseS;
+    l.writes.set(renew, { t: nowLocal, leaseS: ls });
+    l.leaseS = ls;
     l.lastWrite = nowLocal;
   }
 
   /**
    * A peer or depot echoed this task at `(epoch, renew)`: every renewal up to `renew` of the held epoch is confirmed.
-   * The ack base becomes the write time of the newest confirmed renewal the owner actually wrote.
+   * The ack base becomes the write time of the newest confirmed renewal the owner actually wrote; older writes are
+   * forgotten (they no longer bound the lapse).
    */
   confirm(taskId: string, epoch: number, renew: number): void {
     const l = this.leases.get(taskId);
@@ -285,7 +311,8 @@ export class OwnerLeaseTracker {
     for (const r of l.writes.keys()) if (r <= renew && r > best) best = r;
     if (best < 0 || best <= l.confirmedRenew) return;
     l.confirmedRenew = best;
-    l.lastAck = Math.max(l.lastAck, l.writes.get(best)!);
+    l.lastAck = Math.max(l.lastAck, l.writes.get(best)!.t);
+    for (const r of [...l.writes.keys()]) if (r < best) l.writes.delete(r);
   }
 
   markCommitted(taskId: string): void {
@@ -301,7 +328,7 @@ export class OwnerLeaseTracker {
 
   renewDue(taskId: string, nowLocal: number): boolean {
     const l = this.leases.get(taskId);
-    return !!l && !l.sticky && nowLocal - l.lastWrite >= l.leaseS / 4;
+    return !!l && !l.sticky && nowLocal - l.lastWrite >= l.renewEveryS;
   }
 
   commitDue(taskId: string, nowLocal: number): boolean {
@@ -311,7 +338,34 @@ export class OwnerLeaseTracker {
 
   lapsed(taskId: string, nowLocal: number): boolean {
     const l = this.leases.get(taskId);
-    return !!l && !l.sticky && ownerLeaseLapsed(l.lastAck, nowLocal, this.p, l.leaseS);
+    if (!l || l.sticky) return false;
+    // writes older than the confirmed renewal were pruned by confirm(): every remaining write bounds the lapse
+    for (const w of l.writes.values()) if (ownerLeaseLapsed(w.t, nowLocal, this.p, w.leaseS)) return true;
+    return false;
+  }
+
+  /**
+   * Owner-local time at which the lease lapses (zombie-stop): the earliest `write + lease` over the writes at or after
+   * the last confirmed renewal. Undefined when the task is not held or is sticky (post-pickup).
+   */
+  deadline(taskId: string): number | undefined {
+    const l = this.leases.get(taskId);
+    if (!l || l.sticky) return undefined;
+    let d = Infinity;
+    for (const w of l.writes.values()) d = Math.min(d, w.t + w.leaseS);
+    return d;
+  }
+
+  /** Lease seconds left after `nowLocal` under the newest write alone (`lastWrite + lease - now`), for lease planning. */
+  newestWriteResidual(taskId: string, nowLocal: number): number | undefined {
+    const l = this.leases.get(taskId);
+    if (!l || l.sticky) return undefined;
+    return l.lastWrite + l.leaseS - nowLocal;
+  }
+
+  /** `lease_s` of the newest write. */
+  leaseOf(taskId: string): number | undefined {
+    return this.leases.get(taskId)?.leaseS;
   }
 
   /** Zombie-stop: ids (sorted) whose lease lapsed; they stop being tracked. The owner must not act on them again. */

@@ -9,8 +9,8 @@ import type { SweepCell } from './sweep';
  * full numbers are in results/summary.md and results/sweep/sweep.md (the table views).
  */
 
-const LIGHT: Record<SystemId, string> = { pact: '#2a78d6', central_full: '#eb6834', central_hub_loss: '#1baf7a', greedy_nearest: '#eda100', cbba_plain: '#e87ba4' };
-const DARK: Record<SystemId, string> = { pact: '#3987e5', central_full: '#d95926', central_hub_loss: '#199e70', greedy_nearest: '#c98500', cbba_plain: '#d55181' };
+const LIGHT: Record<SystemId, string> = { pact: '#2a78d6', pact_fixed_lease: '#7a5fc4', central_full: '#eb6834', central_hub_loss: '#1baf7a', greedy_nearest: '#eda100', cbba_plain: '#e87ba4' };
+const DARK: Record<SystemId, string> = { pact: '#3987e5', pact_fixed_lease: '#9a7fe0', central_full: '#d95926', central_hub_loss: '#199e70', greedy_nearest: '#c98500', cbba_plain: '#d55181' };
 
 function style(): string {
   const cls = (m: Record<SystemId, string>) => SYSTEM_IDS.map((s) => `.s-${s}{fill:${m[s]};stroke:${m[s]}}`).join('');

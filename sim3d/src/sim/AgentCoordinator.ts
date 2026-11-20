@@ -194,6 +194,8 @@ export interface ScoreContext {
   homePad: Vec3;
   socReserve: number;
   obstacles: ObstacleManager;
+  /** Connectivity term of the bid (pact, radio map on, Decision 22): score penalty of a task from `pos`. */
+  connectivityCost?: (t: Task) => number;
 }
 
 /**
@@ -214,7 +216,9 @@ export function scoreTask(t: Task, ctx: ScoreContext, contention: number): { sco
   if (ctx.battery < needPct + ctx.socReserve * 100) return null;
   const eta = ctx.now + (leg1 + leg2) / SIM.cruiseSpeed + SIM.loadTime + 20;
   const late = Math.max(0, eta - t.deadline) / 60;
-  const score = SIM.w.pri * (4 - t.priority) - SIM.w.dist * ((leg1 + leg2) / 1000) - SIM.w.late * late - SIM.w.energy * (needPct / 100) - SIM.w.pad * contention * 0.25;
+  let score = SIM.w.pri * (4 - t.priority) - SIM.w.dist * ((leg1 + leg2) / 1000) - SIM.w.late * late - SIM.w.energy * (needPct / 100) - SIM.w.pad * contention * 0.25;
+  const conn = ctx.connectivityCost ? ctx.connectivityCost(t) : 0;
+  if (conn > 0) score -= conn;
   return { score, needPct };
 }
 

@@ -195,6 +195,7 @@ export class LocalAgentController implements AgentController {
         homePad: this.homePad!.pos,
         socReserve: p.socReserve,
         obstacles: p.obstacles,
+        connectivityCost: p.tasks.connectivityCost ? (t: Task) => p.tasks.connectivityCost!(t, p.body.pos) : undefined,
       };
       if (this.allocation === 'central') {
         // baselines: the hub dispatches; with the hub down there is nothing to do but hold / go home

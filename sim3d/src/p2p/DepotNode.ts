@@ -9,7 +9,8 @@
  *   epoch) with a per-task grant memory kept outside the merge and a fence record if anything ever out-ranks a grant;
  *   answered by unicast `PICKUP_GRANT` / `TASK_TAKEN`;
  * - lease expiry: the only re-opener of its tasks, after the observer bound `lease (1 + margin) + grace` on its own
- *   clock since it first saw the current (epoch, renew);
+ *   clock since it first saw the current (epoch, renew), with the `lease_s` that record carries (a planned-silence
+ *   renewal announces a longer one, Decision 22);
  * - lease acks: its status record carries `acks { task: [epoch, renew] }`, the renewals it has seen; owners count only
  *   those as confirmed (so the owner stops before this depot can re-open, I3);
  * - shard-lease authority for its catchment shards (`SHARD_LEASE` requests, STRICT policy);
@@ -48,6 +49,7 @@ import {
 } from './ownership';
 import { isShardLeaseRecord, isTaskRecord, recordFromTask, Replica, type DeltaMergeResult } from './replica';
 import { byId, expectsToHear, type NodeEventSink, type P2PConfig, type WriteHook } from './node';
+import { RadioMap, radioPiggyback } from './radiomap';
 
 export interface DepotNodeOptions {
   id: NodeId;
@@ -69,6 +71,8 @@ export class DepotNode {
   readonly replica: Replica;
   readonly gossip: GossipEngine;
   readonly fd: FailureDetector;
+  /** Radio map relay (Decision 22): the depot makes no observations, it merges and re-gossips the drones' ones. */
+  readonly radioMap: RadioMap | null;
   private readonly clock: Clock;
   private readonly port: NetworkPort;
   private readonly cfg: P2PConfig;
@@ -105,7 +109,13 @@ export class DepotNode {
     this.emit = o.events ?? (() => {});
     this.onWrite = o.onWrite ?? (() => {});
     this.replica = new Replica(o.id);
-    this.gossip = new GossipEngine(o.id, this.replica, o.clock, (env) => this.port.send(env), { ...o.cfg.gossip, onMerged: (res) => this.onMerged(res) });
+    this.radioMap = o.cfg.radioMap.enabled ? new RadioMap(o.id, o.cfg.radioMap) : null;
+    const rm = this.radioMap;
+    this.gossip = new GossipEngine(o.id, this.replica, o.clock, (env) => this.port.send(env), {
+      ...o.cfg.gossip,
+      onMerged: (res) => this.onMerged(res),
+      ...(rm ? { piggyback: radioPiggyback(rm) } : {}),
+    });
     this.fd = new FailureDetector(o.id, o.cfg.failure.params, o.cfg.failure.opts);
   }
 

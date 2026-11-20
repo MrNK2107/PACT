@@ -7,6 +7,7 @@ import { SYSTEM_IDS, type SystemId } from '../sim/systems';
 
 const SYSTEM_LABELS: Record<SystemId, string> = {
   pact: 'PACT',
+  pact_fixed_lease: 'PACT, fixed leases (ablation)',
   central_full: 'Central hub',
   central_hub_loss: 'Central, hub can fail',
   greedy_nearest: 'Greedy nearest',

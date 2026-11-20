@@ -143,9 +143,19 @@ export interface ReplicaWant {
   shards: string[];
 }
 
-/** GOSSIP_DELTA payload: a ReplicaDelta plus an optional pull request. */
+/**
+ * One radio-map entry on the wire (Decision 22): `[cell, origin, samples, dark]`, the G-counters of observations the
+ * node `origin` made in grid cell `cell` (`"<ix>,<iz>"`). Merge = per (cell, origin) max of each counter.
+ */
+export type RadioMapEntry = [cell: string, origin: NodeId, samples: number, dark: number];
+
+/**
+ * GOSSIP_DELTA payload: a ReplicaDelta plus an optional pull request. `radio` (Decision 22, optional): radio-map
+ * entries piggybacked on a broadcast push; receivers without a radio map ignore it (NFR-3).
+ */
 export interface GossipDeltaPayload extends ReplicaDelta {
   want?: ReplicaWant;
+  radio?: RadioMapEntry[];
 }
 
 /** Outcome of merging one incoming task record. */
@@ -181,6 +191,51 @@ export interface LeaseParams {
   tCommitS: number;
   driftMargin: number;
   graceS: number;
+}
+
+/**
+ * Radio-shadow-aware ownership ("planned silence", Decision 22): a learned radio map, the dark-stretch forecast of a
+ * planned route, the adaptive lease and the connectivity term of the bid.
+ */
+export interface RadioMapParams {
+  /** Feature flag. Off: no map, no gossip field, fixed leases, no bid term (the `pact_fixed_lease` ablation). */
+  enabled: boolean;
+  /** Grid cell edge (m). */
+  cellM: number;
+  /** Observation period (local s). */
+  samplePeriodS: number;
+  /** A sample is dark when no depot status reached the node (directly or relayed) within this window (local s). */
+  darkWindowS: number;
+  /** Cells with fewer samples (all origins) are unknown and never forecast dark. */
+  minSamples: number;
+  /** A cell is dark when its dark fraction is at least this. */
+  darkThreshold: number;
+  /**
+   * A cell with too few samples of its own takes the pooled statistics of its 3 x 3 neighbourhood (radio shadows are
+   * spatially contiguous; a route rarely crosses exactly the cells others sampled). Still unknown below `minSamples`.
+   */
+  poolNeighbours: boolean;
+  /**
+   * Forecast: a lit gap of at most this many metres between two dark stretches counts as dark (a renewal sent from a
+   * brief lit patch is rarely acknowledged before the drone is dark again).
+   */
+  bridgeM: number;
+  /** Lease cap (s); a planned lease is never below the base lease and never above this. */
+  leaseCapS: number;
+  /** Extra seconds on a planned lease past the forecast dark stretch and one renew period (ack round trip). */
+  marginS: number;
+  /** Multiplier on the forecast dark seconds (slower-than-cruise flight: holds, approaches, detours). */
+  slack: number;
+  /** Bid penalty, score units per forecast dark minute on the way to the pickup: priority 1, and the rest. */
+  bidWeightP1: number;
+  bidWeight: number;
+  /** Cruise speed (m/s) used to turn dark metres into seconds (the engine sets the fleet's). */
+  cruiseSpeedMps: number;
+  /** Entries per gossip push: changed ones first, then `gossipSweepEntries` from a rotating anti-entropy sweep. */
+  gossipMaxEntries: number;
+  gossipSweepEntries: number;
+  /** Memory bound: entries (cell x origin) kept; new keys past it are ignored (deterministically). */
+  maxEntries: number;
 }
 
 /** Shard-lease timing (holder lease, depot observer bound). */
@@ -261,4 +316,23 @@ export const P2P_DEFAULTS = {
   convergeS: 10,
   lease: { driftMargin: 0.02, graceS: 2 },
   failure: { phiSuspect: 5, phiUnreachable: 9, windowSize: 100, minStdS: 0.1, probeFanout: 3, quorum: 2, tFailedS: 60 } satisfies FailureParams,
+  radioMap: {
+    enabled: true,
+    cellM: 100,
+    samplePeriodS: 0.5,
+    darkWindowS: 3,
+    minSamples: 4,
+    darkThreshold: 0.5,
+    poolNeighbours: true,
+    bridgeM: 100,
+    leaseCapS: 90,
+    marginS: 5,
+    slack: 1.25,
+    bidWeightP1: 2,
+    bidWeight: 0.5,
+    cruiseSpeedMps: 15,
+    gossipMaxEntries: 12,
+    gossipSweepEntries: 3,
+    maxEntries: 20000,
+  } satisfies RadioMapParams,
 } as const;

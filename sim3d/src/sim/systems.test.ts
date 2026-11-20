@@ -32,7 +32,7 @@ function hubDrones(eng: SimulationEngine, over: Partial<ScoreContext> = {}): Hub
 
 describe('systems', () => {
   it('maps every system to an allocation mode', () => {
-    expect(SYSTEM_IDS.map(allocationOf)).toEqual(['auction', 'central', 'central', 'greedy', 'cbba']);
+    expect(SYSTEM_IDS.map(allocationOf)).toEqual(['auction', 'auction', 'central', 'central', 'greedy', 'cbba']);
   });
 
   it('scenario files may pick a system and unknown systems are rejected', () => {
@@ -126,5 +126,43 @@ describe('fleet size', () => {
     expect(capped?.data).toMatchObject({ requested: 40, spawned: eng.agents.length });
     expect(eng.agents.length).toBeLessThan(40);
     expect(engine('pact').events.some((e) => e.type === 'fleet_capped')).toBe(BASE.fleet.n_drones > engine('pact').agents.length);
+  });
+});
+
+describe('radio-shadow-aware ownership vs its ablation (Decision 22)', () => {
+  function canyon(system: SystemId): SimulationEngine {
+    const s: Scenario = { ...getScenario('dm_canyon_shadow'), system };
+    return new SimulationEngine(createWorld(worldConfigFrom(s)), s);
+  }
+
+  it('pact_fixed_lease is exactly PACT before Decision 22 (event-log hash pinned from the pre-change code)', { timeout: 120000 }, () => {
+    // dm_canyon_shadow seed 31001, 240 s: hash of the `pact` run at commit 7949a71 (fixed 20 s leases, no radio map)
+    const eng = run(canyon('pact_fixed_lease'), 240);
+    expect(eng.p2p).toBe(true);
+    expect(eng.p2pConfig.radioMap.enabled).toBe(false);
+    expect(eng.events.some((e) => e.type === 'planned_silence')).toBe(false);
+    expect(eng.eventHash()).toBe('20014dbc');
+  });
+
+  it('pact learns the canyon shadows, plans silences within [base, cap] and keeps I1 / I3; deterministic (AT-01)', { timeout: 120000 }, () => {
+    const eng = run(canyon('pact'), 300);
+    expect(eng.p2pConfig.radioMap.enabled).toBe(true);
+    const ps = eng.events.filter((e) => e.type === 'planned_silence');
+    expect(ps.length).toBeGreaterThan(0);
+    const base = eng.p2pConfig.lease.leaseTtlS;
+    for (const e of ps) {
+      expect(e.data.leaseS as number).toBeGreaterThan(base);
+      expect(e.data.leaseS as number).toBeLessThanOrEqual(eng.p2pConfig.radioMap.leaseCapS);
+    }
+    // every replica's lease lengths stay within [base, cap]
+    for (const { replica } of eng.replicas()) for (const r of replica.tasks()) if (r.state === 'CLAIMED' || r.state === 'COMMITTED') {
+      expect(r.lease_s).toBeGreaterThanOrEqual(base);
+      expect(r.lease_s).toBeLessThanOrEqual(eng.p2pConfig.radioMap.leaseCapS);
+    }
+    const dark = eng.nodeOf('A01')!.radioMap!.knownCells().filter((c) => c.dark / c.samples >= 0.5);
+    expect(dark.length).toBeGreaterThan(3);
+    const delivered = eng.events.filter((e) => e.type === 'delivered').map((e) => e.data.task);
+    expect(new Set(delivered).size).toBe(delivered.length);
+    expect(run(canyon('pact'), 300).eventHash()).toBe(eng.eventHash());
   });
 });

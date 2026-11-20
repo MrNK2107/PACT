@@ -290,3 +290,40 @@ describe('AT-10 shape: partition, independent writes, heal, converge (I6)', () =
     expect(Math.max(...secs)).toBeLessThanOrEqual(P2P_DEFAULTS.convergeS);
   });
 });
+
+describe('gossip piggyback (Decision 22: radio-map entries ride on pushes)', () => {
+  it('adds the extra fields to broadcast pushes only, never sends a message for them alone, hands received ones back', () => {
+    let t = 0;
+    const rep = new Replica('A');
+    const sent: Omit<Envelope, 'v' | 'seq'>[] = [];
+    const accepted: unknown[] = [];
+    let takes = 0;
+    const g = new GossipEngine('A', rep, { nowLocal: () => t }, (e) => sent.push(e), {
+      basePeriodS: 1,
+      phaseS: 0,
+      piggyback: {
+        take: () => {
+          takes++;
+          return { radio: [['0,0', 'A', takes, 0]] };
+        },
+        accept: (p, from) => accepted.push([from, p.radio]),
+      },
+    });
+    g.step(); // nothing dirty: no push, take() not consulted
+    expect(sent).toEqual([]);
+    expect(takes).toBe(0);
+    rep.writeTask(mkTaskRecord('t1'), t);
+    g.urgent();
+    t = 0.05;
+    g.step();
+    const push = sent.find((e) => e.type === 'GOSSIP_DELTA')!;
+    expect(push.dst).toBe('*');
+    expect((push.payload as { radio: unknown }).radio).toEqual([['0,0', 'A', 1, 0]]);
+    expect((push.payload as { tasks: TaskRecord[] }).tasks.map((r) => r.task_id)).toEqual(['t1']);
+    g.onMessage({ v: 1, type: 'GOSSIP_DELTA', src: 'B', dst: '*', seq: 1, t_send: 0, payload: { tasks: [], status: [], shards: [], radio: [['1,1', 'B', 2, 1]] } });
+    expect(accepted).toEqual([['B', [['1,1', 'B', 2, 1]]]]);
+    // a node without a piggyback ignores the field (NFR-3)
+    const plain = new GossipEngine('C', new Replica('C'), { nowLocal: () => 0 }, () => {});
+    expect(() => plain.onMessage({ v: 1, type: 'GOSSIP_DELTA', src: 'B', dst: '*', seq: 1, t_send: 0, payload: { radio: [['1,1', 'B', 2, 1]] } })).not.toThrow();
+  });
+});

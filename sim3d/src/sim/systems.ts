@@ -3,7 +3,11 @@
  * `system:` (default `pact`); the bench runner overrides it to compare systems on identical worlds, workloads
  * and fault scripts.
  *
- *  - `pact`             decentralised bid / claim / back-off over the radio, epoch-fenced leases (the default).
+ *  - `pact`             decentralised bid / claim / back-off over the radio, epoch-fenced leases (the default), with
+ *                       radio-shadow-aware ownership: a learned radio map, planned-silence leases and a connectivity
+ *                       term in the bid (Decision 22).
+ *  - `pact_fixed_lease` ablation: `pact` exactly as before Decision 22 (fixed leases, no radio map, no connectivity
+ *                       term). Same P2P protocol otherwise.
  *  - `central_full`     a central hub assigns idle drones to open tasks every `auction_period_s`, with global
  *                       knowledge and no radio limits; the hub never fails (upper bound).
  *  - `central_hub_loss` the same hub, but `kill_service(central_hub)` takes it down: drones finish the task they
@@ -17,9 +21,19 @@
  *                       drone holding it, so claims made out of radio range lead to duplicate dispatches and
  *                       duplicate deliveries. Invariants I1 / I3 are expected to break for this system only.
  */
-export type SystemId = 'pact' | 'central_full' | 'central_hub_loss' | 'greedy_nearest' | 'cbba_plain';
+export type SystemId = 'pact' | 'pact_fixed_lease' | 'central_full' | 'central_hub_loss' | 'greedy_nearest' | 'cbba_plain';
 
-export const SYSTEM_IDS: readonly SystemId[] = ['pact', 'central_full', 'central_hub_loss', 'greedy_nearest', 'cbba_plain'];
+export const SYSTEM_IDS: readonly SystemId[] = ['pact', 'pact_fixed_lease', 'central_full', 'central_hub_loss', 'greedy_nearest', 'cbba_plain'];
+
+/** Systems that run the P2P protocol (every drone and depot a node with its own replica, src/p2p). */
+export function isP2P(system: SystemId): boolean {
+  return system === 'pact' || system === 'pact_fixed_lease';
+}
+
+/** P2P systems with radio-shadow-aware ownership on (Decision 22). */
+export function usesRadioMap(system: SystemId): boolean {
+  return system === 'pact';
+}
 
 export type Allocation = 'auction' | 'central' | 'greedy' | 'cbba';
 
