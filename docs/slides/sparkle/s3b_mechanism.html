@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sparkle s3b mechanism</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sparkle.css">
+<style>
+  .lead { position: absolute; left: 0; top: 0; right: 0; display: flex; align-items: baseline; gap: 18px; }
+  .lead .h { font-size: 32px; }
+  .lead .s { font-size: 21px; color: var(--slate); }
+  .cols { position: absolute; left: 0; right: 0; top: 62px; height: 540px; display: grid; grid-template-columns: 1fr 1.28fr 1fr 1fr; gap: 16px; }
+  .col { padding: 22px 22px 20px; display: flex; flex-direction: column; }
+  .col.hero { border: 2.5px solid var(--lime); background: var(--tint); }
+  .top { display: flex; align-items: center; gap: 12px; }
+  .top .h { font-size: 26px; }
+  .col p { font-size: 22px; margin-top: 12px; line-height: 1.32; }
+  .viz { margin-top: auto; border-radius: 14px; background: var(--grey); padding: 14px 16px; font-size: 17px; }
+  .hero .viz { background: #fff; }
+  .row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; padding: 3px 9px; border-radius: 8px; background: #fff; border: 1.5px solid var(--line); color: var(--ink); white-space: nowrap; }
+  .tag.g { background: var(--tint); border-color: var(--lime); color: var(--deep); }
+  .tag.r { background: var(--rtint); border-color: #F1B7B1; color: var(--red); }
+  .tag.v { background: var(--vtint); border-color: #CDB8FF; color: var(--violet); }
+  .bar { height: 12px; border-radius: 6px; background: var(--lime); }
+  .bar.d { background: #C9CCD0; }
+  .tl { position: relative; height: 150px; }
+  .lane { position: absolute; left: 0; right: 0; height: 40px; display: flex; align-items: center; }
+  .lane .who { width: 56px; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 16px; color: var(--ink); }
+  .seg { position: absolute; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .depot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; align-items: center; font-size: 16px; }
+  .strip { position: absolute; left: 0; right: 0; top: 620px; height: 124px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .note { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 28px; background: var(--vtint); border-radius: 18px; color: var(--ink); font-size: 22px; }
+  .note .lbl { white-space: nowrap; }
+  .band { position: absolute; left: 0; right: 0; top: 768px; height: 84px; }
+</style></head>
+<body><div class="c">
+  <div class="lead"><div class="h">Four ideas, one protocol</div><div class="s">Every drone runs the same code and talks only to drones in radio range. Nothing central decides.</div></div>
+  <div class="cols">
+    <div class="card col">
+      <div class="top"><span class="badge">01</span><span class="h">Local auction</span></div>
+      <p>A free drone scores each open job by <span class="b">priority, distance, deadline, energy</span> and <span class="b">charging-pad demand</span>. It bids only if the payload fits and its battery covers the job, a pad and a reserve. The highest bid wins; the others back off.</p>
+      <div class="viz">
+        <div class="lbl m" style="font-size:13px">Bids for job J-0142</div>
+        <div class="row"><span class="tag">A03</span><div class="bar" style="width:150px"></div><span class="g">wins</span></div>
+        <div class="row"><span class="tag">A01</span><div class="bar d" style="width:105px"></div><span>backs off</span></div>
+        <div class="row"><span class="tag">A05</span><span class="rd">no bid: battery reserve</span></div>
+      </div>
+    </div>
+    <div class="card col hero">
+      <div class="top"><span class="badge">02</span><span class="h">Fenced ownership</span><span class="pill" style="margin-left:auto; background:#fff; border:1.5px solid var(--lime)">core novelty</span></div>
+      <p>A claim carries an <span class="b">epoch</span> and a <span class="b">lease</span> kept alive by heartbeats. If the owner goes silent, the lease expires and the job reopens at a higher epoch. The old owner must stop (<span class="b">zombie-stop</span>). The depot hands the parcel only to the highest epoch.</p>
+      <div class="viz">
+        <div class="tl">
+          <div class="lane" style="top:0"><span class="who">A01</span>
+            <div class="seg" style="left:58px; width:132px; background:var(--tint); color:var(--deep); border:1.5px solid var(--lime)">epoch 1 · lease</div>
+            <div class="seg" style="left:196px; width:100px; background:var(--rtint); color:var(--red)">radio lost</div>
+            <div class="seg" style="left:302px; width:100px; background:#F3F3F3; color:var(--slate); border:1.5px dashed #B9BDC2">must stop</div>
+          </div>
+          <div class="lane" style="top:46px"><span class="who">A04</span>
+            <div class="seg" style="left:302px; width:138px; background:var(--lime); color:var(--ink)">epoch 2 · claims</div>
+          </div>
+          <div class="depot"><span class="lbl m" style="font-size:13px">Depot</span><span class="tag r">epoch 1 → refused</span><span class="tag g">epoch 2 → parcel</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card col">
+      <div class="top"><span class="badge">03</span><span class="h">Shared order board</span></div>
+      <p>Every drone and depot keeps <span class="b">its own copy</span> of the order board, built as a CRDT. Copies sync by <span class="b">gossip</span> with neighbours and always converge to the same state, with no leader and no server.</p>
+      <div class="viz">
+        <div class="row"><span class="tag">A01 copy</span><span>⇄</span><span class="tag">A02 copy</span><span>⇄</span><span class="tag">D1 copy</span></div>
+        <div class="row" style="margin-top:8px"><span class="g">✓ same board, merged in any order</span></div>
+      </div>
+    </div>
+    <div class="card col">
+      <div class="top"><span class="badge v">04</span><span class="h">Partition policy</span></div>
+      <p>When the radio splits the fleet, a <span class="b">fixed rule</span> decides what a cut-off group may still claim, so the two sides never fight over a parcel.</p>
+      <div class="viz">
+        <div class="row"><span class="tag v">STRICT</span><span>only under a live lease on my side</span></div>
+        <div class="row"><span class="tag v">QUORUM</span><span>only while a majority is reachable</span></div>
+        <div class="row"><span class="tag v">OPTIMISTIC</span><span>1 low-priority claim; never urgent</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="strip">
+    <div class="note"><span class="lbl v">Safety stays separate</span><span>Collision avoidance never imports coordination or network code, so a protocol bug cannot disable it.</span></div>
+    <div class="note"><span class="lbl v">Evidence, not guesses</span><span>A drone is declared lost only when peers that should hear it report silence.</span></div>
+  </div>
+  <div class="band">
+    <div class="bl">HELD IN EVERY RUN</div>
+    <div class="bi">0 double deliveries</div>
+    <div class="bi">0 zombie pickups</div>
+    <div class="bi">Same seed → same event log</div>
+  </div>
+</div></body></html>

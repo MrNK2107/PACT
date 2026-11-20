@@ -33,13 +33,15 @@ The same protocol is implemented twice:
 
 | | PACT | Baseline |
 |---|---|---|
-| Hub killed at t = 180 s: on-time rate | **86.3 %** (no drop) | central fleet 86.3 % → **56.8 %** |
-| Deliveries per run after hub loss | **20.0** | central fleet 20.2 → 7.6 |
+| Hub killed at t = 180 s: on-time rate | **72.5 %** (no drop) | central fleet 74.5 % → **44.7 %** |
+| Deliveries per run after hub loss | **19.0** | central fleet 19.3 → 7.0 |
 | Duplicate deliveries, 240 runs with 5-minute radio splits | **0** | plain auction: up to 17.8 per run |
-| Failed carrier: kill → replacement claimed (median) | **9.9 s** | 61.7–67.9 s |
+| Failed carrier: kill → replacement claimed (median) | **9.7 s** | 66.1–71.6 s |
+| Radio shadows (canyon map): false failovers per run | **6.3** (planned silence) | 14.3 with fixed leases |
+| Ownership model check (TLA+ / TLC) | **0 violations** in 201,334,513 states | mutants without the fence or the drift margin fail in 9 steps |
 | Automated tests | 391 sim3d (1 skipped), 75 / 75 scenario acceptance; AeroPACT 692 (92 skipped), acceptance 9 / 9, PX4 SITL 4 / 4 | |
 
-Sources: `results/summary.md`, `results/sweep/sweep.md`, `results/recovery.json`. The evaluation report lists the caveats: the hub-loss acceptance check (AT-05) is recorded as FAIL at 900 s because the central baseline drops 34.1 % against a > 40 % gate (PACT's side passes), and two sweep runs (STRICT policy, canyon map) logged one loss of separation each.
+Sources: `results/summary.md` and `results/recovery.json` (30 seeds × 900 s per system), `results/sweep/sweep.md`, `results/radiomap/summary.md`, `docs/formal/RESULTS.md`. AT-05 passes at 30 seeds (PACT drops 0 %, the central fleet 40 %). Caveats: the plain auction matches PACT's on-time rate only by delivering parcels twice (86 duplicates in 120 runs), and two sweep runs (STRICT policy, canyon map) logged one loss of separation each.
 
 ## Quick start: sim3d (browser)
 

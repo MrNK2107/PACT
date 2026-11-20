@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sparkle s4 differentiators</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sparkle.css">
+<style>
+  .tbl { position: absolute; left: 0; top: 0; width: 1060px; height: 740px; padding: 22px 26px 18px; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  th { font-size: 20px; color: var(--ink); font-weight: 600; padding: 4px 6px 14px; text-align: center; vertical-align: bottom; }
+  th.first { text-align: left; }
+  th .k { display: block; font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+  td { font-size: 21px; padding: 13px 6px; text-align: center; border-top: 1.5px solid var(--line); }
+  td.first { text-align: left; color: var(--ink); font-weight: 500; }
+  .y { color: var(--deep); font-weight: 600; } .n { color: var(--red); font-weight: 600; }
+  .p { background: var(--tint); }
+  th.p { border-radius: 16px 16px 0 0; color: var(--deep); font-size: 22px; font-weight: 700; }
+  tr:last-child td.p { border-radius: 0 0 16px 16px; }
+  tr.num td { font-size: 30px; font-weight: 700; }
+  tr.num td.first { font-size: 21px; }
+  .gr { color: #6F747A; }
+  .twin { position: absolute; left: 26px; right: 26px; bottom: 22px; background: var(--tint); border-radius: 16px; padding: 14px 20px; }
+  .twin .k { font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--deep); }
+  .tw { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 6px; font-size: 21px; color: var(--ink); }
+  .tw .pill { background: #fff; white-space: nowrap; font-size: 17px; }
+  .note { margin-top: 12px; font-size: 16px; color: var(--muted); line-height: 1.35; }
+  .stats { position: absolute; left: 1084px; top: 0; width: 692px; height: 740px; display: flex; flex-direction: column; gap: 14px; }
+  .stat { flex: 1; padding: 18px 24px; display: flex; flex-direction: column; justify-content: center; border-left: 8px solid var(--lime); border-radius: 6px 20px 20px 6px; }
+  .stat .k { font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--deep); }
+  .stat .n { font-size: 60px; font-weight: 700; color: var(--deep); letter-spacing: -.02em; line-height: 1.05; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .n .vs { font-size: 26px; color: var(--muted); font-weight: 500; margin: 0 8px; }
+  .stat .n .bad { font-size: 40px; color: var(--red); }
+  .stat .d { font-size: 20px; color: var(--ink); margin-top: 4px; }
+  .stat .s { font-size: 15px; color: var(--muted); margin-top: 3px; }
+  .band { position: absolute; left: 0; right: 0; top: 768px; height: 84px; }
+  .band .bi { font-size: 19px; }
+</style></head>
+<body><div class="c">
+  <div class="card tbl">
+    <table>
+      <tr><th class="first"><span class="k">Same maps, faults and seeds</span></th>
+        <th>Central hub</th><th>Greedy nearest</th><th>Plain auction</th><th class="p">PACT (ours)</th></tr>
+      <tr><td class="first">Works with no central hub</td><td class="n">✗ No</td><td class="y">✓ Yes</td><td class="y">✓ Yes</td><td class="p y">✓ Yes</td></tr>
+      <tr><td class="first">Keeps delivering after hub loss</td><td class="n">✗ No</td><td class="y">✓ Yes</td><td class="y">✓ Yes</td><td class="p y">✓ Yes</td></tr>
+      <tr><td class="first">Never delivers a parcel twice</td><td class="y">✓ Yes</td><td class="y">✓ Yes</td><td class="n">✗ No</td><td class="p y">✓ Yes</td></tr>
+      <tr><td class="first">Respects priorities and deadlines</td><td class="y">✓ Yes</td><td class="n">✗ No</td><td class="y">✓ Yes</td><td class="p y">✓ Yes</td></tr>
+      <tr><td class="first">Safe rule for cut-off groups</td><td class="gr">n/a</td><td class="n">✗ No</td><td class="n">✗ No</td><td class="p y">✓ Yes</td></tr>
+      <tr class="num"><td class="first">On time after the hub is killed</td><td class="n">56.8%</td><td class="gr">80.6%</td><td class="gr">83.4%</td><td class="p y">86.3%</td></tr>
+    </table>
+    <div class="note">Plain auction = PACT's own radio auction with the fencing removed (no epochs, leases or depot check): it isolates what fencing adds. Benchmark: 100 runs, 4 scenarios × 5 systems × 5 seeds × 900 s simulated, 95% bootstrap confidence intervals.</div>
+    <div class="twin">
+      <div class="k">Confirmed in a second, independent build</div>
+      <div class="tw">
+        <div><span class="lbl m" style="font-size:13px">ROS 2 + Gazebo (AeroPACT), hub killed, 5 seeds</span><br><span class="b">Central hub</span> <span class="rd" style="font-size:30px">20.2%</span> on time &nbsp;·&nbsp; <span class="b">PACT</span> <span class="g" style="font-size:30px; white-space:nowrap">66.8–68.5%</span> on time</div>
+        <div class="pill">0% duplicates · invariants held in every PACT run</div>
+      </div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="card stat"><div class="k">No single point of failure</div>
+      <div class="n">86.3%<span class="vs">vs</span><span class="bad">56.8%</span></div>
+      <div class="d">on time after the hub dies: PACT vs a central hub</div>
+      <div class="s">PACT shows no drop from its healthy run; the hub fleet falls from 20.2 to 7.6 deliveries per run</div></div>
+    <div class="card stat"><div class="k">Never deliver twice</div>
+      <div class="n">0<span class="vs">vs</span><span class="bad">17.8</span></div>
+      <div class="d">double deliveries per run under 5-minute radio splits</div>
+      <div class="s">240-run sweep, 30 seeds; the plain auction without fencing in downtown radio canyons</div></div>
+    <div class="card stat"><div class="k">Fast recovery</div>
+      <div class="n">9.9 s<span class="vs">vs</span><span class="bad">61.7–67.9 s</span></div>
+      <div class="d">from a drone failing to its parcel being re-claimed (median)</div>
+      <div class="s">Drone-failure scenario: PACT vs the central hub's timeout-based detection</div></div>
+  </div>
+  <div class="band">
+    <div class="bl">BUILT LIKE VEHICLE SOFTWARE</div>
+    <div class="bi">Same seed, same log</div>
+    <div class="bi">Safety layer isolated</div>
+    <div class="bi">ROS 2 lifecycle nodes + PX4</div>
+    <div class="bi">990+ passing tests</div>
+  </div>
+</div></body></html>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sparkle prototype collage</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sparkle.css">
+<style>
+  html, body, .c { width: 996px; height: 740px; }
+  .tile { position: absolute; border-radius: 16px; overflow: hidden; background: #ddd; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cap { position: absolute; left: 12px; bottom: 12px; background: rgba(35,31,32,.86); color: #fff; border-radius: 10px; padding: 7px 12px; font-size: 16px; font-weight: 500; }
+  .cap b { color: var(--lime); font-weight: 700; letter-spacing: .1em; font-size: 13px; display: block; text-transform: uppercase; }
+</style></head>
+<body><div class="c">
+  <div class="tile" style="left:0; top:0; width:996px; height:456px"><img src="img/sim3d.png" alt="" style="object-position: 50% 40%">
+    <div class="cap"><b>sim3d · browser simulator</b>Live fleet, order board, telemetry and replay</div></div>
+  <div class="tile" style="left:0; top:470px; width:491px; height:270px"><img src="img/gz_fleet.jpg" alt="">
+    <div class="cap"><b>AeroPACT · ROS 2 + Gazebo</b>Drones claim jobs and fly them</div></div>
+  <div class="tile" style="left:505px; top:470px; width:491px; height:270px"><img src="img/gz_px4.jpg" alt="">
+    <div class="cap"><b>PX4 SITL in the loop</b>Real autopilot software</div></div>
+</div></body></html>

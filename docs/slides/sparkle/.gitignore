@@ -1,0 +1,10 @@
+out/
+img/*_raw.png
+img/preview*.jpg
+img/*_sheet.jpg
+img/hz.png
+# third-party people photos from the SIH deck stay local
+img/bel_*.jpg
+img/exp_*.jpg
+img/pr_*_full.jpg
+__pycache__/

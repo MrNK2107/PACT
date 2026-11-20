@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sparkle s7 architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sparkle.css">
+<style>
+  .arch { position: absolute; left: 0; top: 0; width: 1010px; height: 740px; padding: 20px 24px; }
+  .arch .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .stack { position: absolute; left: 24px; top: 62px; bottom: 22px; width: 700px; display: flex; flex-direction: column; gap: 12px; }
+  .ly { flex: 1; border-radius: 14px; padding: 10px 18px; display: grid; grid-template-columns: 200px 1fr; align-items: center; gap: 12px; }
+  .ly .n { font-size: 23px; font-weight: 700; color: var(--ink); }
+  .ly .d { font-size: 19px; color: var(--slate); line-height: 1.3; }
+  .ly.radio { background: var(--vtint); } .ly.radio .n { color: var(--violet); }
+  .ly.coord { background: var(--tint); border: 2px solid var(--lime); }
+  .ly.coord .n { color: var(--deep); }
+  .ly.flight { background: var(--grey); }
+  .ly.safe { background: #fff; border: 2px dashed var(--red); } .ly.safe .n { color: var(--red); }
+  .ly.ap { background: var(--ink); } .ly.ap .n { color: var(--lime); } .ly.ap .d { color: #E6E6E6; }
+  .sub { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .sub span { font-size: 16px; font-weight: 600; padding: 3px 9px; border-radius: 8px; background: #fff; color: var(--deep); border: 1.5px solid #CFE8A8; }
+  .side { position: absolute; left: 744px; top: 62px; bottom: 22px; width: 242px; display: flex; flex-direction: column; gap: 10px; }
+  .box { flex: 1; border-radius: 14px; padding: 14px 16px; background: var(--grey); display: flex; flex-direction: column; justify-content: center; }
+  .box .n { font-size: 19px; font-weight: 700; color: var(--ink); }
+  .box p { font-size: 17px; margin-top: 4px; line-height: 1.3; }
+  .box.dep { background: var(--tint); border: 2px solid var(--lime); }
+  .arrowv { text-align: center; font-size: 15px; color: var(--muted); }
+  .res { position: absolute; left: 1034px; top: 0; width: 742px; height: 740px; padding: 20px 24px; }
+  .ref { display: grid; grid-template-columns: 1fr 230px; gap: 14px; padding: 15px 0; border-top: 1.5px solid var(--line); align-items: center; }
+  .ref:first-of-type { border-top: none; }
+  .ref .w { font-size: 19px; color: var(--ink); line-height: 1.28; }
+  .ref .w i { color: var(--muted); font-style: normal; font-size: 16px; display: block; }
+  .ref .u { font-size: 17px; color: var(--deep); font-weight: 600; line-height: 1.25; }
+  .meth { position: absolute; left: 24px; right: 24px; bottom: 22px; background: var(--vtint); border-radius: 14px; padding: 16px 18px; font-size: 19px; color: var(--ink); line-height: 1.35; }
+  .band { position: absolute; left: 0; right: 0; top: 768px; height: 84px; }
+  .band .bi { font-size: 18px; }
+</style></head>
+<body><div class="c">
+  <div class="card arch">
+    <div class="head"><span class="lbl">Inside every drone · the same code on all of them</span><span class="lbl m" style="font-size:14px">Top: network · Bottom: motors</span></div>
+    <div class="stack">
+      <div class="ly radio"><span class="n">Mesh radio</span><span class="d">Range-limited and lossy; talks only to neighbours in range. Authenticated transport in AeroPACT.</span></div>
+      <div class="ly radio"><span class="n">Gossip sync</span><span class="d">Exchanges order-board updates and heartbeats with neighbours.</span></div>
+      <div class="ly coord"><span class="n">Coordination</span><div>
+        <div class="d">Decides which jobs this drone owns.</div>
+        <div class="sub"><span>Order board (CRDT)</span><span>Auction</span><span>Epoch + lease</span><span>Zombie-stop</span><span>Partition policy</span><span>Failure detector</span></div></div></div>
+      <div class="ly flight"><span class="n">Flight manager</span><span class="d">A* routes around buildings and no-fly zones; battery model with a reserve; charging pads booked ahead.</span></div>
+      <div class="ly safe"><span class="n">Safety supervisor</span><span class="d">Keeps separation from other drones. Isolated: it never imports coordination or network code.</span></div>
+      <div class="ly ap"><span class="n">Autopilot</span><span class="d">PX4 via uXRCE-DDS offboard control in AeroPACT; kinematic model in the browser simulator.</span></div>
+    </div>
+    <div class="side">
+      <div class="box dep"><div class="n">Depot</div><p>Keeps its own board copy. Hands a parcel only to the <b>highest valid epoch</b>: the last line of defence against double delivery.</p></div>
+      <div class="arrowv">⇅ radio</div>
+      <div class="box"><div class="n">No server anywhere</div><p>There is no hub, no leader and no shared database. Any drone or depot can fail.</p></div>
+      <div class="box"><div class="n">ROS 2 components</div><p>One container per drone: coordinator, flight manager and safety supervisor as lifecycle nodes.</p></div>
+    </div>
+  </div>
+  <div class="card res">
+    <div class="lbl v">Research behind each part</div>
+    <div style="margin-top:6px">
+      <div class="ref"><div class="w">Consensus-based bundle algorithm (CBBA)<i>Choi, Brunet, How · IEEE Trans. Robotics 2009</i></div><div class="u">Market-based task allocation → our auction and the plain-auction baseline</div></div>
+      <div class="ref"><div class="w">Conflict-free replicated data types<i>Shapiro, Preguiça, Baquero, Zawirski · SSS 2011</i></div><div class="u">Board copies that always merge → shared order board</div></div>
+      <div class="ref"><div class="w">Leases for distributed cache consistency<i>Gray, Cheriton · SOSP 1989</i></div><div class="u">Time-limited ownership → job leases</div></div>
+      <div class="ref"><div class="w">Fencing tokens<i>Kleppmann · Designing Data-Intensive Applications, 2017</i></div><div class="u">Reject stale owners → epoch + depot check</div></div>
+      <div class="ref"><div class="w">CAP theorem<i>Brewer 2000 · Gilbert, Lynch 2002</i></div><div class="u">Safety vs availability in a split → partition policies</div></div>
+    </div>
+    <div class="meth"><b>Method:</b> fixed 20 Hz simulation step, seeded randomness, every event in a JSONL log; all metrics come from the log. 8 city maps, about 30 fault scenarios (hub loss, radio splits, dead zones, clock drift, battery crunch, urgent bursts).</div>
+  </div>
+  <div class="band">
+    <div class="bl">BUILT WITH</div>
+    <div class="bi">TypeScript · Three.js · React</div>
+    <div class="bi">ROS 2 Jazzy · C++ lifecycle nodes</div>
+    <div class="bi">Gazebo Harmonic</div>
+    <div class="bi">PX4 v1.16 SITL · uXRCE-DDS</div>
+  </div>
+</div></body></html>
